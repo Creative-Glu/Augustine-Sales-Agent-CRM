@@ -32,6 +32,7 @@ export default function Sidebar() {
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar">
         {SIDEBAR_LINKS.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href;
+          console.log('isActive', isActive);
           return (
             <Link
               key={href}
@@ -39,13 +40,13 @@ export default function Sidebar() {
               className={`group flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
               ${
                 isActive
-                  ? 'bg-primary-light text-black font-semibold'
+                  ? 'bg-mentestack-blue text-white font-semibold'
                   : 'text-black hover:bg-black hover:text-primary-foreground'
               }`}
             >
               <Icon
                 className={`w-5 h-5 ${
-                  isActive ? 'text-black' : 'text-black group-hover:text-primary'
+                  isActive ? 'text-white' : 'text-black group-hover:text-primary'
                 }`}
               />
               <span>{label}</span>
