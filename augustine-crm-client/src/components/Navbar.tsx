@@ -1,4 +1,4 @@
-import { BellIcon } from "@heroicons/react/24/outline";
+import { BellIcon } from '@heroicons/react/24/outline';
 
 export default function Navbar() {
   return (
@@ -7,9 +7,7 @@ export default function Navbar() {
       style={{ marginLeft: 288 }}
     >
       <div className="flex items-center gap-4">
-        <div className="text-lg font-semibold text-purplecrm-700">
-          Dashboard
-        </div>
+        <div className="text-lg font-semibold text-purplecrm-700">Dashboard</div>
       </div>
 
       <div className="flex items-center gap-4">

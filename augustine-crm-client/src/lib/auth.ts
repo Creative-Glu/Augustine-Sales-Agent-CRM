@@ -1,8 +1,3 @@
-/**
- * Basic Authentication System
- * Simple email/password authentication using localStorage
- */
-
 export interface User {
   id: string;
   email: string;
@@ -22,7 +17,12 @@ const USERS_KEY = 'augustine-users';
 /**
  * Get stored users from localStorage
  */
-function getStoredUsers(): Array<{ email: string; password: string; id: string; createdAt: string }> {
+function getStoredUsers(): Array<{
+  email: string;
+  password: string;
+  id: string;
+  createdAt: string;
+}> {
   if (typeof window === 'undefined') return [];
   const stored = localStorage.getItem(USERS_KEY);
   return stored ? JSON.parse(stored) : [];
@@ -31,7 +31,9 @@ function getStoredUsers(): Array<{ email: string; password: string; id: string; 
 /**
  * Save users to localStorage
  */
-function saveUsers(users: Array<{ email: string; password: string; id: string; createdAt: string }>): void {
+function saveUsers(
+  users: Array<{ email: string; password: string; id: string; createdAt: string }>
+): void {
   if (typeof window === 'undefined') return;
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
 }
@@ -46,7 +48,10 @@ function generateToken(): string {
 /**
  * Sign up a new user
  */
-export async function signUp(email: string, password: string): Promise<{ success: boolean; error?: string }> {
+export async function signUp(
+  email: string,
+  password: string
+): Promise<{ success: boolean; error?: string }> {
   try {
     // Validate input
     if (!email || !password) {
@@ -59,7 +64,7 @@ export async function signUp(email: string, password: string): Promise<{ success
 
     // Check if user already exists
     const users = getStoredUsers();
-    if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
+    if (users.find((u) => u.email.toLowerCase() === email.toLowerCase())) {
       return { success: false, error: 'User with this email already exists' };
     }
 
@@ -83,7 +88,10 @@ export async function signUp(email: string, password: string): Promise<{ success
 /**
  * Sign in a user
  */
-export async function signIn(email: string, password: string): Promise<{ success: boolean; error?: string; session?: AuthSession }> {
+export async function signIn(
+  email: string,
+  password: string
+): Promise<{ success: boolean; error?: string; session?: AuthSession }> {
   try {
     // Validate input
     if (!email || !password) {
@@ -93,7 +101,7 @@ export async function signIn(email: string, password: string): Promise<{ success
     // Find user
     const users = getStoredUsers();
     const user = users.find(
-      u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+      (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
     );
 
     if (!user) {
@@ -180,4 +188,3 @@ export function checkAuth(): { authenticated: boolean; user: User | null } {
     user: session?.user ?? null,
   };
 }
-

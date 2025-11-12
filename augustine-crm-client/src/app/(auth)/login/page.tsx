@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { signIn, isAuthenticated } from "../../../../lib/auth";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { isAuthenticated, signIn } from '@/src/lib/auth';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -15,7 +15,7 @@ export default function LoginPage() {
   // Check if user is already logged in
   useEffect(() => {
     if (isAuthenticated()) {
-      router.push("/dashboard");
+      router.push('/dashboard');
     } else {
       setCheckingAuth(false);
     }
@@ -29,13 +29,13 @@ export default function LoginPage() {
     const result = await signIn(email, password);
 
     if (!result.success) {
-      setError(result.error || "Failed to sign in");
+      setError(result.error || 'Failed to sign in');
       setLoading(false);
       return;
     }
 
     // Successful login - redirect to dashboard
-    router.push("/dashboard");
+    router.push('/dashboard');
     router.refresh();
   };
 
@@ -56,17 +56,13 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo/Brand Section */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-primary-700 mb-2">
-            Augustine
-          </h1>
+          <h1 className="text-4xl font-bold text-primary-700 mb-2">Augustine</h1>
           <p className="text-gray-600">Sales & Leads Dashboard</p>
         </div>
 
         {/* Login Form Card */}
         <div className="bg-white rounded-2xl shadow-card p-8 border border-gray-100 overflow-visible">
-          <h2 className="text-2xl font-semibold mb-6 text-gray-900">
-            Sign in to your account
-          </h2>
+          <h2 className="text-2xl font-semibold mb-6 text-gray-900">Sign in to your account</h2>
 
           {error && (
             <div className="mb-4 p-3 bg-danger/10 border border-danger/20 rounded-lg">
@@ -76,10 +72,7 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email address
               </label>
               <input
@@ -97,10 +90,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
               <input
@@ -125,10 +115,7 @@ export default function LoginPage() {
                 />
                 <span className="ml-2 text-gray-600">Remember me</span>
               </label>
-              <a
-                href="#"
-                className="text-primary-600 hover:text-primary-700 font-medium"
-              >
+              <a href="#" className="text-primary-600 hover:text-primary-700 font-medium">
                 Forgot password?
               </a>
             </div>
@@ -137,11 +124,11 @@ export default function LoginPage() {
               type="submit"
               disabled={loading}
               className="w-full py-3 px-4 text-white font-semibold rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md hover:shadow-lg"
-              style={{ 
+              style={{
                 backgroundColor: loading ? '#9333EA' : '#9333EA',
                 minHeight: '48px',
                 display: 'block',
-                visibility: 'visible'
+                visibility: 'visible',
               }}
             >
               {loading ? (
@@ -169,18 +156,15 @@ export default function LoginPage() {
                   Signing in...
                 </span>
               ) : (
-                "Sign in"
+                'Sign in'
               )}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Don't have an account?{" "}
-              <a
-                href="/signup"
-                className="text-primary-600 hover:text-primary-700 font-medium"
-              >
+              Don't have an account?{' '}
+              <a href="/signup" className="text-primary-600 hover:text-primary-700 font-medium">
                 Sign up
               </a>
             </p>

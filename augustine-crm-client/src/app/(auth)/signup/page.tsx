@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { signUp, isAuthenticated } from "../../../../lib/auth";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { isAuthenticated, signUp } from '@/src/lib/auth';
 
 export default function SignupPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -16,7 +16,7 @@ export default function SignupPage() {
   // Check if user is already logged in
   useEffect(() => {
     if (isAuthenticated()) {
-      router.push("/dashboard");
+      router.push('/dashboard');
     } else {
       setCheckingAuth(false);
     }
@@ -28,7 +28,7 @@ export default function SignupPage() {
 
     // Validate passwords match
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError('Passwords do not match');
       return;
     }
 
@@ -37,14 +37,14 @@ export default function SignupPage() {
     const result = await signUp(email, password);
 
     if (!result.success) {
-      setError(result.error || "Failed to create account");
+      setError(result.error || 'Failed to create account');
       setLoading(false);
       return;
     }
 
     // Success - redirect to login
-    alert("Account created successfully! Please sign in.");
-    router.push("/login");
+    alert('Account created successfully! Please sign in.');
+    router.push('/login');
   };
 
   // Show loading while checking authentication
@@ -64,17 +64,13 @@ export default function SignupPage() {
       <div className="w-full max-w-md">
         {/* Logo/Brand Section */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-primary-700 mb-2">
-            Augustine
-          </h1>
+          <h1 className="text-4xl font-bold text-primary-700 mb-2">Augustine</h1>
           <p className="text-gray-600">Sales & Leads Dashboard</p>
         </div>
 
         {/* Signup Form Card */}
         <div className="bg-white rounded-2xl shadow-card p-8 border border-gray-100 overflow-visible">
-          <h2 className="text-2xl font-semibold mb-6 text-gray-900">
-            Create an account
-          </h2>
+          <h2 className="text-2xl font-semibold mb-6 text-gray-900">Create an account</h2>
 
           {error && (
             <div className="mb-4 p-3 bg-danger/10 border border-danger/20 rounded-lg">
@@ -84,10 +80,7 @@ export default function SignupPage() {
 
           <form onSubmit={handleSignup} className="space-y-5">
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email address
               </label>
               <input
@@ -105,10 +98,7 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
               <input
@@ -152,11 +142,11 @@ export default function SignupPage() {
               type="submit"
               disabled={loading}
               className="w-full py-3 px-4 text-white font-semibold rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md hover:shadow-lg"
-              style={{ 
+              style={{
                 backgroundColor: loading ? '#9333EA' : '#9333EA',
                 minHeight: '48px',
                 display: 'block',
-                visibility: 'visible'
+                visibility: 'visible',
               }}
             >
               {loading ? (
@@ -184,18 +174,15 @@ export default function SignupPage() {
                   Creating account...
                 </span>
               ) : (
-                "Sign up"
+                'Sign up'
               )}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Already have an account?{" "}
-              <a
-                href="/login"
-                className="text-primary-600 hover:text-primary-700 font-medium"
-              >
+              Already have an account?{' '}
+              <a href="/login" className="text-primary-600 hover:text-primary-700 font-medium">
                 Sign in
               </a>
             </p>

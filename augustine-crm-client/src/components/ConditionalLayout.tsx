@@ -1,15 +1,11 @@
-"use client";
+'use client';
 
-import { usePathname } from "next/navigation";
-import Sidebar from "./Sidebar";
+import { usePathname } from 'next/navigation';
+import Sidebar from './Sidebar';
 
-export default function ConditionalLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAuthPage = pathname?.startsWith("/login") || pathname?.startsWith("/signup");
+  const isAuthPage = pathname?.startsWith('/login') || pathname?.startsWith('/signup');
 
   if (isAuthPage) {
     return <>{children}</>;
@@ -18,11 +14,7 @@ export default function ConditionalLayout({
   return (
     <div className="flex">
       <Sidebar />
-      <main className="ml-64 w-full min-h-screen bg-purplecrm-50 p-8">
-        {children}
-      </main>
+      <main className="ml-64 w-full min-h-screen bg-purplecrm-50 p-8">{children}</main>
     </div>
   );
 }
-
-

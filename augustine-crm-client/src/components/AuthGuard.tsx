@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { isAuthenticated } from "../../lib/auth";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { isAuthenticated } from '../../lib/auth';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -17,7 +17,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     const checkAuth = () => {
       if (!isAuthenticated()) {
         // User is not authenticated, redirect to login
-        router.push("/login");
+        router.push('/login');
       } else {
         // User is authenticated
         setAuthenticated(true);
@@ -43,4 +43,3 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
   return <>{children}</>;
 }
-

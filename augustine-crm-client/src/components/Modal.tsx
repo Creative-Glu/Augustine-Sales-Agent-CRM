@@ -1,5 +1,5 @@
-import { Dialog, Transition } from "@headlessui/react";
-import { Fragment, ReactNode } from "react";
+import { Dialog, Transition } from '@headlessui/react';
+import { Fragment, ReactNode } from 'react';
 
 export default function Modal({
   open,
@@ -26,11 +26,7 @@ export default function Modal({
         >
           <div className="fixed inset-0 flex items-center justify-center p-4">
             <Dialog.Panel className="mx-auto max-w-lg rounded-2xl bg-white p-6 shadow-lg">
-              {title && (
-                <Dialog.Title className="text-lg font-medium">
-                  {title}
-                </Dialog.Title>
-              )}
+              {title && <Dialog.Title className="text-lg font-medium">{title}</Dialog.Title>}
               <div className="mt-4">{children}</div>
             </Dialog.Panel>
           </div>

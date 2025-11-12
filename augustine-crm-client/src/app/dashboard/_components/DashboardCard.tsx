@@ -1,50 +1,37 @@
-"use client";
+'use client';
 
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { DotsVerticalIcon } from "@radix-ui/react-icons";
+import { motion } from 'framer-motion';
+import { ComponentType, SVGProps } from 'react';
 
-interface DashboardCardProps {
+interface CardProps {
   title: string;
   value: string | number;
   subtitle?: string;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
 }
 
-export default function DashboardCard({
-  title,
-  value,
-  subtitle,
-}: DashboardCardProps) {
+export default function DashboardCard({ title, value, subtitle, icon: Icon }: CardProps) {
   return (
-    <div className="bg-white rounded-xl2 shadow-card p-5 flex flex-col justify-between border border-gray-100 hover:shadow-lg transition">
-      <div className="flex justify-between items-start">
-        <div>
-          <h3 className="text-sm text-gray-500">{title}</h3>
-          <p className="text-3xl font-semibold text-purplecrm-700 mt-1">
-            {value}
-          </p>
-          {subtitle && <p className="text-xs text-gray-400 mt-1">{subtitle}</p>}
+    <motion.div
+      whileHover={{
+        scale: 1.03,
+        boxShadow: '0 10px 24px rgba(147, 51, 234, 0.15)',
+      }}
+      transition={{ duration: 0.2 }}
+      className={`relative p-[2px] rounded-2xl bg-gradient-to-br hover:brightness-110`}
+    >
+      <div className="bg-white rounded-2xl p-6 h-full flex flex-col justify-between transition-all duration-300">
+        <div className="flex items-center justify-between">
+          <div className="p-3 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 shadow-sm">
+            <Icon className="w-6 h-6 text-purplecrm-600" />
+          </div>
+          <p className="text-3xl font-bold text-purplecrm-700">{value}</p>
         </div>
-
-        {/* Radix Dropdown for actions */}
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
-            <button className="p-2 rounded-full hover:bg-gray-100 focus:outline-none">
-              <DotsVerticalIcon />
-            </button>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Content
-            align="end"
-            className="bg-white rounded-lg shadow-card border border-gray-200 p-2 w-32"
-          >
-            <DropdownMenu.Item className="p-2 text-sm hover:bg-purplecrm-50 rounded-md cursor-pointer">
-              View
-            </DropdownMenu.Item>
-            <DropdownMenu.Item className="p-2 text-sm hover:bg-purplecrm-50 rounded-md cursor-pointer">
-              Edit
-            </DropdownMenu.Item>
-          </DropdownMenu.Content>
-        </DropdownMenu.Root>
+        <div className="mt-4">
+          <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
+          {subtitle && <p className="text-xs text-gray-500 mt-1 font-medium">{subtitle}</p>}
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
