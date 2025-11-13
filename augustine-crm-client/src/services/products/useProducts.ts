@@ -1,18 +1,36 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'next/navigation';
 import {
   getProducts,
+  getProductsPaginated,
   createProduct,
   updateProduct,
   deleteProduct,
   Product,
+  ProductsResponse,
 } from './product.service';
+
+// Re-export types so components don't need to import from service files
+export type { Product, ProductsResponse };
 
 export function useProducts() {
   return useQuery<Product[], Error>({
     queryKey: ['products'],
     queryFn: getProducts,
+  });
+}
+
+export function useProductsPaginated(limit: number = 10) {
+  const searchParams = useSearchParams();
+  const offset = searchParams.get('offset') ? parseInt(searchParams.get('offset')!, 10) : 0;
+  const validOffset = isNaN(offset) || offset < 0 ? 0 : offset;
+
+  return useQuery<ProductsResponse, Error>({
+    queryKey: ['products', 'paginated', validOffset, limit],
+    queryFn: () => getProductsPaginated(validOffset, limit),
+    staleTime: 30 * 1000, // 30 seconds
   });
 }
 
