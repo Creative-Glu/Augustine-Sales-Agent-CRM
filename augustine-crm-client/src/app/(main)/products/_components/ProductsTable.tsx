@@ -6,10 +6,11 @@ import { formatPrice, formatDate } from '@/src/utils/format';
 
 interface ProductsTableProps {
   products: Product[];
+  isLoading: boolean;
+  isError: boolean;
 }
 
-export default function ProductsTable({ products }: ProductsTableProps) {
-
+export default function ProductsTable({ products, isLoading, isError }: ProductsTableProps) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full">
@@ -32,58 +33,87 @@ export default function ProductsTable({ products }: ProductsTableProps) {
             </th>
           </tr>
         </thead>
+
+        {/* ✅ Handle Loading / Error / Empty states here */}
         <tbody>
-          {products.map((product) => (
-            <tr
-              key={product.product_id}
-              className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-            >
-              <td className="py-4 px-4">
-                <div className="font-medium text-card-foreground">{product.product_name}</div>
-                {product.product_description && (
-                  <div className="text-xs text-muted-foreground mt-1 truncate">
-                    {product.product_description}
-                  </div>
-                )}
-              </td>
-              <td className="py-4 px-4">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  {product.pricing_type || 'N/A'}
-                </span>
-              </td>
-              <td className="py-4 px-4">
-                <div className="text-sm font-semibold text-card-foreground">
-                  {formatPrice(product.price, product.pricing_type)}
-                </div>
-              </td>
-              <td className="py-4 px-4">
-                <div className="text-sm text-muted-foreground">{formatDate(product.created_at)}</div>
-              </td>
-              <td className="py-4 px-4">
-                <div className="flex items-center justify-end gap-2">
-                  <button
-                    type="button"
-                    disabled
-                    className="inline-flex items-center justify-center p-2 text-muted-foreground border border-gray-200 rounded-lg bg-white cursor-not-allowed opacity-60 hover:bg-gray-50 transition-colors"
-                    title="Edit"
-                  >
-                    <PencilSquareIcon className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    disabled
-                    className="inline-flex items-center justify-center p-2 text-red-500 border border-red-200 rounded-lg bg-white cursor-not-allowed opacity-60 hover:bg-red-50 transition-colors"
-                    title="Delete"
-                  >
-                    <TrashIcon className="w-4 h-4" />
-                  </button>
-                </div>
+          {isLoading && (
+            <tr>
+              <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                <div className="animate-pulse text-sm">Loading products...</div>
               </td>
             </tr>
-          ))}
+          )}
+
+          {isError && (
+            <tr>
+              <td colSpan={5} className="py-8 text-center text-red-500">
+                Failed to load products. Please try again.
+              </td>
+            </tr>
+          )}
+
+          {!isLoading && !isError && products.length === 0 && (
+            <tr>
+              <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                No products found.
+              </td>
+            </tr>
+          )}
+
+          {!isLoading &&
+            !isError &&
+            products.map((product) => (
+              <tr
+                key={product.product_id}
+                className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+              >
+                <td className="py-4 px-4">
+                  <div className="font-medium text-card-foreground">{product.product_name}</div>
+                  {product.product_description && (
+                    <div className="text-xs text-muted-foreground mt-1 truncate">
+                      {product.product_description}
+                    </div>
+                  )}
+                </td>
+                <td className="py-4 px-4">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {product.pricing_type || 'N/A'}
+                  </span>
+                </td>
+                <td className="py-4 px-4">
+                  <div className="text-sm font-semibold text-card-foreground">
+                    {formatPrice(product.price, product.pricing_type)}
+                  </div>
+                </td>
+                <td className="py-4 px-4">
+                  <div className="text-sm text-muted-foreground">
+                    {formatDate(product.created_at)}
+                  </div>
+                </td>
+                <td className="py-4 px-4">
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      disabled
+                      className="inline-flex items-center justify-center p-2 text-muted-foreground border border-gray-200 rounded-lg bg-white cursor-not-allowed opacity-60 hover:bg-gray-50 transition-colors"
+                      title="Edit"
+                    >
+                      <PencilSquareIcon className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled
+                      className="inline-flex items-center justify-center p-2 text-red-500 border border-red-200 rounded-lg bg-white cursor-not-allowed opacity-60 hover:bg-red-50 transition-colors"
+                      title="Delete"
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
         </tbody>
       </table>
     </div>
   );
 }
-

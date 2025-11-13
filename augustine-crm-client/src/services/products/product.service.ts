@@ -25,12 +25,6 @@ export async function getProducts(): Promise<Product[]> {
   return data ?? [];
 }
 
-/**
- * Get products with pagination support
- * @param offset - Number of records to skip
- * @param limit - Number of records to return (default: 10)
- * @returns ProductsResponse with products, total count, and hasMore flag
- */
 export async function getProductsPaginated(
   offset: number = 0,
   limit: number = 10
@@ -62,19 +56,12 @@ export async function getProductsPaginated(
 }
 
 export async function getProductById(id: string): Promise<Product | null> {
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('product_id', id)
-    .single();
+  const { data, error } = await supabase.from('products').select('*').eq('product_id', id).single();
 
   if (error) throw new Error(`Error fetching product: ${error.message}`);
   return data;
 }
 
-/**
- * Create a new product
- */
 export async function createProduct(
   product: Omit<Product, 'product_id' | 'created_at'>
 ): Promise<Product> {
@@ -84,9 +71,6 @@ export async function createProduct(
   return data;
 }
 
-/**
- * Update an existing product
- */
 export async function updateProduct(id: string, updates: Partial<Product>): Promise<Product> {
   const { data, error } = await supabase
     .from('products')
@@ -99,9 +83,6 @@ export async function updateProduct(id: string, updates: Partial<Product>): Prom
   return data;
 }
 
-/**
- * Delete a product
- */
 export async function deleteProduct(id: string): Promise<void> {
   const { error } = await supabase.from('products').delete().eq('product_id', id);
   if (error) throw new Error(`Error deleting product: ${error.message}`);
