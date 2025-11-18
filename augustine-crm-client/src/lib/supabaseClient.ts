@@ -1,13 +1,8 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-/**
- * Validates that required Supabase environment variables are present
- * @throws {Error} If required environment variables are missing
- */
 function validateSupabaseConfig(): void {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
   if (!supabaseUrl) {
     throw new Error(
       'Missing NEXT_PUBLIC_SUPABASE_URL environment variable. ' +
@@ -36,13 +31,6 @@ function validateSupabaseConfig(): void {
 // Validate configuration on module load
 validateSupabaseConfig();
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-/**
- * Supabase client instance
- * Configured with URL and anonymous key from environment variables
- */
 export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
@@ -51,11 +39,6 @@ export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKe
   },
 });
 
-/**
- * Validates the Supabase connection by performing a test query
- * Uses the auth API which is always available
- * @returns {Promise<boolean>} True if connection is valid, false otherwise
- */
 export async function validateSupabaseConnection(): Promise<boolean> {
   try {
     // Use auth API to test connection - this is always available

@@ -10,6 +10,7 @@ import { ErrorText } from '@/components/ErrorText';
 import { useToastHelpers } from '@/lib/toast';
 import { supabase } from '@/lib/supabaseClient';
 import { icpValidationSchema } from '@/validations/icps.schema';
+import { FormFooterActions } from '@/components/FormFooterActions';
 
 interface CreateICPsModalProps {
   open: boolean;
@@ -89,15 +90,11 @@ export default function CreateICPsModal({ open, onClose, onCreated }: CreateICPs
           </div>
 
           {/* Footer */}
-          <div className="flex justify-end gap-2 mt-4">
-            <Button type="button" className="cursor-pointer" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-
-            <Button type="submit" className="cursor-pointer" disabled={isSubmitting}>
-              {isSubmitting ? 'Creating…' : 'Create ICP'}
-            </Button>
-          </div>
+          <FormFooterActions
+            onCancel={onClose}
+            submitLabel="Create ICP"
+            isSubmitting={isSubmitting}
+          />
         </form>
       </DialogContent>
     </Dialog>

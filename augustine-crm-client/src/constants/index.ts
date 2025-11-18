@@ -14,3 +14,10 @@ export const ICP_TABLE_COLUMNS: any[] = [
   { label: 'Created At', align: 'left' },
   { label: 'Actions', align: 'center' },
 ];
+
+export const PRODUCT_OFFER_COLUMNS = [
+  { label: 'Offer Name' },
+  { label: 'ICP' },
+  { label: 'Products' },
+  { label: 'Actions' },
+];

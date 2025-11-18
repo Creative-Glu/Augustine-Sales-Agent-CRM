@@ -13,6 +13,7 @@ import { ProductFormValues } from '@/types/product';
 import { productValidationSchema } from '@/validations/product.schema';
 import { ErrorText } from '@/components/ErrorText';
 import { useToastHelpers } from '@/lib/toast';
+import { FormFooterActions } from '@/components/FormFooterActions';
 
 interface CreateProductModalProps {
   open: boolean;
@@ -121,15 +122,11 @@ export default function CreateProductModal({ open, onClose, onCreated }: CreateP
             </div>
           )}
 
-          {/* Footer Buttons */}
-          <div className="flex justify-end gap-2 mt-4">
-            <Button type="button" className="cursor-pointer" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" className="cursor-pointer" disabled={isSubmitting}>
-              {isSubmitting ? 'Creating…' : 'Create Product'}
-            </Button>
-          </div>
+          <FormFooterActions
+            onCancel={onClose}
+            submitLabel="Create Product"
+            isSubmitting={isSubmitting}
+          />
         </form>
       </DialogContent>
     </Dialog>
