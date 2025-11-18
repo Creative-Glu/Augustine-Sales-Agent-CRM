@@ -3,7 +3,7 @@ import { COOKIE_KEYS } from '../constants/cookieKeys';
 import { STORAGE_KEYS } from '../constants/storageKeys';
 import { getStoredUsers } from './storage';
 import { generateToken } from './token';
-import { AuthSession, User } from '@/src/types/auth';
+import { AuthSession, User } from '@/types/auth';
 
 export async function signIn(
   email: string,

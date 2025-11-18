@@ -6,6 +6,7 @@ import {
   DocumentChartBarIcon,
   Squares2X2Icon,
 } from '@heroicons/react/24/outline';
+import { UserCheck2Icon } from 'lucide-react';
 
 export const SIDEBAR_LINKS = [
   { href: '/dashboard', label: 'Dashboard', icon: HomeIcon },
@@ -20,4 +21,5 @@ export const SIDEBAR_LINKS = [
   { href: '/product-offers', label: 'Offers', icon: CubeIcon },
   { href: '/campaigns', label: 'Campaigns', icon: ChartBarIcon },
   { href: '/leads', label: 'Leads', icon: UserGroupIcon },
+  { href: '/profile', label: 'Profile', icon: UserCheck2Icon },
 ];

@@ -10,6 +10,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.35.2",
     "@headlessui/react": "^2.2.9",
     "@heroicons/react": "^2.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.15",
