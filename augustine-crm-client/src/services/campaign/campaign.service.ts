@@ -2,13 +2,19 @@ import { supabase } from '@/lib/supabaseClient';
 import { CampaignValues } from '@/types/compaign';
 
 export async function getCompaign(): Promise<any> {
-  const { data, error } = await supabase.from('campaigns').select(`
+  const { data, error } = await supabase
+    .from('campaigns')
+    .select(
+      `
   *,
   offer:offer_id (
     offer_id,
     offer_name
-  )
-`);
+  )    
+
+`
+    )
+    .order('createdat', { ascending: false });
 
   if (error) throw new Error(`Error fetching products: ${error.message}`);
   return data ?? [];

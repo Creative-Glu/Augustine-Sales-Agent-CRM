@@ -2,6 +2,7 @@ import { CAMPAIGN_STATUS_OPTIONS } from '@/constants';
 import { CustomeSelect } from '@/components/CustomeSelect';
 import { useUpdateCampaignStatus } from '@/services/campaign/useCampaign';
 import { useToastHelpers } from '@/lib/toast';
+import { statusColors } from './StatusBadge';
 
 interface CampaignStatusDropdownProps {
   campaignId: number;
@@ -33,6 +34,7 @@ export const CampaignStatusDropdown = ({
       optionsData={CAMPAIGN_STATUS_OPTIONS}
       placeholder="Select Status"
       loading={isPending}
+      className={`p-0 px-2 ${statusColors[currentStatus] || statusColors['Default']}`}
     />
   );
 };

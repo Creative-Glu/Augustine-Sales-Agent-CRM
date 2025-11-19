@@ -4,7 +4,7 @@ interface StatusBadgeProps {
   status: string;
 }
 
-const statusColors: Record<string, string> = {
+export const statusColors: Record<string, string> = {
   Draft: 'bg-yellow-100 text-yellow-700',
   Active: 'bg-blue-100 text-blue-700',
   Running: 'bg-green-100 text-green-700',
