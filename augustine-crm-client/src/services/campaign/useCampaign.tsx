@@ -1,7 +1,12 @@
 'use client';
 
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { createCompaign, deleteCompaign, getCompaign } from './campaign.service';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  createCompaign,
+  deleteCompaign,
+  getCompaign,
+  updateCampaignStatus,
+} from './campaign.service';
 
 export const useGetCompaign = () => {
   return useQuery({
@@ -21,5 +26,16 @@ export const useDeleteCompaign = () => {
   return useMutation({
     mutationKey: ['delete-compaign'],
     mutationFn: deleteCompaign,
+  });
+};
+export const useUpdateCampaignStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ['update-campaign-status'],
+    mutationFn: ({ campaignId, newStatus }: { campaignId: number | string; newStatus: string }) =>
+      updateCampaignStatus(campaignId, newStatus),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['compaign'] });
+    },
   });
 };

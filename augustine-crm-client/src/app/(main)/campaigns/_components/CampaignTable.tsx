@@ -5,11 +5,12 @@ import { useState } from 'react';
 import { useToastHelpers } from '@/lib/toast';
 import { DeleteButton, EditButton } from '@/components/ActionButtons';
 import { TableHeader } from '@/components/TableHeader';
-import { CAMPAIGN_COLUMNS } from '@/constants';
+import { CAMPAIGN_COLUMNS, CAMPAIGN_STATUS_OPTIONS } from '@/constants';
 import { formatDate } from '@/utils/format';
 import { StatusBadge } from './StatusBadge';
 import { Campaign } from '@/types/compaign';
 import { useDeleteCompaign } from '@/services/campaign/useCampaign';
+import { CampaignStatusDropdown } from './CampaignStatusDropdown';
 
 interface CampaignTableProps {
   campaigns: Campaign[];
@@ -97,7 +98,10 @@ export default function CampaignTable({
                     <div className="text-xs text-muted-foreground">{c.offer_id}</div>
                   </td>
                   <td className="py-4 px-4">
-                    <StatusBadge status={c.campaign_status} />
+                    <CampaignStatusDropdown
+                      campaignId={c.campaign_id}
+                      currentStatus={c.campaign_status}
+                    />
                   </td>
 
                   <td className="py-4 px-4">
@@ -120,7 +124,6 @@ export default function CampaignTable({
         </table>
       </div>
 
-      {/* Delete Confirmation */}
       <ConfirmDeleteDialog
         open={isDeleteDialogOpen}
         onOpenChange={() => setIsDeleteDialogOpen(false)}

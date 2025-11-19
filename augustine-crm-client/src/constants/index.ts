@@ -42,7 +42,7 @@ export const CAMPAIGN_COLUMNS: TableHeaderColumn[] = [
     label: 'Actions',
   },
 ];
-export const CAMPAIGN_STATUS_OPTIONS: TableHeaderColumn[] = [
+export const CAMPAIGN_STATUS_OPTIONS: any[] = [
   { label: 'Running', value: 'Running' },
   { label: 'Active', value: 'Active' },
   { label: 'Draft', value: 'Draft' },
