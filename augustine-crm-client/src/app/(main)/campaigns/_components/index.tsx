@@ -5,12 +5,24 @@ import { PageHeader } from '@/components/PageHeader';
 import { useGetCompaign } from '@/services/campaign/useCampaign';
 import CampaignTable from './CampaignTable';
 import { CreateButton } from '@/components/CreateButton';
-import CreateCampaignModal from './CreateCompaignModal';
+import CampaignModal from './CampaignModal';
+import { Campaign } from '@/types/compaign';
 
 const CampaignPage = () => {
   const { data: campaignData, isLoading, isError, refetch: fetchCampaign } = useGetCompaign();
 
   const [isCampaignModalOpen, setCampaignModalOpen] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+
+  const handleEdit = (campaign: Campaign) => {
+    setSelectedCampaign(campaign);
+    setCampaignModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setCampaignModalOpen(false);
+    setSelectedCampaign(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -30,14 +42,16 @@ const CampaignPage = () => {
             isLoading={isLoading}
             isError={isError}
             fetchCampaignList={fetchCampaign}
+            onEdit={handleEdit}
           />
         </div>
       </div>
 
-      <CreateCampaignModal
+      <CampaignModal
         open={isCampaignModalOpen}
-        onClose={() => setCampaignModalOpen(false)}
-        onCreated={() => fetchCampaign()}
+        onClose={handleCloseModal}
+        onCreated={fetchCampaign}
+        campaign={selectedCampaign}
       />
     </div>
   );

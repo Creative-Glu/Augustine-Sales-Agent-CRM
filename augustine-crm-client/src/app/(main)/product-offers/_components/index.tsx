@@ -5,7 +5,8 @@ import { PageHeader } from '@/components/PageHeader';
 import { useProductOffers } from '@/services/product-offers/useProductOffers';
 import ProductOfferTable from './ProductOffersTable';
 import React from 'react';
-import CreateProductOfferModal from './CreateProductOfferModal';
+import ProductOfferModal from './ProductOfferModal';
+import { ProductOffer } from '@/types/product-offer';
 
 const ProductOfferPage = () => {
   const {
@@ -16,6 +17,17 @@ const ProductOfferPage = () => {
   } = useProductOffers();
 
   const [isProductOfferModalOpen, setProductOfferModalOpen] = React.useState(false);
+  const [selectedOffer, setSelectedOffer] = React.useState<ProductOffer | null>(null);
+
+  const handleEdit = (offer: ProductOffer) => {
+    setSelectedOffer(offer);
+    setProductOfferModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setProductOfferModalOpen(false);
+    setSelectedOffer(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -36,14 +48,16 @@ const ProductOfferPage = () => {
             isLoading={isLoading}
             isError={isError}
             fetchProductOffersList={fetchProductOffersList}
+            onEdit={handleEdit}
           />
         </div>
       </div>
 
-      <CreateProductOfferModal
+      <ProductOfferModal
         open={isProductOfferModalOpen}
-        onClose={() => setProductOfferModalOpen(false)}
+        onClose={handleCloseModal}
         onCreated={fetchProductOffersList}
+        offer={selectedOffer}
       />
     </div>
   );

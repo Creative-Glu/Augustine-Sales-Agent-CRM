@@ -5,7 +5,11 @@ import {
   createProductOffer,
   deleteProductOffers,
   getProductOffers,
+  updateProductOffer,
 } from './product-offers.service';
+import { ProductOffer } from '@/types/product-offer';
+
+export type { ProductOffer };
 
 export function useProductOffers() {
   return useQuery<any, Error>({
@@ -28,6 +32,17 @@ export function useCreateProductOffer() {
 
   return useMutation({
     mutationFn: createProductOffer,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['product-offers'] }),
+  });
+}
+
+export function useUpdateProductOffer() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ['update-product-offer'],
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<ProductOffer> }) =>
+      updateProductOffer(id, updates),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['product-offers'] }),
   });
 }

@@ -43,3 +43,18 @@ export async function updateCampaignStatus(campaignId: string | number, newStatu
   if (error) throw new Error(`Error updating campaign status: ${error.message}`);
   return data;
 }
+
+export async function updateCampaign(
+  id: string | number,
+  updates: Partial<CampaignValues>
+): Promise<CampaignValues> {
+  const { data, error } = await supabase
+    .from('campaigns')
+    .update(updates)
+    .eq('campaign_id', id)
+    .select()
+    .single();
+
+  if (error) throw new Error(`Error updating campaign: ${error.message}`);
+  return data;
+}

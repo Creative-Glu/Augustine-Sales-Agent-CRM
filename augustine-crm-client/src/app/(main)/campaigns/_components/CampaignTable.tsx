@@ -17,6 +17,7 @@ interface CampaignTableProps {
   isLoading: boolean;
   isError: boolean;
   fetchCampaignList: () => void;
+  onEdit?: (campaign: Campaign) => void;
 }
 
 export default function CampaignTable({
@@ -24,6 +25,7 @@ export default function CampaignTable({
   isLoading,
   isError,
   fetchCampaignList,
+  onEdit,
 }: CampaignTableProps) {
   const { successToast, errorToast } = useToastHelpers();
   const { mutateAsync: deleteCompaign } = useDeleteCompaign();
@@ -115,7 +117,7 @@ export default function CampaignTable({
                   </td>
 
                   <td className="py-4 px-4 flex items-center gap-2">
-                    <EditButton />
+                    <EditButton onClick={() => onEdit?.(c)} />
                     <DeleteButton onDelete={() => openDeleteDialog(c.campaign_id)} />
                   </td>
                 </tr>

@@ -6,11 +6,21 @@ import { TableHeader } from '@/components/TableHeader';
 import { ICP_TABLE_COLUMNS } from '@/constants';
 import { useToastHelpers } from '@/lib/toast';
 import { useDeleteICPs } from '@/services/icps/useICPs';
-import { ICPsTableProps } from '@/types/icps';
+import { ICPsTableProps, ICP } from '@/types/icps';
 import { formatDate } from '@/utils/format';
 import { useState } from 'react';
 
-export default function ICPsTable({ icps, isLoading, isError, fetchICPs }: ICPsTableProps) {
+interface ICPsTablePropsWithEdit extends ICPsTableProps {
+  onEdit?: (icp: ICP) => void;
+}
+
+export default function ICPsTable({
+  icps,
+  isLoading,
+  isError,
+  fetchICPs,
+  onEdit,
+}: ICPsTablePropsWithEdit) {
   const [selectedICPId, setSelectedICPId] = useState<string>('');
   const [isDeleteICPModalOpen, setIsDeleteICPModalOpen] = useState(false);
 
@@ -91,7 +101,7 @@ export default function ICPsTable({ icps, isLoading, isError, fetchICPs }: ICPsT
                   </td>
 
                   <td className="py-4 px-4 flex items-center justify-center gap-2">
-                    <EditButton />
+                    <EditButton onClick={() => onEdit?.(icp)} />
                     <DeleteButton onDelete={() => openDeleteICPModal(icp.icp_id)} />
                   </td>
                 </tr>

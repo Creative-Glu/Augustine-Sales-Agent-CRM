@@ -1,8 +1,7 @@
 'use client';
 
 import { useFormik } from 'formik';
-import { useCreateProduct } from '@/services/products/useProducts';
-import { Button } from '@/components/ui/button';
+import { useCreateProduct, useUpdateProduct, Product } from '@/services/products/useProducts';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,44 +14,61 @@ import { ErrorText } from '@/components/ErrorText';
 import { useToastHelpers } from '@/lib/toast';
 import { FormFooterActions } from '@/components/FormFooterActions';
 
-interface CreateProductModalProps {
+interface ProductModalProps {
   open: boolean;
   onClose: () => void;
   onCreated?: () => void;
+  product?: Product | null;
 }
 
-export default function CreateProductModal({ open, onClose, onCreated }: CreateProductModalProps) {
+export default function ProductModal({ open, onClose, onCreated, product }: ProductModalProps) {
   const { mutateAsync: createNewProductMutation } = useCreateProduct();
+  const { mutateAsync: updateProductMutation } = useUpdateProduct();
   const { successToast, errorToast } = useToastHelpers();
+
+  const isEditMode = !!product;
 
   const formik = useFormik<ProductFormValues>({
     initialValues: {
-      product_name: '',
-      product_description: '',
-      pricing_type: 'free',
-      price: 0,
+      product_name: product?.product_name || '',
+      product_description: product?.product_description || '',
+      pricing_type: product?.pricing_type || 'free',
+      price: product?.price || 0,
     },
     validationSchema: productValidationSchema,
     validateOnChange: true,
     validateOnMount: true,
+    enableReinitialize: true,
     onSubmit: async (values, { setSubmitting }) => {
       try {
-        const { data } = await supabase.rpc('generate_new_product_id');
+        if (isEditMode && product) {
+          const payload = {
+            product_name: values.product_name,
+            product_description: values.product_description,
+            pricing_type: values.pricing_type,
+            price: values?.pricing_type == 'free' ? 0 : values?.price,
+          };
 
-        const payload = {
-          ...values,
-          product_id: data,
-          price: values?.pricing_type == 'free' ? 0 : values?.price,
-        };
+          await updateProductMutation({ id: product.product_id, updates: payload });
+          successToast('Product updated successfully');
+        } else {
+          const { data } = await supabase.rpc('generate_new_product_id');
 
-        await createNewProductMutation(payload);
-        successToast('Product created successfully');
+          const payload = {
+            ...values,
+            product_id: data,
+            price: values?.pricing_type == 'free' ? 0 : values?.price,
+          };
+
+          await createNewProductMutation(payload);
+          successToast('Product created successfully');
+        }
 
         onCreated?.();
         onClose();
       } catch (err) {
-        errorToast('Error creating product');
-        console.error('Create product error:', err);
+        errorToast(isEditMode ? 'Error updating product' : 'Error creating product');
+        console.error(isEditMode ? 'Update product error:' : 'Create product error:', err);
       } finally {
         setSubmitting(false);
       }
@@ -66,7 +82,7 @@ export default function CreateProductModal({ open, onClose, onCreated }: CreateP
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Create Product</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Edit Product' : 'Create Product'}</DialogTitle>
         </DialogHeader>
 
         {/* Form */}
@@ -124,7 +140,7 @@ export default function CreateProductModal({ open, onClose, onCreated }: CreateP
 
           <FormFooterActions
             onCancel={onClose}
-            submitLabel="Create Product"
+            submitLabel={isEditMode ? 'Update Product' : 'Create Product'}
             isSubmitting={isSubmitting}
           />
         </form>
@@ -132,3 +148,4 @@ export default function CreateProductModal({ open, onClose, onCreated }: CreateP
     </Dialog>
   );
 }
+

@@ -3,14 +3,13 @@
 import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Pagination from '@/components/Pagination';
-import { useProductsPaginated } from '@/services/products/useProducts';
+import { useProductsPaginated, Product } from '@/services/products/useProducts';
 import ProductsTable from './ProductsTable';
 import React from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { CreateButton } from '@/components/CreateButton';
-import { PlusCircleIcon } from 'lucide-react';
 
-const CreateProductModal = dynamic(() => import('./CreateProductModal'), { ssr: false });
+const ProductModal = dynamic(() => import('./ProductModal'), { ssr: false });
 
 export default function ProductsPage() {
   const searchParams = useSearchParams();
@@ -25,6 +24,17 @@ export default function ProductsPage() {
   const totalPages = Math.ceil(total / limit);
 
   const [isProductModalOpen, setProductModalOpen] = React.useState(false);
+  const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(null);
+
+  const handleEdit = (product: Product) => {
+    setSelectedProduct(product);
+    setProductModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setProductModalOpen(false);
+    setSelectedProduct(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -39,6 +49,7 @@ export default function ProductsPage() {
             isLoading={isLoading}
             isError={isError}
             fetchProductsList={fetchProductsList}
+            onEdit={handleEdit}
           />
         </div>
       </div>
@@ -55,10 +66,11 @@ export default function ProductsPage() {
         />
       )}
 
-      <CreateProductModal
+      <ProductModal
         open={isProductModalOpen}
-        onClose={() => setProductModalOpen(false)}
-        onCreated={() => fetchProductsList()}
+        onClose={handleCloseModal}
+        onCreated={fetchProductsList}
+        product={selectedProduct}
       />
     </div>
   );

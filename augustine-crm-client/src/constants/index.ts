@@ -49,3 +49,11 @@ export const CAMPAIGN_STATUS_OPTIONS: any[] = [
   { label: 'Stopped', value: 'Stopped' },
   { label: 'AFA', value: 'AFA' },
 ];
+
+export const CONTACTS_TABLE_COLUMNS: TableHeaderColumn[] = [
+  { label: 'Parish Name', align: 'left' },
+  { label: 'Email', align: 'left' },
+  { label: 'Phone', align: 'left' },
+  { label: 'Institution Type', align: 'left' },
+  { label: 'Actions', align: 'center' },
+];

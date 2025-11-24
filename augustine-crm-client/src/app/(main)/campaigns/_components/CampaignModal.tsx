@@ -13,51 +13,69 @@ import { useProductOffers } from '@/services/product-offers/useProductOffers';
 import { mapToSelectOptions } from '@/utils/mapToSelectOptions';
 import { campaignValidationSchema } from '@/validations/campaign.schema';
 import { CAMPAIGN_STATUS_OPTIONS } from '@/constants';
-import { CampaignValues } from '@/types/compaign';
-import { useCreateCompaign } from '@/services/campaign/useCampaign';
+import { CampaignValues, Campaign } from '@/types/compaign';
+import { useCreateCompaign, useUpdateCampaign } from '@/services/campaign/useCampaign';
 
-interface CreateCampaignModalProps {
+interface CampaignModalProps {
   open: boolean;
   onClose: () => void;
   onCreated?: () => void;
+  campaign?: Campaign | null;
 }
 
-export default function CreateCampaignModal({
+export default function CampaignModal({
   open,
   onClose,
   onCreated,
-}: CreateCampaignModalProps) {
+  campaign,
+}: CampaignModalProps) {
   const { successToast, errorToast } = useToastHelpers();
   const { mutateAsync: createCompaign } = useCreateCompaign();
+  const { mutateAsync: updateCampaignMutation } = useUpdateCampaign();
   const { data: offersData, isLoading: isOffersLoading } = useProductOffers();
   const offerOptions = mapToSelectOptions(offersData, 'offer_name', 'offer_id');
 
+  const isEditMode = !!campaign;
+
   const formik = useFormik<Omit<CampaignValues, 'campaign_id'>>({
     initialValues: {
-      campaign_name: '',
-      offer_id: '',
-      instructions: '',
-      campaign_status: 'Draft',
+      campaign_name: campaign?.campaign_name || '',
+      offer_id: campaign?.offer_id || '',
+      instructions: campaign?.instructions || '',
+      campaign_status: (campaign?.campaign_status as 'Running' | 'Draft') || 'Draft',
     },
     validateOnChange: true,
     validateOnMount: true,
+    enableReinitialize: true,
     validationSchema: campaignValidationSchema,
     onSubmit: async (values, { setSubmitting }) => {
       try {
-        const { data: newId } = await supabase.rpc('generate_new_campaign_id');
+        if (isEditMode && campaign) {
+          const payload = {
+            campaign_name: values.campaign_name,
+            offer_id: values.offer_id,
+            instructions: values.instructions,
+            campaign_status: values.campaign_status,
+          };
 
-        const payload = {
-          ...values,
-          campaign_id: newId,
-        };
-        await createCompaign(payload);
+          await updateCampaignMutation({ id: campaign.campaign_id, updates: payload });
+          successToast('Campaign updated successfully');
+        } else {
+          const { data: newId } = await supabase.rpc('generate_new_campaign_id');
 
-        successToast('Campaign created successfully');
+          const payload = {
+            ...values,
+            campaign_id: newId,
+          };
+          await createCompaign(payload);
+          successToast('Campaign created successfully');
+        }
+
         onCreated?.();
         onClose();
       } catch (err) {
-        console.error('Create campaign error:', err);
-        errorToast('Error creating campaign');
+        console.error(isEditMode ? 'Update campaign error:' : 'Create campaign error:', err);
+        errorToast(isEditMode ? 'Error updating campaign' : 'Error creating campaign');
       } finally {
         setSubmitting(false);
       }
@@ -71,7 +89,7 @@ export default function CreateCampaignModal({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Create Campaign</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Edit Campaign' : 'Create Campaign'}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -118,7 +136,7 @@ export default function CreateCampaignModal({
 
           <FormFooterActions
             onCancel={onClose}
-            submitLabel="Create Campaign"
+            submitLabel={isEditMode ? 'Update Campaign' : 'Create Campaign'}
             isSubmitting={isSubmitting}
           />
         </form>
@@ -126,3 +144,4 @@ export default function CreateCampaignModal({
     </Dialog>
   );
 }
+

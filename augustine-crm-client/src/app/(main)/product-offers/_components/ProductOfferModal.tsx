@@ -10,59 +10,72 @@ import { CustomeSelect } from '@/components/CustomeSelect';
 import { productOfferValidationSchema } from '@/validations/product-offer.schema';
 import { useGetICPs } from '@/services/icps/useICPs';
 import { useProducts } from '@/services/products/useProducts';
-import { useCreateProductOffer } from '@/services/product-offers/useProductOffers';
+import {
+  ProductOffer,
+  useCreateProductOffer,
+  useUpdateProductOffer,
+} from '@/services/product-offers/useProductOffers';
 import { mapToSelectOptions } from '@/utils/mapToSelectOptions';
 import { FormFooterActions } from '@/components/FormFooterActions';
-import { ProductOffer } from '@/types/product-offer';
 
-interface CreateProductOfferModalProps {
+interface ProductOfferModalProps {
   open: boolean;
   onClose: () => void;
   onCreated?: () => void;
+  offer?: ProductOffer | null;
 }
 
-export default function CreateProductOfferModal({
+export default function ProductOfferModal({
   open,
   onClose,
   onCreated,
-}: CreateProductOfferModalProps) {
+  offer,
+}: ProductOfferModalProps) {
   const { successToast, errorToast } = useToastHelpers();
   const { mutateAsync: createProductOffer } = useCreateProductOffer();
+  const { mutateAsync: updateProductOffer } = useUpdateProductOffer();
 
   const { data: icpsData, isLoading: isICPLoading } = useGetICPs();
-
   const { data: productsData, isLoading: isProductsLoading } = useProducts();
   const icpOptions = mapToSelectOptions(icpsData, 'icp_name', 'icp_id');
   const productOptions = mapToSelectOptions(productsData, 'product_name', 'product_id');
 
+  const isEditMode = !!offer;
+
   const formik = useFormik<Omit<ProductOffer, 'offer_id'>>({
     initialValues: {
-      offer_name: '',
-      icp_id: '',
-      offer_1: '',
-      offer_2: '',
-      offer_3: '',
+      offer_name: offer?.offer_name || '',
+      icp_id: offer?.icp_id || '',
+      offer_1: offer?.offer_1 || '',
+      offer_2: offer?.offer_2 || '',
+      offer_3: offer?.offer_3 || '',
     },
     validationSchema: productOfferValidationSchema,
     validateOnChange: true,
+    enableReinitialize: true,
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       try {
-        const { data: offerId } = await supabase.rpc('generate_new_offer_id');
+        if (isEditMode && offer) {
+          await updateProductOffer({ id: offer.offer_id, updates: values });
+          successToast('Offer updated successfully!');
+        } else {
+          const { data: offerId } = await supabase.rpc('generate_new_offer_id');
 
-        const payload = {
-          ...values,
-          offer_id: offerId,
-        };
+          const payload = {
+            ...values,
+            offer_id: offerId,
+          };
 
-        await createProductOffer(payload);
+          await createProductOffer(payload);
+          successToast('Offer created successfully!');
+        }
 
-        successToast('Offer created successfully!');
         onCreated?.();
         onClose();
         resetForm();
       } catch (err) {
         console.error(err);
-        errorToast('Error creating offer');
+        errorToast(isEditMode ? 'Error updating offer' : 'Error creating offer');
       } finally {
         setSubmitting(false);
       }
@@ -76,7 +89,7 @@ export default function CreateProductOfferModal({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
-          <DialogTitle>Create Product Offer</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Edit Product Offer' : 'Create Product Offer'}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -133,7 +146,7 @@ export default function CreateProductOfferModal({
 
           <FormFooterActions
             onCancel={onClose}
-            submitLabel="Create Offer"
+            submitLabel={isEditMode ? 'Update Offer' : 'Create Offer'}
             isSubmitting={isSubmitting}
           />
         </form>
@@ -141,3 +154,4 @@ export default function CreateProductOfferModal({
     </Dialog>
   );
 }
+

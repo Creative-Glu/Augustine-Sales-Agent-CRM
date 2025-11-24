@@ -1,8 +1,8 @@
 'use client';
 
 import { useFormik } from 'formik';
-import { useCreateICPs } from '@/services/icps/useICPs';
-import { Button } from '@/components/ui/button';
+import { useCreateICPs, useUpdateICP } from '@/services/icps/useICPs';
+import { ICP } from '@/types/icps';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,43 +12,58 @@ import { supabase } from '@/lib/supabaseClient';
 import { icpValidationSchema } from '@/validations/icps.schema';
 import { FormFooterActions } from '@/components/FormFooterActions';
 
-interface CreateICPsModalProps {
+interface ICPModalProps {
   open: boolean;
   onClose: () => void;
   onCreated?: () => void;
+  icp?: ICP | null;
 }
 
-export default function CreateICPsModal({ open, onClose, onCreated }: CreateICPsModalProps) {
+export default function ICPModal({ open, onClose, onCreated, icp }: ICPModalProps) {
   const { mutateAsync: createICPMutation } = useCreateICPs();
+  const { mutateAsync: updateICPMutation } = useUpdateICP();
   const { successToast, errorToast } = useToastHelpers();
+
+  const isEditMode = !!icp;
 
   const formik = useFormik({
     initialValues: {
-      icp_name: '',
-      icp_desc: '',
+      icp_name: icp?.icp_name || '',
+      icp_desc: icp?.icp_desc || '',
     },
     validationSchema: icpValidationSchema,
     validateOnChange: true,
+    enableReinitialize: true,
     onSubmit: async (values, { setSubmitting }) => {
       try {
-        const { data, error } = await supabase.rpc('get_new_icp_id');
+        if (isEditMode && icp) {
+          const payload = {
+            icp_name: values.icp_name,
+            icp_desc: values.icp_desc,
+          };
 
-        if (error) throw error;
+          await updateICPMutation({ id: icp.icp_id, updates: payload });
+          successToast('ICP updated successfully');
+        } else {
+          const { data, error } = await supabase.rpc('get_new_icp_id');
 
-        const payload = {
-          icp_id: data,
-          icp_name: values.icp_name,
-          icp_desc: values.icp_desc,
-        };
+          if (error) throw error;
 
-        await createICPMutation(payload);
-        successToast('ICP created successfully');
+          const payload = {
+            icp_id: data,
+            icp_name: values.icp_name,
+            icp_desc: values.icp_desc,
+          };
+
+          await createICPMutation(payload);
+          successToast('ICP created successfully');
+        }
 
         onCreated?.();
         onClose();
       } catch (err) {
-        errorToast('Error creating ICP');
-        console.error('Create ICP error:', err);
+        errorToast(isEditMode ? 'Error updating ICP' : 'Error creating ICP');
+        console.error(isEditMode ? 'Update ICP error:' : 'Create ICP error:', err);
       } finally {
         setSubmitting(false);
       }
@@ -61,7 +76,7 @@ export default function CreateICPsModal({ open, onClose, onCreated }: CreateICPs
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Create New ICP</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Edit ICP' : 'Create New ICP'}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -92,7 +107,7 @@ export default function CreateICPsModal({ open, onClose, onCreated }: CreateICPs
           {/* Footer */}
           <FormFooterActions
             onCancel={onClose}
-            submitLabel="Create ICP"
+            submitLabel={isEditMode ? 'Update ICP' : 'Create ICP'}
             isSubmitting={isSubmitting}
           />
         </form>
@@ -100,3 +115,4 @@ export default function CreateICPsModal({ open, onClose, onCreated }: CreateICPs
     </Dialog>
   );
 }
+

@@ -6,13 +6,21 @@ import { useToastHelpers } from '@/lib/toast';
 import { DeleteButton, EditButton } from '@/components/ActionButtons';
 import { TableHeader } from '@/components/TableHeader';
 import { PRODUCT_OFFER_COLUMNS } from '@/constants';
-import { useDeleteProductOffers } from '@/services/product-offers/useProductOffers';
+import { useDeleteProductOffers, ProductOffer } from '@/services/product-offers/useProductOffers';
+
+type ProductOfferRow = ProductOffer & {
+  icp?: { icp_id: string; icp_name: string } | null;
+  offer_1_product?: { product_id: string; product_name: string } | null;
+  offer_2_product?: { product_id: string; product_name: string } | null;
+  offer_3_product?: { product_id: string; product_name: string } | null;
+};
 
 interface ProductsOfferProps {
-  productOffers: any;
+  productOffers: ProductOfferRow[];
   isLoading: boolean;
   isError: boolean;
   fetchProductOffersList: () => void;
+  onEdit?: (offer: ProductOffer) => void;
 }
 
 export default function ProductOfferTable({
@@ -20,6 +28,7 @@ export default function ProductOfferTable({
   isLoading,
   isError,
   fetchProductOffersList,
+  onEdit,
 }: ProductsOfferProps) {
   const { successToast, errorToast } = useToastHelpers();
 
@@ -80,7 +89,7 @@ export default function ProductOfferTable({
 
             {!isLoading &&
               !isError &&
-              productOffers.map((offer: any) => (
+              productOffers.map((offer) => (
                 <tr
                   key={offer.offer_id}
                   className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
@@ -109,7 +118,7 @@ export default function ProductOfferTable({
 
                   {/* Actions */}
                   <td className="py-4 px-4 flex items-center gap-2">
-                    <EditButton />
+                    <EditButton onClick={() => onEdit?.(offer)} />
                     <DeleteButton onDelete={() => openDeleteDialog(offer.offer_id)} />
                   </td>
                 </tr>

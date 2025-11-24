@@ -42,3 +42,18 @@ export async function createProductOffer(productOffer: ProductOffer): Promise<Pr
   if (error) throw new Error(`Error creating product: ${error.message}`);
   return data;
 }
+
+export async function updateProductOffer(
+  id: string,
+  updates: Partial<ProductOffer>
+): Promise<ProductOffer> {
+  const { data, error } = await supabase
+    .from('product_offers')
+    .update(updates)
+    .eq('offer_id', id)
+    .select()
+    .single();
+
+  if (error) throw new Error(`Error updating product offer: ${error.message}`);
+  return data;
+}

@@ -20,6 +20,7 @@ export const SIDEBAR_LINKS = [
   { href: '/icp', label: 'ICP', icon: Squares2X2Icon },
   { href: '/product-offers', label: 'Offers', icon: CubeIcon },
   { href: '/campaigns', label: 'Campaigns', icon: ChartBarIcon },
+  { href: '/contacts', label: 'Contacts', icon: UserGroupIcon },
   // { href: '/leads', label: 'Leads', icon: UserGroupIcon },
   { href: '/journey', label: 'Journey', icon: TreePine },
   // { href: '/profile', label: 'Profile', icon: UserCheck2Icon },

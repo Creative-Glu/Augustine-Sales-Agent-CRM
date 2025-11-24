@@ -17,6 +17,7 @@ interface ProductsTableProps {
   isLoading: boolean;
   isError: boolean;
   fetchProductsList: () => void;
+  onEdit?: (product: Product) => void;
 }
 
 export default function ProductsTable({
@@ -24,6 +25,7 @@ export default function ProductsTable({
   isLoading,
   isError,
   fetchProductsList,
+  onEdit,
 }: ProductsTableProps) {
   const { successToast, errorToast } = useToastHelpers();
 
@@ -131,7 +133,7 @@ export default function ProductsTable({
                   </td>
 
                   <td className="py-4 px-4 flex items-center justify-center gap-2">
-                    <EditButton />
+                    <EditButton onClick={() => onEdit?.(product)} />
                     <DeleteButton onDelete={() => openDeleteDialog(product.product_id)} />
                   </td>
                 </tr>
