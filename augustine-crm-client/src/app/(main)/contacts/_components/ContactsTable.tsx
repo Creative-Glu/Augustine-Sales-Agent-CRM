@@ -7,6 +7,8 @@ import { useToastHelpers } from '@/lib/toast';
 import { DeleteButton, EditButton, ViewButton } from '@/components/ActionButtons';
 import { TableHeader } from '@/components/TableHeader';
 import { CONTACTS_TABLE_COLUMNS } from '@/constants';
+import { useGetICPs } from '@/services/icps/useICPs';
+import { Badge } from '@/components/ui/badge';
 
 interface ContactsTableProps {
   contacts: Contact[];
@@ -26,11 +28,21 @@ export default function ContactsTable({
   onView,
 }: ContactsTableProps) {
   const { successToast, errorToast } = useToastHelpers();
+  const { data: icpsData } = useGetICPs();
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedContactId, setSelectedContactId] = useState<number | null>(null);
 
   const { mutateAsync: deleteContact } = useDeleteContact();
+
+  // Helper function to get ICP names from contact
+  const getICPNames = (contact: Contact): string[] => {
+    if (!contact.icps || !icpsData) return [];
+    const icpIds = Array.isArray(contact.icps) ? contact.icps : [];
+    return icpIds
+      .map((id) => icpsData.find((icp) => icp.icp_id === id)?.icp_name)
+      .filter((name): name is string => !!name);
+  };
 
   const openDeleteDialog = (contactId: number) => {
     setSelectedContactId(contactId);
@@ -59,7 +71,7 @@ export default function ContactsTable({
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                <td colSpan={6} className="py-8 text-center text-muted-foreground">
                   <div className="animate-pulse text-sm">Loading contacts...</div>
                 </td>
               </tr>
@@ -67,7 +79,7 @@ export default function ContactsTable({
 
             {isError && (
               <tr>
-                <td colSpan={5} className="py-8 text-center text-red-500">
+                <td colSpan={6} className="py-8 text-center text-red-500">
                   Failed to load contacts. Please try again.
                 </td>
               </tr>
@@ -75,7 +87,7 @@ export default function ContactsTable({
 
             {!isLoading && !isError && contacts.length === 0 && (
               <tr>
-                <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                <td colSpan={6} className="py-8 text-center text-muted-foreground">
                   No contacts found.
                 </td>
               </tr>
@@ -109,6 +121,25 @@ export default function ContactsTable({
                   <td className="py-4 px-4">
                     <div className="text-sm text-muted-foreground">
                       {contact['Institution Type'] || 'N/A'}
+                    </div>
+                  </td>
+
+                  <td className="py-4 px-4">
+                    <div className="flex flex-wrap gap-1">
+                      {getICPNames(contact).length > 0 ? (
+                        getICPNames(contact).slice(0, 2).map((name, idx) => (
+                          <Badge key={idx} variant="secondary" className="text-xs">
+                            {name}
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-sm text-muted-foreground">-</span>
+                      )}
+                      {getICPNames(contact).length > 2 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{getICPNames(contact).length - 2}
+                        </Badge>
+                      )}
                     </div>
                   </td>
 

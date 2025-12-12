@@ -55,5 +55,6 @@ export const CONTACTS_TABLE_COLUMNS: TableHeaderColumn[] = [
   { label: 'Email', align: 'left' },
   { label: 'Phone', align: 'left' },
   { label: 'Institution Type', align: 'left' },
+  { label: 'ICPs', align: 'left' },
   { label: 'Actions', align: 'center' },
 ];

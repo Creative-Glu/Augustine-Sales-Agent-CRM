@@ -78,3 +78,28 @@ export async function deleteContact(id: number) {
   if (error) throw new Error(`Error deleting contact: ${error.message}`);
 }
 
+export async function getContactICPs(contactId: number): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('Augustine 10')
+    .select('icps')
+    .eq('id', contactId)
+    .single();
+
+  if (error) throw new Error(`Error fetching contact ICPs: ${error.message}`);
+  
+  // Handle both array and object formats
+  if (!data?.icps) return [];
+  if (Array.isArray(data.icps)) return data.icps;
+  if (typeof data.icps === 'object' && data.icps.icp_ids) return data.icps.icp_ids;
+  return [];
+}
+
+export async function updateContactICPs(contactId: number, icpIds: string[]): Promise<void> {
+  const { error } = await supabase
+    .from('Augustine 10')
+    .update({ icps: icpIds })
+    .eq('id', contactId);
+
+  if (error) throw new Error(`Error updating contact ICPs: ${error.message}`);
+}
+

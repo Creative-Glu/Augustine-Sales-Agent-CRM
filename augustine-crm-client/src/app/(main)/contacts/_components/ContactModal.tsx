@@ -11,6 +11,9 @@ import { ErrorText } from '@/components/ErrorText';
 import { useToastHelpers } from '@/lib/toast';
 import { FormFooterActions } from '@/components/FormFooterActions';
 import { supabase } from '@/lib/supabaseClient';
+import { useGetICPs } from '@/services/icps/useICPs';
+import { MultiSelect } from '@/components/MultiSelect';
+import { useEffect, useState } from 'react';
 
 interface ContactModalProps {
   open: boolean;
@@ -23,8 +26,27 @@ export default function ContactModal({ open, onClose, onCreated, contact }: Cont
   const { mutateAsync: createNewContactMutation } = useCreateContact();
   const { mutateAsync: updateContactMutation } = useUpdateContact();
   const { successToast, errorToast } = useToastHelpers();
+  const { data: icpsData, isLoading: isICPLoading } = useGetICPs();
 
   const isEditMode = !!contact;
+  
+  // Parse ICPs from contact - handle both array and other formats
+  const getInitialICPs = (): string[] => {
+    if (!contact?.icps) return [];
+    if (Array.isArray(contact.icps)) return contact.icps;
+    return [];
+  };
+
+  const [selectedICPs, setSelectedICPs] = useState<string[]>(getInitialICPs());
+
+  // Update selected ICPs when contact changes
+  useEffect(() => {
+    if (contact) {
+      setSelectedICPs(getInitialICPs());
+    } else {
+      setSelectedICPs([]);
+    }
+  }, [contact]);
 
   const formik = useFormik<ContactFormValues>({
     initialValues: {
@@ -57,8 +79,14 @@ export default function ContactModal({ open, onClose, onCreated, contact }: Cont
           Object.entries(values).map(([key, value]) => [key, value === '' ? null : value])
         );
 
+        // Add selected ICPs to the values
+        const valuesWithICPs = {
+          ...cleanedValues,
+          icps: selectedICPs.length > 0 ? selectedICPs : null,
+        };
+
         if (isEditMode && contact) {
-          await updateContactMutation({ id: contact.id, updates: cleanedValues });
+          await updateContactMutation({ id: contact.id, updates: valuesWithICPs });
           successToast('Contact updated successfully');
         } else {
           const { data: newId, error: idGenerationError } = await supabase.rpc(
@@ -69,7 +97,7 @@ export default function ContactModal({ open, onClose, onCreated, contact }: Cont
             throw new Error(idGenerationError?.message || 'Failed to generate contact id');
           }
 
-          await createNewContactMutation({ ...cleanedValues, id: newId });
+          await createNewContactMutation({ ...valuesWithICPs, id: newId });
           successToast('Contact created successfully');
         }
 
@@ -307,6 +335,24 @@ export default function ContactModal({ open, onClose, onCreated, contact }: Cont
               placeholder="Enter classification"
             />
             <ErrorText touched={touched.Classification} error={errors.Classification} />
+          </div>
+
+          {/* ICPs Selection */}
+          <div>
+            <MultiSelect
+              label="ICPs (Ideal Customer Profiles)"
+              options={
+                icpsData?.map((icp) => ({
+                  label: icp.icp_name,
+                  value: icp.icp_id,
+                  description: icp.icp_desc || undefined,
+                })) || []
+              }
+              selected={selectedICPs}
+              onChange={setSelectedICPs}
+              placeholder="Select ICPs..."
+              loading={isICPLoading}
+            />
           </div>
 
           {/* Email Thread */}
