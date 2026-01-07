@@ -1,11 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SignIn } from '@clerk/nextjs';
 import { motion } from 'framer-motion';
 import { SparklesIcon } from '@heroicons/react/24/outline';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.push('/dashboard');
+  }, []);
+
   const [checkingAuth, setCheckingAuth] = useState(false);
 
   if (checkingAuth) {

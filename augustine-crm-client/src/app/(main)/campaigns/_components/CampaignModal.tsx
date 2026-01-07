@@ -23,12 +23,7 @@ interface CampaignModalProps {
   campaign?: Campaign | null;
 }
 
-export default function CampaignModal({
-  open,
-  onClose,
-  onCreated,
-  campaign,
-}: CampaignModalProps) {
+export default function CampaignModal({ open, onClose, onCreated, campaign }: CampaignModalProps) {
   const { successToast, errorToast } = useToastHelpers();
   const { mutateAsync: createCompaign } = useCreateCompaign();
   const { mutateAsync: updateCampaignMutation } = useUpdateCampaign();
@@ -144,4 +139,3 @@ export default function CampaignModal({
     </Dialog>
   );
 }
-
