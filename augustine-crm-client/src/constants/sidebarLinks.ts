@@ -5,6 +5,7 @@ import {
   UserGroupIcon,
   DocumentChartBarIcon,
   Squares2X2Icon,
+  DocumentArrowUpIcon,
 } from '@heroicons/react/24/outline';
 import { TreePine, UserCheck2Icon } from 'lucide-react';
 
@@ -23,5 +24,6 @@ export const SIDEBAR_LINKS = [
   { href: '/contacts', label: 'Contacts', icon: UserGroupIcon },
   // { href: '/leads', label: 'Leads', icon: UserGroupIcon },
   { href: '/journey', label: 'Journey', icon: TreePine },
+  { href: '/upload-catholic-pdf', label: 'Upload Catholic PDF', icon: DocumentArrowUpIcon },
   // { href: '/profile', label: 'Profile', icon: UserCheck2Icon },
 ];
