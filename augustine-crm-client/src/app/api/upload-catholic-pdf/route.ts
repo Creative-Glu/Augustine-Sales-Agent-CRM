@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const WEBHOOK_URL = 'https://gluagents.xyz/webhook/upload-ocd-by-city';
+const WEBHOOK_URL = process.env.NEXT_PUBLIC_PDF_UPLOAD_WEBHOOK_URL!;
+
+if (!WEBHOOK_URL) {
+  throw new Error('WEBHOOK_URL is not set');
+}
 
 export async function POST(request: NextRequest) {
   try {
