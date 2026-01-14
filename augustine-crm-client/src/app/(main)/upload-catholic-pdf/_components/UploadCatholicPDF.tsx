@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import { DocumentArrowUpIcon, XMarkIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
 import { useToastHelpers } from '@/lib/toast';
+import { useQueryClient } from '@tanstack/react-query';
+import FileNameCounts from './FileNameCounts';
 
 const API_URL = '/api/upload-catholic-pdf';
 
@@ -15,6 +17,7 @@ export default function UploadCatholicPDF() {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { successToast, errorToast } = useToastHelpers();
+  const queryClient = useQueryClient();
 
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -85,14 +88,23 @@ export default function UploadCatholicPDF() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.message || errorData.error || `Upload failed: ${response.statusText}`
-        );
+        const errorMessage = errorData.message || errorData.error || `Upload failed: ${response.statusText}`;
+        
+        // If it's a duplicate file error (409), show a more specific message
+        if (response.status === 409) {
+          errorToast('PDF Already Processed', errorMessage);
+          return;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
       setUploadSuccess(true);
       successToast(result.message || 'PDF has been successfully sent to the webhook.');
+
+      // Invalidate file counts cache to refresh the list (both paginated and non-paginated)
+      queryClient.invalidateQueries({ queryKey: ['institution', 'file-name-counts'] });
 
       // Reset after successful upload
       setTimeout(() => {
@@ -211,6 +223,13 @@ export default function UploadCatholicPDF() {
             </motion.div>
           )}
           </div>
+        </div>
+      </div>
+
+      {/* File Name Counts Section */}
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-md overflow-hidden">
+        <div className="p-6">
+          <FileNameCounts />
         </div>
       </div>
     </div>

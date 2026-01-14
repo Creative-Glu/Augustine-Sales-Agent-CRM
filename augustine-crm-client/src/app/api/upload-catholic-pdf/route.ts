@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 const WEBHOOK_URL = process.env.NEXT_PUBLIC_PDF_UPLOAD_WEBHOOK_URL!;
+const FILE_UPLOAD_SUPABASE_URL = process.env.NEXT_PUBLIC_FILE_UPLOAD_SUPABASE_URL!;
+const FILE_UPLOAD_SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_FILE_UPLOAD_SUPABASE_ANON_KEY!;
 
 if (!WEBHOOK_URL) {
   throw new Error('WEBHOOK_URL is not set');
 }
+
+if (!FILE_UPLOAD_SUPABASE_URL || !FILE_UPLOAD_SUPABASE_ANON_KEY) {
+  throw new Error('File upload Supabase credentials are not set');
+}
+
+// Create Supabase client for server-side use (for file upload checks)
+const supabase = createClient(FILE_UPLOAD_SUPABASE_URL, FILE_UPLOAD_SUPABASE_ANON_KEY);
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,6 +28,27 @@ export async function POST(request: NextRequest) {
     // Validate file type
     if (file.type !== 'application/pdf') {
       return NextResponse.json({ error: 'Only PDF files are allowed' }, { status: 400 });
+    }
+
+    // Check if file_name already exists in institution table
+    const fileName = file.name;
+    const { data: existingFiles, error: checkError } = await supabase
+      .from('institution')
+      .select('file_name')
+      .eq('file_name', fileName)
+      .limit(1);
+
+    if (checkError) {
+      console.error('Error checking file existence:', checkError);
+      // Continue with upload even if check fails (don't block upload due to DB error)
+    } else if (existingFiles && existingFiles.length > 0) {
+      return NextResponse.json(
+        { 
+          error: 'This PDF has already been processed',
+          message: `The file "${fileName}" already exists in the system. Please upload a different file.`
+        },
+        { status: 409 } // 409 Conflict status code
+      );
     }
 
     // Create a new FormData to forward to the webhook
