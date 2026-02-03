@@ -118,9 +118,11 @@ export function useStaffPaginated() {
   const result_id = searchParams.get('result_id') ?? undefined;
   const name_search = searchParams.get('staff_name') ?? undefined;
   const email_search = searchParams.get('staff_email') ?? undefined;
+  const staff_date_from = searchParams.get('staff_date_from') ?? undefined;
+  const staff_date_to = searchParams.get('staff_date_to') ?? undefined;
 
   return useQuery({
-    queryKey: ['execution', 'staff', view, offset, limit, result_id, name_search, email_search],
+    queryKey: ['execution', 'staff', view, offset, limit, result_id, name_search, email_search, staff_date_from, staff_date_to],
     queryFn: () =>
       getStaffPaginated({
         offset,
@@ -128,6 +130,8 @@ export function useStaffPaginated() {
         result_id,
         name_search: name_search || undefined,
         email_search: email_search || undefined,
+        date_from: staff_date_from || undefined,
+        date_to: staff_date_to || undefined,
       }),
     enabled: view === 'staff',
     staleTime: 30 * 1000,

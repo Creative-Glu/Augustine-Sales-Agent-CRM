@@ -162,6 +162,8 @@ export function StaffFilters() {
   const result_id = searchParams.get('result_id') ?? '';
   const staff_name = searchParams.get('staff_name') ?? '';
   const staff_email = searchParams.get('staff_email') ?? '';
+  const staff_date_from = searchParams.get('staff_date_from') ?? '';
+  const staff_date_to = searchParams.get('staff_date_to') ?? '';
 
   return (
     <div className="flex flex-wrap items-end gap-4 mb-4">
@@ -190,6 +192,24 @@ export function StaffFilters() {
           className="w-[200px]"
           value={staff_email}
           onChange={(e) => setParams({ staff_email: e.target.value || null, offset: null })}
+        />
+      </div>
+      <div className="space-y-1">
+        <Label className="text-xs">From date</Label>
+        <Input
+          type="date"
+          className="w-[140px]"
+          value={staff_date_from}
+          onChange={(e) => setParams({ staff_date_from: e.target.value || null, offset: null })}
+        />
+      </div>
+      <div className="space-y-1">
+        <Label className="text-xs">To date</Label>
+        <Input
+          type="date"
+          className="w-[140px]"
+          value={staff_date_to}
+          onChange={(e) => setParams({ staff_date_to: e.target.value || null, offset: null })}
         />
       </div>
     </div>

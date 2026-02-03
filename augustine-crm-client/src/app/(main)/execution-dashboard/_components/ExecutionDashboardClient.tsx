@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -9,6 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { DocumentArrowDownIcon } from '@heroicons/react/24/outline';
 import Pagination from '@/components/Pagination';
 import {
   useExecutionView,
@@ -18,6 +21,9 @@ import {
   useStaffPaginated,
   type ExecutionView,
 } from '@/services/execution/useExecutionData';
+import { getStaffForExport } from '@/services/execution/staff.service';
+import { useToastHelpers } from '@/lib/toast';
+import type { Staff } from '@/types/execution';
 import WebsitesUrlTable from './WebsitesUrlTable';
 import JobsTable from './JobsTable';
 import ResultsTable from './ResultsTable';
@@ -28,6 +34,36 @@ import {
   ResultsFilters,
   StaffFilters,
 } from './ExecutionFilters';
+
+function escapeCsvCell(value: string | null): string {
+  if (value == null) return '';
+  const s = String(value);
+  if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) {
+    return `"${s.replace(/"/g, '""')}"`;
+  }
+  return s;
+}
+
+function staffToCsv(rows: Staff[]): string {
+  const header = 'staff_id,result_id,name,role,email,created_at';
+  const body = rows.map(
+    (r) =>
+      [r.staff_id, r.result_id, r.name, r.role, r.email, r.created_at]
+        .map(escapeCsvCell)
+        .join(',')
+  );
+  return [header, ...body].join('\r\n');
+}
+
+function downloadCsv(csv: string, filename: string) {
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 const VIEW_LABELS: Record<ExecutionView, string> = {
   websites: 'Website URLs',
@@ -61,6 +97,8 @@ export default function ExecutionDashboardClient() {
   const jobsQuery = useJobsPaginated();
   const resultsQuery = useResultsPaginated();
   const staffQuery = useStaffPaginated();
+  const [exportingStaff, setExportingStaff] = useState(false);
+  const { successToast, errorToast } = useToastHelpers();
 
   const setView = (newView: ExecutionView) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -121,7 +159,43 @@ export default function ExecutionDashboardClient() {
                 {view === 'staff' && (staffQuery.data?.data?.length ?? 0)}
                 {' of '}{total} {VIEW_LABELS[view].toLowerCase()}
               </p>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
+                {view === 'staff' && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={exportingStaff}
+                    onClick={async () => {
+                      setExportingStaff(true);
+                      try {
+                        const params = {
+                          result_id: searchParams.get('result_id') || undefined,
+                          name_search: searchParams.get('staff_name') || undefined,
+                          email_search: searchParams.get('staff_email') || undefined,
+                          date_from: searchParams.get('staff_date_from') || undefined,
+                          date_to: searchParams.get('staff_date_to') || undefined,
+                        };
+                        const rows = await getStaffForExport(params);
+                        if (rows.length === 0) {
+                          errorToast('No staff records to export with current filters.');
+                          return;
+                        }
+                        const csv = staffToCsv(rows);
+                        downloadCsv(csv, `staff_export_${new Date().toISOString().slice(0, 10)}.csv`);
+                        successToast(`Exported ${rows.length} staff record(s).`);
+                      } catch (e) {
+                        errorToast(e instanceof Error ? e.message : 'Export failed');
+                      } finally {
+                        setExportingStaff(false);
+                      }
+                    }}
+                    className="gap-1"
+                  >
+                    <DocumentArrowDownIcon className="w-4 h-4" />
+                    {exportingStaff ? 'Exporting…' : 'Export CSV'}
+                  </Button>
+                )}
                 <span className="text-xs text-muted-foreground">Per page</span>
                 <Select
                   value={String(limit)}
@@ -190,6 +264,7 @@ export default function ExecutionDashboardClient() {
             </TabsContent>
           </div>
         </div>
+
 
         {total > limit && (
           <div className="mt-4">

@@ -7,6 +7,8 @@ export interface StaffPaginatedParams {
   result_id?: string;
   name_search?: string;
   email_search?: string;
+  date_from?: string; // ISO date YYYY-MM-DD
+  date_to?: string;   // ISO date YYYY-MM-DD
 }
 
 export interface StaffPaginatedResponse {
@@ -15,12 +17,16 @@ export interface StaffPaginatedResponse {
   hasMore: boolean;
 }
 
+const EXPORT_MAX_ROWS = 10000;
+
 export async function getStaffPaginated({
   offset,
   limit,
   result_id,
   name_search,
   email_search,
+  date_from,
+  date_to,
 }: StaffPaginatedParams): Promise<StaffPaginatedResponse> {
   let query = executionSupabase
     .from('staff')
@@ -29,6 +35,16 @@ export async function getStaffPaginated({
   if (result_id) query = query.eq('result_id', result_id);
   if (name_search?.trim()) query = query.ilike('name', `%${name_search.trim()}%`);
   if (email_search?.trim()) query = query.ilike('email', `%${email_search.trim()}%`);
+  if (date_from) {
+    const fromStart = new Date(date_from);
+    fromStart.setUTCHours(0, 0, 0, 0);
+    query = query.gte('created_at', fromStart.toISOString());
+  }
+  if (date_to) {
+    const toEnd = new Date(date_to);
+    toEnd.setUTCHours(23, 59, 59, 999);
+    query = query.lte('created_at', toEnd.toISOString());
+  }
 
   query = query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
 
@@ -44,4 +60,40 @@ export async function getStaffPaginated({
     total,
     hasMore,
   };
+}
+
+export interface StaffExportParams {
+  result_id?: string;
+  name_search?: string;
+  email_search?: string;
+  date_from?: string;
+  date_to?: string;
+}
+
+export async function getStaffForExport(params: StaffExportParams): Promise<Staff[]> {
+  let query = executionSupabase
+    .from('staff')
+    .select('*');
+
+  const { result_id, name_search, email_search, date_from, date_to } = params;
+  if (result_id) query = query.eq('result_id', result_id);
+  if (name_search?.trim()) query = query.ilike('name', `%${name_search.trim()}%`);
+  if (email_search?.trim()) query = query.ilike('email', `%${email_search.trim()}%`);
+  if (date_from) {
+    const fromStart = new Date(date_from);
+    fromStart.setUTCHours(0, 0, 0, 0);
+    query = query.gte('created_at', fromStart.toISOString());
+  }
+  if (date_to) {
+    const toEnd = new Date(date_to);
+    toEnd.setUTCHours(23, 59, 59, 999);
+    query = query.lte('created_at', toEnd.toISOString());
+  }
+
+  query = query.order('created_at', { ascending: false }).limit(EXPORT_MAX_ROWS);
+
+  const { data, error } = await query;
+
+  if (error) throw new Error(`Error fetching staff for export: ${error.message}`);
+  return (data ?? []) as Staff[];
 }
