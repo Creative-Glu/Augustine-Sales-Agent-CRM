@@ -4,7 +4,6 @@ import { Staff } from '@/types/execution';
 export interface StaffPaginatedParams {
   offset: number;
   limit: number;
-  result_id?: string;
   name_search?: string;
   email_search?: string;
   date_from?: string; // ISO date YYYY-MM-DD
@@ -22,7 +21,6 @@ const EXPORT_MAX_ROWS = 10000;
 export async function getStaffPaginated({
   offset,
   limit,
-  result_id,
   name_search,
   email_search,
   date_from,
@@ -32,7 +30,6 @@ export async function getStaffPaginated({
     .from('staff')
     .select('*', { count: 'exact', head: false });
 
-  if (result_id) query = query.eq('result_id', result_id);
   if (name_search?.trim()) query = query.ilike('name', `%${name_search.trim()}%`);
   if (email_search?.trim()) query = query.ilike('email', `%${email_search.trim()}%`);
   if (date_from) {
@@ -95,5 +92,19 @@ export async function getStaffForExport(params: StaffExportParams): Promise<Staf
   const { data, error } = await query;
 
   if (error) throw new Error(`Error fetching staff for export: ${error.message}`);
+  return (data ?? []) as Staff[];
+}
+
+export async function getStaffByInstitutionId(institution_id: number | string): Promise<Staff[]> {
+  const raw = institution_id;
+  if (raw === undefined || raw === null) return [];
+
+  const { data, error } = await executionSupabase
+    .from('staff')
+    .select('*')
+    .eq('institution_id', raw)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(`Error fetching staff by institution: ${error.message}`);
   return (data ?? []) as Staff[];
 }

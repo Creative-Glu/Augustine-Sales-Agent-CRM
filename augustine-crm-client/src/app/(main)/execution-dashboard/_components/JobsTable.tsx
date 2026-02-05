@@ -5,7 +5,6 @@ import { Job } from '@/types/execution';
 import { Badge } from '@/components/ui/badge';
 
 const COLUMNS = [
-  { label: 'Job ID', align: 'left' as const },
   { label: 'Status', align: 'left' as const },
   { label: 'URLs count', align: 'right' as const },
   { label: 'Submitted', align: 'left' as const },
@@ -78,9 +77,6 @@ export default function JobsTable({
               !isError &&
               rows.map((row) => (
                 <tr key={row.job_id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                  <td className="py-3 px-4 font-mono text-sm truncate max-w-[200px]" title={row.job_id}>
-                    {row.job_id}
-                  </td>
                   <td className="py-3 px-4">
                     <Badge variant={statusVariant[row.status] ?? 'secondary'} className="text-xs">
                       {row.status}

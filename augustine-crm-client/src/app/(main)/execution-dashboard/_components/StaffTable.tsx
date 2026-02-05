@@ -4,8 +4,6 @@ import { TableHeader } from '@/components/TableHeader';
 import { Staff } from '@/types/execution';
 
 const COLUMNS = [
-  { label: 'Staff ID', align: 'left' as const },
-  { label: 'Result ID', align: 'left' as const },
   { label: 'Name', align: 'left' as const },
   { label: 'Role', align: 'left' as const },
   { label: 'Email', align: 'left' as const },
@@ -68,12 +66,6 @@ export default function StaffTable({
               !isError &&
               rows.map((row) => (
                 <tr key={row.staff_id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                  <td className="py-3 px-4 font-mono text-sm truncate max-w-[160px]" title={row.staff_id}>
-                    {row.staff_id}
-                  </td>
-                  <td className="py-3 px-4 font-mono text-sm truncate max-w-[160px]" title={row.result_id}>
-                    {row.result_id}
-                  </td>
                   <td className="py-3 px-4 font-medium text-card-foreground">{cell(row.name)}</td>
                   <td className="py-3 px-4 text-sm text-muted-foreground">{cell(row.role)}</td>
                   <td className="py-3 px-4 text-sm">

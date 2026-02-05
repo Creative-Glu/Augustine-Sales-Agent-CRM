@@ -33,13 +33,28 @@ export interface Result {
   created_at: string;
 }
 
-/** Staff – extracted staff details from a result */
+/** Staff – extracted staff details, linked to institution via institution_id */
 export interface Staff {
-  staff_id: string;
+  staff_id: number;
   result_id: string;
+  institution_id: number;
   name: string;
   role: string | null;
   email: string | null;
+  contact: string | null;
+  contact_number: string | null;
+  created_at: string;
+}
+
+/** Institution – from execution DB table institutions (id may be number or string from API) */
+export interface Institution {
+  id: number | string;
+  name: string;
+  email: string | null;
+  contact: string | null;
+  website_url: string | null;
+  address: string | null;
+  type: string | null;
   created_at: string;
 }
 

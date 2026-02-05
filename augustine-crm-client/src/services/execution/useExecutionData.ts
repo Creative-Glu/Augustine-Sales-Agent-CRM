@@ -12,13 +12,14 @@ import {
   type ResultSourceFilter,
 } from './result.service';
 import { getStaffPaginated } from './staff.service';
+import { getInstitutionPaginated } from './institution.service';
 import {
   getWebsitesUrlPaginated,
   type WebsitesUrlPaginatedParams,
 } from '@/services/websites-url/websitesUrl.service';
 
 const DEFAULT_LIMIT = 10;
-const VIEWS = ['websites', 'jobs', 'results', 'staff'] as const;
+const VIEWS = ['institution', 'websites', 'jobs', 'results', 'staff'] as const;
 export type ExecutionView = (typeof VIEWS)[number];
 
 function getOffset(searchParams: URLSearchParams): number {
@@ -36,12 +37,26 @@ function getLimit(searchParams: URLSearchParams): number {
 function getView(searchParams: URLSearchParams): ExecutionView {
   const v = searchParams.get('view');
   if (v && VIEWS.includes(v as ExecutionView)) return v as ExecutionView;
-  return 'websites';
+  return 'institution';
 }
 
 export function useExecutionView() {
   const searchParams = useSearchParams();
   return getView(searchParams);
+}
+
+export function useInstitutionPaginated() {
+  const searchParams = useSearchParams();
+  const view = getView(searchParams);
+  const offset = getOffset(searchParams);
+  const limit = getLimit(searchParams);
+
+  return useQuery({
+    queryKey: ['execution', 'institution', view, offset, limit],
+    queryFn: () => getInstitutionPaginated({ offset, limit }),
+    enabled: view === 'institution',
+    staleTime: 30 * 1000,
+  });
 }
 
 export function useWebsitesUrlPaginated() {
@@ -115,19 +130,17 @@ export function useStaffPaginated() {
   const view = getView(searchParams);
   const offset = getOffset(searchParams);
   const limit = getLimit(searchParams);
-  const result_id = searchParams.get('result_id') ?? undefined;
   const name_search = searchParams.get('staff_name') ?? undefined;
   const email_search = searchParams.get('staff_email') ?? undefined;
   const staff_date_from = searchParams.get('staff_date_from') ?? undefined;
   const staff_date_to = searchParams.get('staff_date_to') ?? undefined;
 
   return useQuery({
-    queryKey: ['execution', 'staff', view, offset, limit, result_id, name_search, email_search, staff_date_from, staff_date_to],
+    queryKey: ['execution', 'staff', view, offset, limit, name_search, email_search, staff_date_from, staff_date_to],
     queryFn: () =>
       getStaffPaginated({
         offset,
         limit,
-        result_id,
         name_search: name_search || undefined,
         email_search: email_search || undefined,
         date_from: staff_date_from || undefined,

@@ -5,7 +5,6 @@ import { WebsitesUrl } from '@/types/websitesUrl';
 import { Badge } from '@/components/ui/badge';
 
 const EXECUTION_DASHBOARD_COLUMNS = [
-  { label: 'Record ID', align: 'left' as const },
   { label: 'Company name', align: 'left' as const },
   { label: 'Company Domain', align: 'left' as const },
   { label: 'Website URL', align: 'left' as const },
@@ -78,11 +77,6 @@ export default function WebsitesUrlTable({
                   key={row['Record ID']}
                   className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                 >
-                  <td className="py-3 px-4">
-                    <span className="font-mono text-sm text-card-foreground">
-                      {cell(row['Record ID'])}
-                    </span>
-                  </td>
                   <td className="py-3 px-4">
                     <span className="font-medium text-card-foreground">
                       {cell(row['Company name'])}

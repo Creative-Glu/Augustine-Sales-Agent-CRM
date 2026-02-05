@@ -15,6 +15,7 @@ import { DocumentArrowDownIcon } from '@heroicons/react/24/outline';
 import Pagination from '@/components/Pagination';
 import {
   useExecutionView,
+  useInstitutionPaginated,
   useWebsitesUrlPaginated,
   useJobsPaginated,
   useResultsPaginated,
@@ -24,10 +25,13 @@ import {
 import { getStaffForExport } from '@/services/execution/staff.service';
 import { useToastHelpers } from '@/lib/toast';
 import type { Staff } from '@/types/execution';
+import type { Institution } from '@/types/execution';
 import WebsitesUrlTable from './WebsitesUrlTable';
 import JobsTable from './JobsTable';
 import ResultsTable from './ResultsTable';
 import StaffTable from './StaffTable';
+import InstitutionTable from './InstitutionTable';
+import InstitutionStaffModal from './InstitutionStaffModal';
 import {
   WebsitesUrlFilters,
   JobsFilters,
@@ -66,6 +70,7 @@ function downloadCsv(csv: string, filename: string) {
 }
 
 const VIEW_LABELS: Record<ExecutionView, string> = {
+  institution: 'Institution',
   websites: 'Website URLs',
   jobs: 'Jobs',
   results: 'Results',
@@ -93,12 +98,20 @@ export default function ExecutionDashboardClient() {
   const limit = getLimit(searchParams);
   const offset = getOffset(searchParams);
 
+  const institutionQuery = useInstitutionPaginated();
   const websitesQuery = useWebsitesUrlPaginated();
   const jobsQuery = useJobsPaginated();
   const resultsQuery = useResultsPaginated();
   const staffQuery = useStaffPaginated();
   const [exportingStaff, setExportingStaff] = useState(false);
+  const [selectedInstitution, setSelectedInstitution] = useState<Institution | null>(null);
+  const [institutionModalOpen, setInstitutionModalOpen] = useState(false);
   const { successToast, errorToast } = useToastHelpers();
+
+  const openInstitutionStaff = (institution: Institution) => {
+    setSelectedInstitution(institution);
+    setInstitutionModalOpen(true);
+  };
 
   const setView = (newView: ExecutionView) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -109,12 +122,14 @@ export default function ExecutionDashboardClient() {
 
   const basePath = '/execution-dashboard';
   const currentOffset = offset;
+  const totalInstitutions = institutionQuery.data?.total ?? 0;
   const totalWebsites = websitesQuery.data?.total ?? 0;
   const totalJobs = jobsQuery.data?.total ?? 0;
   const totalResults = resultsQuery.data?.total ?? 0;
   const totalStaff = staffQuery.data?.total ?? 0;
 
   const totalByView: Record<ExecutionView, number> = {
+    institution: totalInstitutions,
     websites: totalWebsites,
     jobs: totalJobs,
     results: totalResults,
@@ -129,22 +144,26 @@ export default function ExecutionDashboardClient() {
     <div className="space-y-6">
       <Tabs value={view} onValueChange={(v) => setView(v as ExecutionView)}>
         <TabsList className="bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
-          <TabsTrigger value="websites" className="rounded-md px-4">
+          <TabsTrigger value="institution" className="cursor-pointer rounded-md px-4">
+            {VIEW_LABELS.institution}
+          </TabsTrigger>
+          <TabsTrigger value="websites" className="cursor-pointer rounded-md px-4">
             {VIEW_LABELS.websites}
           </TabsTrigger>
-          <TabsTrigger value="jobs" className="rounded-md px-4">
+          <TabsTrigger value="jobs" className="cursor-pointer rounded-md px-4">
             {VIEW_LABELS.jobs}
           </TabsTrigger>
-          <TabsTrigger value="results" className="rounded-md px-4">
+          <TabsTrigger value="results" className="cursor-pointer rounded-md px-4">
             {VIEW_LABELS.results}
           </TabsTrigger>
-          <TabsTrigger value="staff" className="rounded-md px-4">
+          <TabsTrigger value="staff" className="cursor-pointer rounded-md px-4">
             {VIEW_LABELS.staff}
           </TabsTrigger>
         </TabsList>
 
         <div className="mt-4 bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-700 shadow-md overflow-hidden">
           <div className="p-6">
+            {view === 'institution' && null}
             {view === 'websites' && <WebsitesUrlFilters />}
             {view === 'jobs' && <JobsFilters />}
             {view === 'results' && <ResultsFilters />}
@@ -153,6 +172,7 @@ export default function ExecutionDashboardClient() {
             <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
               <p className="text-sm text-muted-foreground">
                 Showing{' '}
+                {view === 'institution' && (institutionQuery.data?.data?.length ?? 0)}
                 {view === 'websites' && (websitesQuery.data?.data?.length ?? 0)}
                 {view === 'jobs' && (jobsQuery.data?.data?.length ?? 0)}
                 {view === 'results' && (resultsQuery.data?.data?.length ?? 0)}
@@ -170,7 +190,6 @@ export default function ExecutionDashboardClient() {
                       setExportingStaff(true);
                       try {
                         const params = {
-                          result_id: searchParams.get('result_id') || undefined,
                           name_search: searchParams.get('staff_name') || undefined,
                           email_search: searchParams.get('staff_email') || undefined,
                           date_from: searchParams.get('staff_date_from') || undefined,
@@ -230,6 +249,15 @@ export default function ExecutionDashboardClient() {
               </div>
             </div>
 
+            <TabsContent value="institution" className="mt-0">
+              <InstitutionTable
+                rows={institutionQuery.data?.data ?? []}
+                isLoading={institutionQuery.isLoading}
+                isError={institutionQuery.isError}
+                onRetry={() => institutionQuery.refetch()}
+                onSelect={openInstitutionStaff}
+              />
+            </TabsContent>
             <TabsContent value="websites" className="mt-0">
               <WebsitesUrlTable
                 rows={websitesQuery.data?.data ?? []}
@@ -265,6 +293,11 @@ export default function ExecutionDashboardClient() {
           </div>
         </div>
 
+        <InstitutionStaffModal
+          institution={selectedInstitution}
+          open={institutionModalOpen}
+          onOpenChange={setInstitutionModalOpen}
+        />
 
         {total > limit && (
           <div className="mt-4">

@@ -5,8 +5,6 @@ import { Result } from '@/types/execution';
 import { Badge } from '@/components/ui/badge';
 
 const COLUMNS = [
-  { label: 'Result ID', align: 'left' as const },
-  { label: 'Job ID', align: 'left' as const },
   { label: 'URL', align: 'left' as const },
   { label: 'Source', align: 'left' as const },
   { label: 'Status', align: 'left' as const },
@@ -67,12 +65,6 @@ export default function ResultsTable({
               !isError &&
               rows.map((row) => (
                 <tr key={row.result_id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                  <td className="py-3 px-4 font-mono text-sm truncate max-w-[160px]" title={row.result_id}>
-                    {row.result_id}
-                  </td>
-                  <td className="py-3 px-4 font-mono text-sm truncate max-w-[160px]" title={row.job_id}>
-                    {row.job_id}
-                  </td>
                   <td className="py-3 px-4 text-sm">
                     <a
                       href={row.url.startsWith('http') ? row.url : `https://${row.url}`}

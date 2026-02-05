@@ -159,7 +159,6 @@ export function ResultsFilters() {
 
 export function StaffFilters() {
   const { searchParams, setParams } = useExecutionParams();
-  const result_id = searchParams.get('result_id') ?? '';
   const staff_name = searchParams.get('staff_name') ?? '';
   const staff_email = searchParams.get('staff_email') ?? '';
   const staff_date_from = searchParams.get('staff_date_from') ?? '';
@@ -167,15 +166,6 @@ export function StaffFilters() {
 
   return (
     <div className="flex flex-wrap items-end gap-4 mb-4">
-      <div className="space-y-1">
-        <Label className="text-xs">Result ID</Label>
-        <Input
-          placeholder="Filter by result ID"
-          className="w-[280px] font-mono text-sm"
-          value={result_id}
-          onChange={(e) => setParams({ result_id: e.target.value || null, offset: null })}
-        />
-      </div>
       <div className="space-y-1">
         <Label className="text-xs">Name</Label>
         <Input
