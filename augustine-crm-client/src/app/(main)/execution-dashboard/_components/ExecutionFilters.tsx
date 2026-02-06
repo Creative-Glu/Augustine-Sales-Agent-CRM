@@ -57,8 +57,8 @@ export function WebsitesUrlFilters() {
             <SelectItem value="Missing URL">Missing URL</SelectItem>
             <SelectItem value="Processing">Processing</SelectItem>
             <SelectItem value="Pending">Pending</SelectItem>
-            <SelectItem value="success">success</SelectItem>
-            <SelectItem value="failed">failed</SelectItem>
+            <SelectItem value="success">Success</SelectItem>
+            <SelectItem value="failed">Failed</SelectItem>
           </SelectContent>
         </Select>
       </div>

@@ -26,6 +26,14 @@ function cell(value: string | null) {
   return value ?? '—';
 }
 
+function formatStatus(status: string | null): string {
+  if (!status) return '—';
+  const lower = status.toLowerCase();
+  if (lower === 'success') return 'Success';
+  if (lower === 'failed') return 'Failed';
+  return status;
+}
+
 export default function WebsitesUrlTable({
   rows,
   isLoading,
@@ -114,7 +122,7 @@ export default function WebsitesUrlTable({
                   <td className="py-3 px-4">
                     {row['Status'] ? (
                       <Badge variant="secondary" className="text-xs">
-                        {row['Status']}
+                        {formatStatus(row['Status'])}
                       </Badge>
                     ) : (
                       <span className="text-muted-foreground">—</span>
