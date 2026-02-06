@@ -106,17 +106,15 @@ export function useResultsPaginated() {
   const view = getView(searchParams);
   const offset = getOffset(searchParams);
   const limit = getLimit(searchParams);
-  const job_id = searchParams.get('job_id') ?? undefined;
   const status = (searchParams.get('result_status') as ResultStatusFilter) ?? 'all';
   const source = (searchParams.get('result_source') as ResultSourceFilter) ?? 'all';
 
   return useQuery({
-    queryKey: ['execution', 'results', view, offset, limit, job_id, status, source],
+    queryKey: ['execution', 'results', view, offset, limit, status, source],
     queryFn: () =>
       getResultsPaginated({
         offset,
         limit,
-        job_id,
         status: status || 'all',
         source: source || 'all',
       }),

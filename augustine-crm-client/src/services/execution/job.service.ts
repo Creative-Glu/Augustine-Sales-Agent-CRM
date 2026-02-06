@@ -28,7 +28,7 @@ export async function getJobsPaginated({
     query = query.eq('status', status);
   }
 
-  query = query.order('submitted_at', { ascending: false }).range(offset, offset + limit - 1);
+  query = query.order('updated_at', { ascending: false }).range(offset, offset + limit - 1);
 
   const { data, error, count } = await query;
 

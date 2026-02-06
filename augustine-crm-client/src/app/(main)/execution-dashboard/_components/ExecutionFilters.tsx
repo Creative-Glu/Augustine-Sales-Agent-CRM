@@ -107,19 +107,9 @@ export function ResultsFilters() {
   const { searchParams, setParams } = useExecutionParams();
   const result_status = (searchParams.get('result_status') as ResultStatusFilter) ?? 'all';
   const result_source = (searchParams.get('result_source') as ResultSourceFilter) ?? 'all';
-  const job_id = searchParams.get('job_id') ?? '';
 
   return (
     <div className="flex flex-wrap items-end gap-4 mb-4">
-      <div className="space-y-1">
-        <Label className="text-xs">Job ID</Label>
-        <Input
-          placeholder="Filter by job ID"
-          className="w-[280px] font-mono text-sm"
-          value={job_id}
-          onChange={(e) => setParams({ job_id: e.target.value || null, offset: null })}
-        />
-      </div>
       <div className="space-y-1">
         <Label className="text-xs">Status</Label>
         <Select

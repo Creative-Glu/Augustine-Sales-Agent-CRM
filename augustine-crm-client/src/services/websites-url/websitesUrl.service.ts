@@ -35,7 +35,10 @@ export async function getWebsitesUrlPaginated({
   if (company_search?.trim())
     query = query.ilike('Company name', `%${company_search.trim()}%`);
 
-  query = query.range(offset, offset + limit - 1);
+  // Sort by most recently updated first; place nulls last so older/empty rows don't appear on top
+  query = query
+    .order('updated_at', { ascending: false, nullsFirst: false })
+    .range(offset, offset + limit - 1);
 
   const { data, error, count } = await query;
 
