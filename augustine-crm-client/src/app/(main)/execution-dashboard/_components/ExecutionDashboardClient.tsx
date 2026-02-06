@@ -51,10 +51,10 @@ function escapeCsvCell(value: string | null): string {
 }
 
 function staffToCsv(rows: Staff[]): string {
-  const header = 'staff_id,result_id,name,role,email,created_at';
+  const header = 'staff_id,result_id,name,role,email,contact_number,created_at';
   const body = rows.map(
     (r) =>
-      [r.staff_id, r.result_id, r.name, r.role, r.email, r.created_at]
+      [r.staff_id, r.result_id, r.name, r.role, r.email, r.contact_number, r.created_at]
         .map(escapeCsvCell)
         .join(',')
   );

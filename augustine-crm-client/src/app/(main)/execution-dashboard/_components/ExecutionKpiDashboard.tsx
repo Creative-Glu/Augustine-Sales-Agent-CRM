@@ -40,8 +40,27 @@ const LOG_COLUMNS = [
   { label: 'URLs', align: 'right' as const },
   { label: 'Submitted', align: 'left' as const },
   { label: 'Updated', align: 'left' as const },
+  { label: 'Processing time', align: 'right' as const },
   { label: 'Error', align: 'left' as const },
 ];
+
+function formatDuration(ms: number): string {
+  if (ms < 0) return '—';
+  const sec = Math.floor(ms / 1000);
+  const min = Math.floor(sec / 60);
+  const hr = Math.floor(min / 60);
+  if (hr > 0) return `${hr}h ${min % 60}m`;
+  if (min > 0) return `${min}m ${sec % 60}s`;
+  return `${sec}s`;
+}
+
+function getJobProcessingTime(job: Job): string {
+  if (job.status !== 'completed' && job.status !== 'failed') return '—';
+  const submitted = job.submitted_at ? new Date(job.submitted_at).getTime() : NaN;
+  const updated = job.updated_at ? new Date(job.updated_at).getTime() : NaN;
+  if (Number.isNaN(submitted) || Number.isNaN(updated)) return '—';
+  return formatDuration(updated - submitted);
+}
 
 interface ExecutionKpiDashboardProps {
   stats: ExecutionStats | undefined;
@@ -230,6 +249,9 @@ export default function ExecutionKpiDashboard({
                       </td>
                       <td className="py-3 px-4 text-muted-foreground">
                         {formatDate(row.updated_at)}
+                      </td>
+                      <td className="py-3 px-4 text-right tabular-nums text-muted-foreground">
+                        {getJobProcessingTime(row)}
                       </td>
                       <td className="py-3 px-4 text-destructive max-w-[200px] truncate" title={row.error ?? ''}>
                         {row.error ?? '—'}
