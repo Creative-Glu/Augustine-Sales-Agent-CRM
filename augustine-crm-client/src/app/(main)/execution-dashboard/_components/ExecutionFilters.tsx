@@ -2,6 +2,8 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback } from 'react';
+import { ArrowPathIcon } from '@heroicons/react/24/outline';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -36,13 +38,16 @@ function useExecutionParams() {
   return { searchParams, setParams };
 }
 
+const filterBarClass =
+  'flex flex-wrap items-end gap-4 p-4 rounded-lg bg-muted/40 dark:bg-muted/20 border border-border/60 mb-4';
+
 export function WebsitesUrlFilters() {
   const { searchParams, setParams } = useExecutionParams();
   const status = searchParams.get('status') ?? '';
   const company_search = searchParams.get('company_search') ?? '';
 
   return (
-    <div className="flex flex-wrap items-end gap-4 mb-4">
+    <div className={filterBarClass}>
       <div className="space-y-1">
         <Label className="text-xs">Status</Label>
         <Select
@@ -71,6 +76,16 @@ export function WebsitesUrlFilters() {
           onChange={(e) => setParams({ company_search: e.target.value || null, offset: null })}
         />
       </div>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => setParams({ status: null, company_search: null, offset: null })}
+        className="gap-2 cursor-pointer"
+      >
+        <ArrowPathIcon className="w-4 h-4 shrink-0" />
+        Reset
+      </Button>
     </div>
   );
 }
@@ -80,7 +95,7 @@ export function JobsFilters() {
   const job_status = (searchParams.get('job_status') as JobStatusFilter) ?? 'all';
 
   return (
-    <div className="flex flex-wrap items-end gap-4 mb-4">
+    <div className={filterBarClass}>
       <div className="space-y-1">
         <Label className="text-xs">Status</Label>
         <Select
@@ -99,6 +114,16 @@ export function JobsFilters() {
           </SelectContent>
         </Select>
       </div>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => setParams({ job_status: null, offset: null })}
+        className="gap-2 cursor-pointer"
+      >
+        <ArrowPathIcon className="w-4 h-4 shrink-0" />
+        Reset
+      </Button>
     </div>
   );
 }
@@ -109,7 +134,7 @@ export function ResultsFilters() {
   const result_source = (searchParams.get('result_source') as ResultSourceFilter) ?? 'all';
 
   return (
-    <div className="flex flex-wrap items-end gap-4 mb-4">
+    <div className={filterBarClass}>
       <div className="space-y-1">
         <Label className="text-xs">Status</Label>
         <Select
@@ -143,6 +168,16 @@ export function ResultsFilters() {
           </SelectContent>
         </Select>
       </div>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => setParams({ result_status: null, result_source: null, offset: null })}
+        className="gap-2 cursor-pointer"
+      >
+        <ArrowPathIcon className="w-4 h-4 shrink-0" />
+        Reset
+      </Button>
     </div>
   );
 }
@@ -155,7 +190,7 @@ export function StaffFilters() {
   const staff_date_to = searchParams.get('staff_date_to') ?? '';
 
   return (
-    <div className="flex flex-wrap items-end gap-4 mb-4">
+    <div className={filterBarClass}>
       <div className="space-y-1">
         <Label className="text-xs">Name</Label>
         <Input
@@ -192,6 +227,24 @@ export function StaffFilters() {
           onChange={(e) => setParams({ staff_date_to: e.target.value || null, offset: null })}
         />
       </div>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() =>
+          setParams({
+            staff_name: null,
+            staff_email: null,
+            staff_date_from: null,
+            staff_date_to: null,
+            offset: null,
+          })
+        }
+        className="gap-2 cursor-pointer"
+      >
+        <ArrowPathIcon className="w-4 h-4 shrink-0" />
+        Reset
+      </Button>
     </div>
   );
 }

@@ -36,28 +36,33 @@ export default function StaffTable({
   const colSpan = COLUMNS.length;
 
   return (
-    <div className="w-full">
+    <div className="w-full rounded-lg border border-border overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full text-sm">
           <TableHeader columns={COLUMNS} />
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={colSpan} className="py-8 text-center text-muted-foreground">
+                <td colSpan={colSpan} className="py-12 text-center text-muted-foreground text-sm">
                   Loading staff…
                 </td>
               </tr>
             )}
             {isError && (
               <tr>
-                <td colSpan={colSpan} className="py-8 text-center text-red-500">
-                  Failed to load. {onRetry && <button type="button" onClick={onRetry} className="underline ml-1">Retry</button>}
+                <td colSpan={colSpan} className="py-12 text-center text-destructive text-sm">
+                  Failed to load.{' '}
+                  {onRetry && (
+                    <button type="button" onClick={onRetry} className="underline font-medium ml-1 hover:no-underline">
+                      Retry
+                    </button>
+                  )}
                 </td>
               </tr>
             )}
             {!isLoading && !isError && rows.length === 0 && (
               <tr>
-                <td colSpan={colSpan} className="py-8 text-center text-muted-foreground">
+                <td colSpan={colSpan} className="py-12 text-center text-muted-foreground text-sm">
                   No staff found.
                 </td>
               </tr>
@@ -65,19 +70,19 @@ export default function StaffTable({
             {!isLoading &&
               !isError &&
               rows.map((row) => (
-                <tr key={row.staff_id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                  <td className="py-3 px-4 font-medium text-card-foreground">{cell(row.name)}</td>
-                  <td className="py-3 px-4 text-sm text-muted-foreground">{cell(row.role)}</td>
-                  <td className="py-3 px-4 text-sm">
+                <tr key={row.staff_id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                  <td className="py-3 px-4 font-medium text-foreground">{cell(row.name)}</td>
+                  <td className="py-3 px-4 text-muted-foreground">{cell(row.role)}</td>
+                  <td className="py-3 px-4">
                     {row.email ? (
-                      <a href={`mailto:${row.email}`} className="text-blue-600 hover:underline">
+                      <a href={`mailto:${row.email}`} className="text-primary hover:underline">
                         {row.email}
                       </a>
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}
                   </td>
-                  <td className="py-3 px-4 text-sm text-muted-foreground">{formatDate(row.created_at)}</td>
+                  <td className="py-3 px-4 text-muted-foreground">{formatDate(row.created_at)}</td>
                 </tr>
               ))}
           </tbody>

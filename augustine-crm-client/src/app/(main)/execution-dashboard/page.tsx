@@ -13,11 +13,11 @@ export default function ExecutionDashboardPage() {
         showLive={true}
       />
 
-      <div className="mt-5">
+      <div className="mt-6 px-1">
         <Suspense
           fallback={
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-700 p-8">
-              <div className="animate-pulse text-muted-foreground">Loading dashboard...</div>
+            <div className="bg-card rounded-xl border border-border shadow-sm p-10 flex items-center justify-center min-h-[320px]">
+              <div className="animate-pulse text-sm text-muted-foreground font-medium">Loading dashboard…</div>
             </div>
           }
         >

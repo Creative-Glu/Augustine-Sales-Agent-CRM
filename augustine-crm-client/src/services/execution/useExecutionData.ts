@@ -17,9 +17,10 @@ import {
   getWebsitesUrlPaginated,
   type WebsitesUrlPaginatedParams,
 } from '@/services/websites-url/websitesUrl.service';
+import { getExecutionStats, getRecentJobs } from './stats.service';
 
 const DEFAULT_LIMIT = 10;
-const VIEWS = ['institution', 'websites', 'jobs', 'results', 'staff'] as const;
+const VIEWS = ['overview', 'institution', 'websites', 'jobs', 'results', 'staff'] as const;
 export type ExecutionView = (typeof VIEWS)[number];
 
 function getOffset(searchParams: URLSearchParams): number {
@@ -37,7 +38,7 @@ function getLimit(searchParams: URLSearchParams): number {
 function getView(searchParams: URLSearchParams): ExecutionView {
   const v = searchParams.get('view');
   if (v && VIEWS.includes(v as ExecutionView)) return v as ExecutionView;
-  return 'institution';
+  return 'overview';
 }
 
 export function useExecutionView() {
@@ -121,6 +122,36 @@ export function useResultsPaginated() {
     enabled: view === 'results',
     staleTime: 30 * 1000,
   });
+}
+
+export function useExecutionStats() {
+  const searchParams = useSearchParams();
+  const view = getView(searchParams);
+
+  const statsQuery = useQuery({
+    queryKey: ['execution', 'stats', view],
+    queryFn: getExecutionStats,
+    enabled: view === 'overview',
+    staleTime: 30 * 1000,
+  });
+
+  const recentJobsQuery = useQuery({
+    queryKey: ['execution', 'recent-jobs', view],
+    queryFn: getRecentJobs,
+    enabled: view === 'overview',
+    staleTime: 30 * 1000,
+  });
+
+  return {
+    stats: statsQuery.data,
+    recentJobs: recentJobsQuery.data ?? [],
+    isLoading: statsQuery.isLoading || recentJobsQuery.isLoading,
+    isError: statsQuery.isError || recentJobsQuery.isError,
+    refetch: () => {
+      statsQuery.refetch();
+      recentJobsQuery.refetch();
+    },
+  };
 }
 
 export function useStaffPaginated() {

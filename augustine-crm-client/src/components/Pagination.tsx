@@ -92,7 +92,7 @@ export default function Pagination({
   const pageNumbers = getPageNumbers();
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 bg-white rounded-xl border border-gray-200 shadow-sm">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 bg-card rounded-xl border border-border shadow-sm">
       <div className="text-sm text-muted-foreground">
         Page {currentPage} of {totalPages}
       </div>
@@ -102,7 +102,7 @@ export default function Pagination({
         <button
           onClick={goToPrevious}
           disabled={currentOffset === 0}
-          className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-card-foreground bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-foreground bg-background border border-border rounded-lg hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <ChevronLeftIcon className="w-4 h-4" />
           Previous
@@ -129,7 +129,7 @@ export default function Pagination({
                 className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                   isActive
                     ? 'bg-primary text-primary-foreground'
-                    : 'text-card-foreground bg-white border border-gray-300 hover:bg-gray-50'
+                    : 'text-foreground bg-background border border-border hover:bg-muted/50'
                 }`}
               >
                 {pageNum}
@@ -142,7 +142,7 @@ export default function Pagination({
         <button
           onClick={goToNext}
           disabled={!hasMore}
-          className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-card-foreground bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-foreground bg-background border border-border rounded-lg hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           Next
           <ChevronRightIcon className="w-4 h-4" />

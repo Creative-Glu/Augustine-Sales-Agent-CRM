@@ -11,11 +11,13 @@ interface TableHeaderProps {
 export const TableHeader = ({ columns }: TableHeaderProps) => {
   return (
     <thead>
-      <tr className="border-b border-gray-200">
+      <tr className="border-b border-border bg-muted/40 dark:bg-muted/20">
         {columns.map((col, idx) => (
           <th
             key={idx}
-            className={`py-3 px-4 text-sm font-semibold text-card-foreground text-${col.align ?? 'left'}`}
+            className={`py-3.5 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground ${
+              col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'
+            }`}
           >
             {col.label}
           </th>

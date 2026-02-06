@@ -43,28 +43,24 @@ export default function WebsitesUrlTable({
   const colSpan = EXECUTION_DASHBOARD_COLUMNS.length;
 
   return (
-    <div className="w-full">
+    <div className="w-full rounded-lg border border-border overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full text-sm">
           <TableHeader columns={EXECUTION_DASHBOARD_COLUMNS} />
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={colSpan} className="py-8 text-center text-muted-foreground">
-                  <div className="animate-pulse text-sm">Loading extraction data...</div>
+                <td colSpan={colSpan} className="py-12 text-center text-muted-foreground text-sm">
+                  <span className="animate-pulse">Loading extraction data…</span>
                 </td>
               </tr>
             )}
             {isError && (
               <tr>
-                <td colSpan={colSpan} className="py-8 text-center text-red-500">
+                <td colSpan={colSpan} className="py-12 text-center text-destructive text-sm">
                   Failed to load data.{' '}
                   {onRetry && (
-                    <button
-                      type="button"
-                      onClick={onRetry}
-                      className="underline font-medium ml-1"
-                    >
+                    <button type="button" onClick={onRetry} className="underline font-medium ml-1 hover:no-underline">
                       Retry
                     </button>
                   )}
@@ -73,7 +69,7 @@ export default function WebsitesUrlTable({
             )}
             {!isLoading && !isError && rows.length === 0 && (
               <tr>
-                <td colSpan={colSpan} className="py-8 text-center text-muted-foreground">
+                <td colSpan={colSpan} className="py-12 text-center text-muted-foreground text-sm">
                   No records yet. Run Catholic PDF extraction to populate this table.
                 </td>
               </tr>
@@ -83,7 +79,7 @@ export default function WebsitesUrlTable({
               rows.map((row) => (
                 <tr
                   key={row['Record ID']}
-                  className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                  className="border-b border-border/50 hover:bg-muted/30 transition-colors"
                 >
                   <td className="py-3 px-4">
                     <span className="font-medium text-card-foreground">
@@ -99,7 +95,7 @@ export default function WebsitesUrlTable({
                         href={row['Website URL'].startsWith('http') ? row['Website URL'] : `https://${row['Website URL']}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline text-sm truncate max-w-[200px] inline-block"
+                        className="text-primary hover:underline text-sm truncate max-w-[200px] inline-block"
                       >
                         {row['Website URL']}
                       </a>

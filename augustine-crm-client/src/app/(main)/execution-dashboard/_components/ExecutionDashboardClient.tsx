@@ -11,10 +11,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { DocumentArrowDownIcon } from '@heroicons/react/24/outline';
+import { DocumentArrowDownIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import Pagination from '@/components/Pagination';
 import {
   useExecutionView,
+  useExecutionStats,
   useInstitutionPaginated,
   useWebsitesUrlPaginated,
   useJobsPaginated,
@@ -32,6 +33,7 @@ import ResultsTable from './ResultsTable';
 import StaffTable from './StaffTable';
 import InstitutionTable from './InstitutionTable';
 import InstitutionStaffModal from './InstitutionStaffModal';
+import ExecutionKpiDashboard from './ExecutionKpiDashboard';
 import {
   WebsitesUrlFilters,
   JobsFilters,
@@ -70,6 +72,7 @@ function downloadCsv(csv: string, filename: string) {
 }
 
 const VIEW_LABELS: Record<ExecutionView, string> = {
+  overview: 'Overview',
   institution: 'Institution',
   websites: 'Website URLs',
   jobs: 'Jobs',
@@ -98,6 +101,7 @@ export default function ExecutionDashboardClient() {
   const limit = getLimit(searchParams);
   const offset = getOffset(searchParams);
 
+  const statsQuery = useExecutionStats();
   const institutionQuery = useInstitutionPaginated();
   const websitesQuery = useWebsitesUrlPaginated();
   const jobsQuery = useJobsPaginated();
@@ -129,6 +133,7 @@ export default function ExecutionDashboardClient() {
   const totalStaff = staffQuery.data?.total ?? 0;
 
   const totalByView: Record<ExecutionView, number> = {
+    overview: 0,
     institution: totalInstitutions,
     websites: totalWebsites,
     jobs: totalJobs,
@@ -139,45 +144,83 @@ export default function ExecutionDashboardClient() {
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const currentPage = Math.floor(currentOffset / limit) + 1;
   const hasMore = currentOffset + limit < total;
+  const showPagination = view !== 'overview' && total > limit;
 
   return (
     <div className="space-y-6">
       <Tabs value={view} onValueChange={(v) => setView(v as ExecutionView)}>
-        <TabsList className="bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
-          <TabsTrigger value="institution" className="cursor-pointer rounded-md px-4">
+        <TabsList className="h-11 bg-muted/60 dark:bg-muted/30 p-1.5 rounded-xl border border-border/60 shadow-sm">
+          <TabsTrigger
+            value="overview"
+            className="cursor-pointer rounded-lg px-5 py-2 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/60 transition-colors"
+          >
+            {VIEW_LABELS.overview}
+          </TabsTrigger>
+          <TabsTrigger
+            value="institution"
+            className="cursor-pointer rounded-lg px-5 py-2 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/60 transition-colors"
+          >
             {VIEW_LABELS.institution}
           </TabsTrigger>
-          <TabsTrigger value="websites" className="cursor-pointer rounded-md px-4">
+          <TabsTrigger
+            value="websites"
+            className="cursor-pointer rounded-lg px-5 py-2 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/60 transition-colors"
+          >
             {VIEW_LABELS.websites}
           </TabsTrigger>
-          <TabsTrigger value="jobs" className="cursor-pointer rounded-md px-4">
+          <TabsTrigger
+            value="jobs"
+            className="cursor-pointer rounded-lg px-5 py-2 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/60 transition-colors"
+          >
             {VIEW_LABELS.jobs}
           </TabsTrigger>
-          <TabsTrigger value="results" className="cursor-pointer rounded-md px-4">
+          <TabsTrigger
+            value="results"
+            className="cursor-pointer rounded-lg px-5 py-2 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/60 transition-colors"
+          >
             {VIEW_LABELS.results}
           </TabsTrigger>
-          <TabsTrigger value="staff" className="cursor-pointer rounded-md px-4">
+          <TabsTrigger
+            value="staff"
+            className="cursor-pointer rounded-lg px-5 py-2 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/60 transition-colors"
+          >
             {VIEW_LABELS.staff}
           </TabsTrigger>
         </TabsList>
 
-        <div className="mt-4 bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-700 shadow-md overflow-hidden">
+        <div className="mt-6 bg-card rounded-xl border border-border shadow-sm overflow-hidden">
           <div className="p-6">
-            {view === 'institution' && null}
-            {view === 'websites' && <WebsitesUrlFilters />}
-            {view === 'jobs' && <JobsFilters />}
-            {view === 'results' && <ResultsFilters />}
-            {view === 'staff' && <StaffFilters />}
+            {view === 'overview' && (
+              <ExecutionKpiDashboard
+                stats={statsQuery.stats}
+                recentJobs={statsQuery.recentJobs}
+                isLoading={statsQuery.isLoading}
+                isError={statsQuery.isError}
+                onRetry={statsQuery.refetch}
+              />
+            )}
 
-            <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
-              <p className="text-sm text-muted-foreground">
+            {view !== 'overview' && (
+              <>
+                {view === 'institution' && null}
+                {view === 'websites' && <WebsitesUrlFilters />}
+                {view === 'jobs' && <JobsFilters />}
+                {view === 'results' && <ResultsFilters />}
+                {view === 'staff' && <StaffFilters />}
+
+                <div className="flex items-center justify-between gap-4 flex-wrap py-4 border-b border-border/60">
+              <p className="text-sm text-muted-foreground font-medium">
                 Showing{' '}
-                {view === 'institution' && (institutionQuery.data?.data?.length ?? 0)}
-                {view === 'websites' && (websitesQuery.data?.data?.length ?? 0)}
-                {view === 'jobs' && (jobsQuery.data?.data?.length ?? 0)}
-                {view === 'results' && (resultsQuery.data?.data?.length ?? 0)}
-                {view === 'staff' && (staffQuery.data?.data?.length ?? 0)}
-                {' of '}{total} {VIEW_LABELS[view].toLowerCase()}
+                <span className="text-foreground">
+                  {view === 'institution' && (institutionQuery.data?.data?.length ?? 0)}
+                  {view === 'websites' && (websitesQuery.data?.data?.length ?? 0)}
+                  {view === 'jobs' && (jobsQuery.data?.data?.length ?? 0)}
+                  {view === 'results' && (resultsQuery.data?.data?.length ?? 0)}
+                  {view === 'staff' && (staffQuery.data?.data?.length ?? 0)}
+                </span>
+                {' of '}
+                <span className="text-foreground">{total}</span>
+                {' '}{VIEW_LABELS[view].toLowerCase()}
               </p>
               <div className="flex items-center gap-3 flex-wrap">
                 {view === 'staff' && (
@@ -209,46 +252,56 @@ export default function ExecutionDashboardClient() {
                         setExportingStaff(false);
                       }
                     }}
-                    className="gap-1"
+                    className="gap-2"
                   >
-                    <DocumentArrowDownIcon className="w-4 h-4" />
+                    <DocumentArrowDownIcon className="w-4 h-4 shrink-0" />
                     {exportingStaff ? 'Exporting…' : 'Export CSV'}
                   </Button>
                 )}
-                <span className="text-xs text-muted-foreground">Per page</span>
-                <Select
-                  value={String(limit)}
-                  onValueChange={(v) => {
-                    const params = new URLSearchParams(searchParams.toString());
-                    params.set('limit', v);
-                    params.delete('offset');
-                    router.push(`/execution-dashboard?${params.toString()}`);
-                  }}
-                >
-                  <SelectTrigger className="w-[70px] h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="25">25</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                  </SelectContent>
-                </Select>
-                <button
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground font-medium">Per page</span>
+                  <Select
+                    value={String(limit)}
+                    onValueChange={(v) => {
+                      const params = new URLSearchParams(searchParams.toString());
+                      params.set('limit', v);
+                      params.delete('offset');
+                      router.push(`/execution-dashboard?${params.toString()}`);
+                    }}
+                  >
+                    <SelectTrigger className="w-[72px] h-9 border-border/80">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="25">25</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
                   onClick={() => {
+                    statsQuery.refetch();
+                    institutionQuery.refetch();
                     websitesQuery.refetch();
                     jobsQuery.refetch();
                     resultsQuery.refetch();
                     staffQuery.refetch();
                   }}
-                  className="text-sm font-medium text-blue-600 hover:text-blue-700"
                 >
+                  <ArrowPathIcon className="w-4 h-4 shrink-0" />
                   Refresh
-                </button>
+                </Button>
               </div>
             </div>
 
+            <TabsContent value="overview" className="mt-0 hidden">
+              {/* Overview content rendered above via view === 'overview' */}
+            </TabsContent>
             <TabsContent value="institution" className="mt-0">
               <InstitutionTable
                 rows={institutionQuery.data?.data ?? []}
@@ -290,6 +343,8 @@ export default function ExecutionDashboardClient() {
                 onRetry={() => staffQuery.refetch()}
               />
             </TabsContent>
+              </>
+            )}
           </div>
         </div>
 
@@ -299,8 +354,8 @@ export default function ExecutionDashboardClient() {
           onOpenChange={setInstitutionModalOpen}
         />
 
-        {total > limit && (
-          <div className="mt-4">
+        {showPagination && (
+          <div className="mt-6">
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
