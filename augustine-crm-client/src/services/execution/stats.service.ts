@@ -58,7 +58,7 @@ async function countWebsitesByStatus(status: string): Promise<number> {
   const { count, error } = await executionSupabase
     .from('websites_url')
     .select('*', { count: 'exact', head: true })
-    .eq('Status', status);
+    .ilike('Status', status);
   if (error) return 0;
   return count ?? 0;
 }

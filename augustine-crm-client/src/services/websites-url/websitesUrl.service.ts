@@ -31,7 +31,8 @@ export async function getWebsitesUrlPaginated({
     .from('websites_url')
     .select('*', { count: 'exact', head: false });
 
-  if (status?.trim()) query = query.eq('Status', status.trim());
+  // Match status case-insensitively so "Failed" in DB matches filter value "failed"
+  if (status?.trim()) query = query.ilike('Status', status.trim());
   if (company_search?.trim())
     query = query.ilike('Company name', `%${company_search.trim()}%`);
 
