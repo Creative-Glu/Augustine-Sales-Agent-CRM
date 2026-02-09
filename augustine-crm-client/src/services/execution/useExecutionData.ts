@@ -17,7 +17,7 @@ import {
   getWebsitesUrlPaginated,
   type WebsitesUrlPaginatedParams,
 } from '@/services/websites-url/websitesUrl.service';
-import { getExecutionStats, getRecentJobs } from './stats.service';
+import { getExecutionStats, getRecentJobs, getRecentFailedResults } from './stats.service';
 
 const DEFAULT_LIMIT = 10;
 const VIEWS = ['overview', 'institution', 'websites', 'jobs', 'results', 'staff'] as const;
@@ -142,14 +142,24 @@ export function useExecutionStats() {
     staleTime: 30 * 1000,
   });
 
+  const recentFailedResultsQuery = useQuery({
+    queryKey: ['execution', 'recent-failed-results', view],
+    queryFn: getRecentFailedResults,
+    enabled: view === 'overview',
+    staleTime: 30 * 1000,
+  });
+
   return {
     stats: statsQuery.data,
     recentJobs: recentJobsQuery.data ?? [],
-    isLoading: statsQuery.isLoading || recentJobsQuery.isLoading,
-    isError: statsQuery.isError || recentJobsQuery.isError,
+    recentFailedResults: recentFailedResultsQuery.data ?? [],
+    isLoading:
+      statsQuery.isLoading || recentJobsQuery.isLoading || recentFailedResultsQuery.isLoading,
+    isError: statsQuery.isError || recentJobsQuery.isError || recentFailedResultsQuery.isError,
     refetch: () => {
       statsQuery.refetch();
       recentJobsQuery.refetch();
+      recentFailedResultsQuery.refetch();
     },
   };
 }

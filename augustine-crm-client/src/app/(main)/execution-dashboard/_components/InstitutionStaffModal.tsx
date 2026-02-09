@@ -16,7 +16,6 @@ const STAFF_COLUMNS = [
   { label: 'Name', align: 'left' as const },
   { label: 'Role', align: 'left' as const },
   { label: 'Email', align: 'left' as const },
-  { label: 'Contact', align: 'left' as const },
   { label: 'Contact number', align: 'left' as const },
   { label: 'Created', align: 'left' as const },
 ];
@@ -102,7 +101,6 @@ export default function InstitutionStaffModal({
                         <span className="text-muted-foreground">—</span>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-sm text-muted-foreground">{cell(row.contact)}</td>
                     <td className="py-3 px-4 text-sm text-muted-foreground">{cell(row.contact_number)}</td>
                     <td className="py-3 px-4 text-sm text-muted-foreground">
                       {formatDate(row.created_at)}

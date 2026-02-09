@@ -1,5 +1,5 @@
 import { executionSupabase } from '@/lib/executionSupabaseClient';
-import type { Job } from '@/types/execution';
+import type { Job, Result } from '@/types/execution';
 
 export interface JobCounts {
   total: number;
@@ -139,4 +139,17 @@ export async function getRecentJobs(): Promise<Job[]> {
     .limit(RECENT_JOBS_LIMIT);
   if (error) throw new Error(`Error fetching recent jobs: ${error.message}`);
   return (data ?? []) as Job[];
+}
+
+const RECENT_FAILED_RESULTS_LIMIT = 15;
+
+export async function getRecentFailedResults(): Promise<Result[]> {
+  const { data, error } = await executionSupabase
+    .from('results')
+    .select('*')
+    .eq('status', 'error')
+    .order('processed_at', { ascending: false })
+    .limit(RECENT_FAILED_RESULTS_LIMIT);
+  if (error) throw new Error(`Error fetching recent failed results: ${error.message}`);
+  return (data ?? []) as Result[];
 }

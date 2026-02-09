@@ -8,13 +8,14 @@ import {
   UserGroupIcon,
   ClockIcon,
   ArrowPathIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableHeader } from '@/components/TableHeader';
 import type { ExecutionStats } from '@/services/execution/stats.service';
-import type { Job } from '@/types/execution';
+import type { Job, Result } from '@/types/execution';
 
 function formatDate(iso: string | null): string {
   if (!iso) return '—';
@@ -62,9 +63,17 @@ function getJobProcessingTime(job: Job): string {
   return formatDuration(updated - submitted);
 }
 
+const FAILED_RESULTS_COLUMNS = [
+  { label: 'URL', align: 'left' as const },
+  { label: 'Source', align: 'left' as const },
+  { label: 'Processed', align: 'left' as const },
+  { label: 'Error', align: 'left' as const },
+];
+
 interface ExecutionKpiDashboardProps {
   stats: ExecutionStats | undefined;
   recentJobs: Job[];
+  recentFailedResults: Result[];
   isLoading: boolean;
   isError: boolean;
   onRetry: () => void;
@@ -98,6 +107,7 @@ function KpiCard({
 export default function ExecutionKpiDashboard({
   stats,
   recentJobs,
+  recentFailedResults,
   isLoading,
   isError,
   onRetry,
@@ -255,6 +265,62 @@ export default function ExecutionKpiDashboard({
                       </td>
                       <td className="py-3 px-4 text-destructive max-w-[200px] truncate" title={row.error ?? ''}>
                         {row.error ?? '—'}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recent failed results */}
+      <Card className="border-border bg-card">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ExclamationTriangleIcon className="h-5 w-5 text-destructive" />
+            <CardTitle className="text-base">Recent failed results</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto rounded-b-xl">
+            <table className="w-full text-sm">
+              <TableHeader columns={FAILED_RESULTS_COLUMNS} />
+              <tbody>
+                {recentFailedResults.length === 0 ? (
+                  <tr>
+                    <td colSpan={FAILED_RESULTS_COLUMNS.length} className="py-8 text-center text-muted-foreground">
+                      No failed results.
+                    </td>
+                  </tr>
+                ) : (
+                  recentFailedResults.map((row) => (
+                    <tr
+                      key={row.result_id}
+                      className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+                    >
+                      <td className="py-3 px-4">
+                        <a
+                          href={row.url.startsWith('http') ? row.url : `https://${row.url}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline truncate max-w-[220px] inline-block"
+                        >
+                          {row.url}
+                        </a>
+                      </td>
+                      <td className="py-3 px-4">
+                        <Badge variant="outline" className="text-xs">
+                          {row.source}
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-4 text-muted-foreground">{formatDate(row.processed_at)}</td>
+                      <td
+                        className="py-3 px-4 text-destructive max-w-[280px] truncate"
+                        title={row.error ?? row.error_type ?? ''}
+                      >
+                        {row.error ?? row.error_type ?? '—'}
                       </td>
                     </tr>
                   ))

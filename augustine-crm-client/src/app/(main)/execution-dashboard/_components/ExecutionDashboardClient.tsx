@@ -194,6 +194,7 @@ export default function ExecutionDashboardClient() {
               <ExecutionKpiDashboard
                 stats={statsQuery.stats}
                 recentJobs={statsQuery.recentJobs}
+                recentFailedResults={statsQuery.recentFailedResults}
                 isLoading={statsQuery.isLoading}
                 isError={statsQuery.isError}
                 onRetry={statsQuery.refetch}
