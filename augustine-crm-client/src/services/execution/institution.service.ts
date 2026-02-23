@@ -34,14 +34,33 @@ export async function getInstitutionPaginated({
   };
 }
 
-/** Count of institution records created in the last 24 hours. */
-export async function getInstitutionCountLast24h(): Promise<number> {
+export interface InstitutionCounts {
+  total: number;
+  withEmail: number;
+  withoutEmail: number;
+}
+
+/** Count institutions with optional 24h filter; includes with/without email breakdown. */
+export async function getInstitutionCounts(last24h: boolean): Promise<InstitutionCounts> {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { count, error } = await executionSupabase
+
+  let totalQuery = executionSupabase.from('institutions').select('*', { count: 'exact', head: true });
+  if (last24h) totalQuery = totalQuery.gte('created_at', since);
+  const { count: total, error: totalError } = await totalQuery;
+  if (totalError) throw new Error(`Error fetching institution count: ${totalError.message}`);
+
+  let withEmailQuery = executionSupabase
     .from('institutions')
     .select('*', { count: 'exact', head: true })
-    .gte('created_at', since);
+    .not('email', 'is', null)
+    .neq('email', '');
+  if (last24h) withEmailQuery = withEmailQuery.gte('created_at', since);
+  const { count: withEmail, error: withEmailError } = await withEmailQuery;
+  if (withEmailError) throw new Error(`Error fetching institution with-email count: ${withEmailError.message}`);
 
-  if (error) throw new Error(`Error fetching institution count (24h): ${error.message}`);
-  return count ?? 0;
+  return {
+    total: total ?? 0,
+    withEmail: withEmail ?? 0,
+    withoutEmail: (total ?? 0) - (withEmail ?? 0),
+  };
 }

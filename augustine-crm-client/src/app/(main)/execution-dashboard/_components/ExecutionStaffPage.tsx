@@ -11,9 +11,10 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DocumentArrowDownIcon, ArrowPathIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { DocumentArrowDownIcon, ArrowPathIcon, CalendarDaysIcon, EnvelopeIcon, EnvelopeSlashIcon } from '@heroicons/react/24/outline';
 import Pagination from '@/components/Pagination';
-import { useStaffPaginated, useStaffCountLast24h } from '@/services/execution/useExecutionData';
+import { useStaffPaginated, useStaffCounts } from '@/services/execution/useExecutionData';
 import { getStaffForExport } from '@/services/execution/staff.service';
 import { useToastHelpers } from '@/lib/toast';
 import type { Staff } from '@/types/execution';
@@ -72,8 +73,9 @@ export default function ExecutionStaffPage() {
   const limit = getLimit(searchParams);
   const offset = getOffset(searchParams);
 
+  const [range, setRange] = useState<'24h' | 'overall'>('24h');
   const staffQuery = useStaffPaginated();
-  const count24hQuery = useStaffCountLast24h();
+  const countsQuery = useStaffCounts(range === '24h');
   const [exportingStaff, setExportingStaff] = useState(false);
   const { successToast, errorToast } = useToastHelpers();
 
@@ -86,17 +88,46 @@ export default function ExecutionStaffPage() {
   return (
     <div className="space-y-6">
       <Card className="border-border bg-card">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardHeader className="flex flex-wrap items-center justify-between gap-3 pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
             <CalendarDaysIcon className="h-4 w-4" />
-            Daily extracted (last 24h)
+            Extracted data · Accuracy level
           </CardTitle>
+          <ToggleGroup
+            type="single"
+            value={range}
+            onValueChange={(v) => v && setRange(v as '24h' | 'overall')}
+            variant="outline"
+            size="sm"
+            className="rounded-lg"
+          >
+            <ToggleGroupItem value="24h" aria-label="Last 24 hours">Last 24h</ToggleGroupItem>
+            <ToggleGroupItem value="overall" aria-label="Overall">Overall</ToggleGroupItem>
+          </ToggleGroup>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
           <div className="text-2xl font-bold tabular-nums text-foreground">
-            {count24hQuery.isLoading ? '—' : count24hQuery.isError ? '—' : count24hQuery.data ?? 0}
+            {countsQuery.isLoading ? '—' : countsQuery.isError ? '—' : countsQuery.data?.total ?? 0}
           </div>
-          <p className="text-xs text-muted-foreground mt-1">Staff records added in the last 24 hours</p>
+          <p className="text-xs text-muted-foreground">
+            {range === '24h' ? 'Staff records added in the last 24 hours' : 'Total staff records'}
+          </p>
+          <div className="flex flex-wrap gap-4 pt-2 border-t border-border/60 text-sm">
+            <span className="flex items-center gap-1.5 text-muted-foreground">
+              <EnvelopeIcon className="h-4 w-4 text-green-600 dark:text-green-400" />
+              <strong className="text-foreground tabular-nums">
+                {countsQuery.isLoading ? '—' : countsQuery.isError ? '—' : countsQuery.data?.withEmail ?? 0}
+              </strong>
+              with email
+            </span>
+            <span className="flex items-center gap-1.5 text-muted-foreground">
+              <EnvelopeSlashIcon className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              <strong className="text-foreground tabular-nums">
+                {countsQuery.isLoading ? '—' : countsQuery.isError ? '—' : countsQuery.data?.withoutEmail ?? 0}
+              </strong>
+              without email
+            </span>
+          </div>
         </CardContent>
       </Card>
 

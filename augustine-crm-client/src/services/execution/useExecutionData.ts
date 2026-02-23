@@ -11,8 +11,8 @@ import {
   type ResultStatusFilter,
   type ResultSourceFilter,
 } from './result.service';
-import { getStaffPaginated, getStaffCountLast24h } from './staff.service';
-import { getInstitutionPaginated, getInstitutionCountLast24h } from './institution.service';
+import { getStaffPaginated, getStaffCounts } from './staff.service';
+import { getInstitutionPaginated, getInstitutionCounts } from './institution.service';
 import {
   getWebsitesUrlPaginated,
   type WebsitesUrlPaginatedParams,
@@ -209,21 +209,21 @@ export function useStaffPaginated() {
   });
 }
 
-export function useInstitutionCountLast24h() {
+export function useInstitutionCounts(last24h: boolean) {
   const view = useExecutionView();
   return useQuery({
-    queryKey: ['execution', 'institution-count-24h'],
-    queryFn: getInstitutionCountLast24h,
+    queryKey: ['execution', 'institution-counts', last24h],
+    queryFn: () => getInstitutionCounts(last24h),
     enabled: view === 'institution',
     staleTime: 60 * 1000,
   });
 }
 
-export function useStaffCountLast24h() {
+export function useStaffCounts(last24h: boolean) {
   const view = useExecutionView();
   return useQuery({
-    queryKey: ['execution', 'staff-count-24h'],
-    queryFn: getStaffCountLast24h,
+    queryKey: ['execution', 'staff-counts', last24h],
+    queryFn: () => getStaffCounts(last24h),
     enabled: view === 'staff',
     staleTime: 60 * 1000,
   });
