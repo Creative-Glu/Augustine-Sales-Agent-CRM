@@ -10,9 +10,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { ArrowPathIcon } from '@heroicons/react/24/outline';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowPathIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
 import Pagination from '@/components/Pagination';
-import { useInstitutionPaginated } from '@/services/execution/useExecutionData';
+import { useInstitutionPaginated, useInstitutionCountLast24h } from '@/services/execution/useExecutionData';
 import type { Institution } from '@/types/execution';
 import InstitutionTable from './InstitutionTable';
 import InstitutionStaffModal from './InstitutionStaffModal';
@@ -40,6 +41,7 @@ export default function ExecutionInstitutionPage() {
   const offset = getOffset(searchParams);
 
   const institutionQuery = useInstitutionPaginated();
+  const count24hQuery = useInstitutionCountLast24h();
   const [selectedInstitution, setSelectedInstitution] = useState<Institution | null>(null);
   const [institutionModalOpen, setInstitutionModalOpen] = useState(false);
 
@@ -56,6 +58,21 @@ export default function ExecutionInstitutionPage() {
 
   return (
     <div className="space-y-6">
+      <Card className="border-border bg-card">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+            <CalendarDaysIcon className="h-4 w-4" />
+            Daily extracted (last 24h)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold tabular-nums text-foreground">
+            {count24hQuery.isLoading ? '—' : count24hQuery.isError ? '—' : count24hQuery.data ?? 0}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">Institutions added in the last 24 hours</p>
+        </CardContent>
+      </Card>
+
       <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
         <div className="p-6">
           <div className="flex items-center justify-between gap-4 flex-wrap py-4 border-b border-border/60">

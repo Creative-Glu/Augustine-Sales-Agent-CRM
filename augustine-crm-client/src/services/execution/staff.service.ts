@@ -95,6 +95,18 @@ export async function getStaffForExport(params: StaffExportParams): Promise<Staf
   return (data ?? []) as Staff[];
 }
 
+/** Count of staff records created in the last 24 hours. */
+export async function getStaffCountLast24h(): Promise<number> {
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { count, error } = await executionSupabase
+    .from('staff')
+    .select('*', { count: 'exact', head: true })
+    .gte('created_at', since);
+
+  if (error) throw new Error(`Error fetching staff count (24h): ${error.message}`);
+  return count ?? 0;
+}
+
 export async function getStaffByInstitutionId(institution_id: number | string): Promise<Staff[]> {
   const raw = institution_id;
   if (raw === undefined || raw === null) return [];

@@ -33,3 +33,15 @@ export async function getInstitutionPaginated({
     hasMore,
   };
 }
+
+/** Count of institution records created in the last 24 hours. */
+export async function getInstitutionCountLast24h(): Promise<number> {
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { count, error } = await executionSupabase
+    .from('institutions')
+    .select('*', { count: 'exact', head: true })
+    .gte('created_at', since);
+
+  if (error) throw new Error(`Error fetching institution count (24h): ${error.message}`);
+  return count ?? 0;
+}

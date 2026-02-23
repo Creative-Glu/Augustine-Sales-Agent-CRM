@@ -11,8 +11,8 @@ import {
   type ResultStatusFilter,
   type ResultSourceFilter,
 } from './result.service';
-import { getStaffPaginated } from './staff.service';
-import { getInstitutionPaginated } from './institution.service';
+import { getStaffPaginated, getStaffCountLast24h } from './staff.service';
+import { getInstitutionPaginated, getInstitutionCountLast24h } from './institution.service';
 import {
   getWebsitesUrlPaginated,
   type WebsitesUrlPaginatedParams,
@@ -206,5 +206,25 @@ export function useStaffPaginated() {
       }),
     enabled: view === 'staff',
     staleTime: 30 * 1000,
+  });
+}
+
+export function useInstitutionCountLast24h() {
+  const view = useExecutionView();
+  return useQuery({
+    queryKey: ['execution', 'institution-count-24h'],
+    queryFn: getInstitutionCountLast24h,
+    enabled: view === 'institution',
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useStaffCountLast24h() {
+  const view = useExecutionView();
+  return useQuery({
+    queryKey: ['execution', 'staff-count-24h'],
+    queryFn: getStaffCountLast24h,
+    enabled: view === 'staff',
+    staleTime: 60 * 1000,
   });
 }
