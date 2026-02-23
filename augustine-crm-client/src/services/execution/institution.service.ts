@@ -34,6 +34,18 @@ export async function getInstitutionPaginated({
   };
 }
 
+/** Fetch a single institution by id (for modal / detail). */
+export async function getInstitutionById(id: number | string): Promise<Institution | null> {
+  const { data, error } = await executionSupabase
+    .from('institutions')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error) throw new Error(`Error fetching institution: ${error.message}`);
+  return data as Institution | null;
+}
+
 export interface InstitutionCounts {
   total: number;
   withEmail: number;

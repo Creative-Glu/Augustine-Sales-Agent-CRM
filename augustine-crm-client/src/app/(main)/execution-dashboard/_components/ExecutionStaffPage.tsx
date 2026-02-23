@@ -26,6 +26,9 @@ import {
 import Pagination from '@/components/Pagination';
 import { useStaffPaginated, useStaffCounts } from '@/services/execution/useExecutionData';
 import { getStaffForExport } from '@/services/execution/staff.service';
+import { getInstitutionById } from '@/services/execution/institution.service';
+import type { Institution } from '@/types/execution';
+import InstitutionStaffModal from './InstitutionStaffModal';
 import { useToastHelpers } from '@/lib/toast';
 import type { Staff } from '@/types/execution';
 import { StaffFilters } from './ExecutionFilters';
@@ -42,7 +45,24 @@ function escapeCsvCell(value: string | null): string {
   return s;
 }
 
-function staffToCsv(rows: Staff[]): string {
+/** Enrichment criteria columns only (no DB fields). */
+const ENRICHED_CSV_HEADER = 'Name,Role,Email,Contact Number,Institution';
+
+function staffToCsv(rows: Staff[], enrichedFormat: boolean): string {
+  if (enrichedFormat) {
+    const body = rows.map((r) =>
+      [
+        r.name,
+        r.role,
+        r.email,
+        r.contact_number ?? r.contact ?? '',
+        r.institutions?.name ?? String(r.institution_id ?? ''),
+      ]
+        .map(escapeCsvCell)
+        .join(',')
+    );
+    return [ENRICHED_CSV_HEADER, ...body].join('\r\n');
+  }
   const header = 'staff_id,result_id,name,role,email,contact_number,created_at';
   const body = rows.map(
     (r) =>
@@ -97,7 +117,21 @@ export default function ExecutionStaffPage() {
   const staffQuery = useStaffPaginated();
   const countsQuery = useStaffCounts(range === '24h', enriched_only, require_phone);
   const [exportingStaff, setExportingStaff] = useState(false);
+  const [selectedInstitution, setSelectedInstitution] = useState<Institution | null>(null);
+  const [institutionModalOpen, setInstitutionModalOpen] = useState(false);
   const { successToast, errorToast } = useToastHelpers();
+
+  const handleInstitutionClick = async (institutionId: number) => {
+    try {
+      const institution = await getInstitutionById(institutionId);
+      if (institution) {
+        setSelectedInstitution(institution);
+        setInstitutionModalOpen(true);
+      }
+    } catch {
+      errorToast('Could not load institution details.');
+    }
+  };
 
   const setEnrichmentFilter = (value: 'all' | 'enriched') => {
     const params = new URLSearchParams(searchParams.toString());
@@ -273,7 +307,7 @@ export default function ExecutionStaffPage() {
                       errorToast('No staff records to export with current filters.');
                       return;
                     }
-                    const csv = staffToCsv(rows);
+                    const csv = staffToCsv(rows, enriched_only);
                     downloadCsv(csv, `staff_export_${new Date().toISOString().slice(0, 10)}.csv`);
                     successToast(`Exported ${rows.length} staff record(s).`);
                   } catch (e) {
@@ -326,6 +360,7 @@ export default function ExecutionStaffPage() {
             isLoading={staffQuery.isLoading}
             isError={staffQuery.isError}
             onRetry={() => staffQuery.refetch()}
+            onInstitutionClick={handleInstitutionClick}
           />
         </div>
       </div>
@@ -341,6 +376,13 @@ export default function ExecutionStaffPage() {
           queryParamName="offset"
         />
       )}
+
+      <InstitutionStaffModal
+        institution={selectedInstitution}
+        open={institutionModalOpen}
+        onOpenChange={setInstitutionModalOpen}
+        mode="details"
+      />
     </div>
   );
 }

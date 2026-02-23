@@ -20,7 +20,8 @@ export interface StaffPaginatedResponse {
   hasMore: boolean;
 }
 
-const EXPORT_MAX_ROWS = 10000;
+const EXPORT_MAX_ROWS = 100000;
+const EXPORT_BATCH_SIZE = 1000;
 
 export async function getStaffPaginated({
   offset,
@@ -34,7 +35,7 @@ export async function getStaffPaginated({
 }: StaffPaginatedParams): Promise<StaffPaginatedResponse> {
   let query = executionSupabase
     .from('staff')
-    .select('*', { count: 'exact', head: false });
+    .select('*, institutions(name)', { count: 'exact', head: false });
 
   if (name_search?.trim()) query = query.ilike('name', `%${name_search.trim()}%`);
   if (email_search?.trim()) query = query.ilike('email', `%${email_search.trim()}%`);
@@ -95,48 +96,69 @@ export interface StaffExportParams {
 }
 
 export async function getStaffForExport(params: StaffExportParams): Promise<Staff[]> {
-  let query = executionSupabase
-    .from('staff')
-    .select('*');
+  const {
+    result_id,
+    name_search,
+    email_search,
+    date_from,
+    date_to,
+    enriched_only,
+    enriched_require_phone = true,
+  } = params;
 
-  const { result_id, name_search, email_search, date_from, date_to, enriched_only, enriched_require_phone = true } = params;
-  if (result_id) query = query.eq('result_id', result_id);
-  if (name_search?.trim()) query = query.ilike('name', `%${name_search.trim()}%`);
-  if (email_search?.trim()) query = query.ilike('email', `%${email_search.trim()}%`);
-  if (date_from) {
-    const fromStart = new Date(date_from);
-    fromStart.setUTCHours(0, 0, 0, 0);
-    query = query.gte('created_at', fromStart.toISOString());
-  }
-  if (date_to) {
-    const toEnd = new Date(date_to);
-    toEnd.setUTCHours(23, 59, 59, 999);
-    query = query.lte('created_at', toEnd.toISOString());
-  }
+  const selectFields = enriched_only ? '*, institutions(name)' : '*';
+  const allRows: Staff[] = [];
+  let offset = 0;
 
-  if (enriched_only) {
-    query = query
-      .not('name', 'is', null)
-      .neq('name', '')
-      .not('role', 'is', null)
-      .neq('role', '')
-      .not('email', 'is', null)
-      .neq('email', '')
-      .ilike('email', '%@%')
-      .ilike('email', '%.%')
-      .not('institution_id', 'is', null)
-      .gt('institution_id', 0);
-    if (enriched_require_phone) {
-      query = query.not('contact_number', 'is', null).neq('contact_number', '');
+  while (true) {
+    let query = executionSupabase
+      .from('staff')
+      .select(selectFields)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + EXPORT_BATCH_SIZE - 1);
+
+    if (result_id) query = query.eq('result_id', result_id);
+    if (name_search?.trim()) query = query.ilike('name', `%${name_search.trim()}%`);
+    if (email_search?.trim()) query = query.ilike('email', `%${email_search.trim()}%`);
+    if (date_from) {
+      const fromStart = new Date(date_from);
+      fromStart.setUTCHours(0, 0, 0, 0);
+      query = query.gte('created_at', fromStart.toISOString());
     }
+    if (date_to) {
+      const toEnd = new Date(date_to);
+      toEnd.setUTCHours(23, 59, 59, 999);
+      query = query.lte('created_at', toEnd.toISOString());
+    }
+
+    if (enriched_only) {
+      query = query
+        .not('name', 'is', null)
+        .neq('name', '')
+        .not('role', 'is', null)
+        .neq('role', '')
+        .not('email', 'is', null)
+        .neq('email', '')
+        .ilike('email', '%@%')
+        .ilike('email', '%.%')
+        .not('institution_id', 'is', null)
+        .gt('institution_id', 0);
+      if (enriched_require_phone) {
+        query = query.not('contact_number', 'is', null).neq('contact_number', '');
+      }
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw new Error(`Error fetching staff for export: ${error.message}`);
+    const batch = (data ?? []) as Staff[];
+    allRows.push(...batch);
+
+    if (batch.length < EXPORT_BATCH_SIZE || allRows.length >= EXPORT_MAX_ROWS) break;
+    offset += EXPORT_BATCH_SIZE;
   }
 
-  query = query.order('created_at', { ascending: false }).limit(EXPORT_MAX_ROWS);
-
-  const { data, error } = await query;
-
-  if (error) throw new Error(`Error fetching staff for export: ${error.message}`);
-  return (data ?? []) as Staff[];
+  return allRows;
 }
 
 export interface StaffCounts {

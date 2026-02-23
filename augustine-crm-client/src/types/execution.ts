@@ -44,6 +44,8 @@ export interface Staff {
   contact: string | null;
   contact_number: string | null;
   created_at: string;
+  /** Set when staff is fetched with institution join (e.g. list view). */
+  institutions?: { name: string } | null;
 }
 
 /** Institution – from execution DB table institutions (id may be number or string from API) */

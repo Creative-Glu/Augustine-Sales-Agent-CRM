@@ -2,12 +2,14 @@
 
 import { TableHeader } from '@/components/TableHeader';
 import { Staff } from '@/types/execution';
+import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
 
 const COLUMNS = [
   { label: 'Name', align: 'left' as const },
   { label: 'Role', align: 'left' as const },
   { label: 'Email', align: 'left' as const },
   { label: 'Contact number', align: 'left' as const },
+  { label: 'Institution', align: 'left' as const },
   { label: 'Created', align: 'left' as const },
 ];
 
@@ -28,11 +30,14 @@ export default function StaffTable({
   isLoading,
   isError,
   onRetry,
+  onInstitutionClick,
 }: {
   rows: Staff[];
   isLoading: boolean;
   isError: boolean;
   onRetry?: () => void;
+  /** When provided, institution name is shown as a link that calls this with institution_id. */
+  onInstitutionClick?: (institutionId: number) => void;
 }) {
   const colSpan = COLUMNS.length;
 
@@ -84,6 +89,26 @@ export default function StaffTable({
                     )}
                   </td>
                   <td className="py-3 px-4 text-muted-foreground">{cell(row.contact_number)}</td>
+                  <td className="py-3 px-4">
+                    {row.institution_id != null ? (
+                      onInstitutionClick ? (
+                        <button
+                          type="button"
+                          onClick={() => onInstitutionClick(row.institution_id)}
+                          className="inline-flex items-center gap-1 text-primary hover:underline font-medium"
+                        >
+                          {row.institutions?.name ?? `Institution #${row.institution_id}`}
+                          <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5 shrink-0" />
+                        </button>
+                      ) : (
+                        <span className="text-muted-foreground">
+                          {row.institutions?.name ?? `#${row.institution_id}`}
+                        </span>
+                      )
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </td>
                   <td className="py-3 px-4 text-muted-foreground">{formatDate(row.created_at)}</td>
                 </tr>
               ))}
