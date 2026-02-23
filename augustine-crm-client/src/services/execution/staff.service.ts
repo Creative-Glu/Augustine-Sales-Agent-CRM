@@ -8,8 +8,10 @@ export interface StaffPaginatedParams {
   email_search?: string;
   date_from?: string; // ISO date YYYY-MM-DD
   date_to?: string;   // ISO date YYYY-MM-DD
-  /** When true, only return staff that meet enrichment target: name, role, email, contact_number, institution_id all present */
+  /** When true, only return staff that meet enrichment target (name, role, email, institution; phone optional per enriched_require_phone) */
   enriched_only?: boolean;
+  /** When true with enriched_only, require contact_number. When false, phone is optional. */
+  enriched_require_phone?: boolean;
 }
 
 export interface StaffPaginatedResponse {
@@ -28,6 +30,7 @@ export async function getStaffPaginated({
   date_from,
   date_to,
   enriched_only,
+  enriched_require_phone = true,
 }: StaffPaginatedParams): Promise<StaffPaginatedResponse> {
   let query = executionSupabase
     .from('staff')
@@ -54,10 +57,13 @@ export async function getStaffPaginated({
       .neq('role', '')
       .not('email', 'is', null)
       .neq('email', '')
-      .not('contact_number', 'is', null)
-      .neq('contact_number', '')
+      .ilike('email', '%@%')
+      .ilike('email', '%.%')
       .not('institution_id', 'is', null)
       .gt('institution_id', 0);
+    if (enriched_require_phone) {
+      query = query.not('contact_number', 'is', null).neq('contact_number', '');
+    }
   }
 
   query = query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
@@ -82,8 +88,10 @@ export interface StaffExportParams {
   email_search?: string;
   date_from?: string;
   date_to?: string;
-  /** When true, only return staff that meet enrichment target (name, role, email, contact number, institution) */
+  /** When true, only return staff that meet enrichment target; phone required per enriched_require_phone */
   enriched_only?: boolean;
+  /** When true with enriched_only, require contact_number. When false, phone is optional. */
+  enriched_require_phone?: boolean;
 }
 
 export async function getStaffForExport(params: StaffExportParams): Promise<Staff[]> {
@@ -91,7 +99,7 @@ export async function getStaffForExport(params: StaffExportParams): Promise<Staf
     .from('staff')
     .select('*');
 
-  const { result_id, name_search, email_search, date_from, date_to, enriched_only } = params;
+  const { result_id, name_search, email_search, date_from, date_to, enriched_only, enriched_require_phone = true } = params;
   if (result_id) query = query.eq('result_id', result_id);
   if (name_search?.trim()) query = query.ilike('name', `%${name_search.trim()}%`);
   if (email_search?.trim()) query = query.ilike('email', `%${email_search.trim()}%`);
@@ -114,10 +122,13 @@ export async function getStaffForExport(params: StaffExportParams): Promise<Staf
       .neq('role', '')
       .not('email', 'is', null)
       .neq('email', '')
-      .not('contact_number', 'is', null)
-      .neq('contact_number', '')
+      .ilike('email', '%@%')
+      .ilike('email', '%.%')
       .not('institution_id', 'is', null)
       .gt('institution_id', 0);
+    if (enriched_require_phone) {
+      query = query.not('contact_number', 'is', null).neq('contact_number', '');
+    }
   }
 
   query = query.order('created_at', { ascending: false }).limit(EXPORT_MAX_ROWS);
@@ -134,8 +145,12 @@ export interface StaffCounts {
   withoutEmail: number;
 }
 
-/** Count staff with optional 24h and enriched_only filters; includes with/without email breakdown. */
-export async function getStaffCounts(last24h: boolean, enriched_only = false): Promise<StaffCounts> {
+/** Count staff with optional 24h, enriched_only, and enriched_require_phone filters; includes with/without email breakdown. */
+export async function getStaffCounts(
+  last24h: boolean,
+  enriched_only = false,
+  enriched_require_phone = true
+): Promise<StaffCounts> {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
   let totalQuery = executionSupabase.from('staff').select('*', { count: 'exact', head: true });
@@ -148,10 +163,13 @@ export async function getStaffCounts(last24h: boolean, enriched_only = false): P
       .neq('role', '')
       .not('email', 'is', null)
       .neq('email', '')
-      .not('contact_number', 'is', null)
-      .neq('contact_number', '')
+      .ilike('email', '%@%')
+      .ilike('email', '%.%')
       .not('institution_id', 'is', null)
       .gt('institution_id', 0);
+    if (enriched_require_phone) {
+      totalQuery = totalQuery.not('contact_number', 'is', null).neq('contact_number', '');
+    }
   }
   const { count: total, error: totalError } = await totalQuery;
   if (totalError) throw new Error(`Error fetching staff count: ${totalError.message}`);
@@ -161,6 +179,9 @@ export async function getStaffCounts(last24h: boolean, enriched_only = false): P
     .select('*', { count: 'exact', head: true })
     .not('email', 'is', null)
     .neq('email', '');
+  if (enriched_only) {
+    withEmailQuery = withEmailQuery.ilike('email', '%@%').ilike('email', '%.%');
+  }
   if (last24h) withEmailQuery = withEmailQuery.gte('created_at', since);
   if (enriched_only) {
     withEmailQuery = withEmailQuery
@@ -168,10 +189,11 @@ export async function getStaffCounts(last24h: boolean, enriched_only = false): P
       .neq('name', '')
       .not('role', 'is', null)
       .neq('role', '')
-      .not('contact_number', 'is', null)
-      .neq('contact_number', '')
       .not('institution_id', 'is', null)
       .gt('institution_id', 0);
+    if (enriched_require_phone) {
+      withEmailQuery = withEmailQuery.not('contact_number', 'is', null).neq('contact_number', '');
+    }
   }
   const { count: withEmail, error: withEmailError } = await withEmailQuery;
   if (withEmailError) throw new Error(`Error fetching staff with-email count: ${withEmailError.message}`);

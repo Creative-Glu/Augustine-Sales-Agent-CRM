@@ -193,9 +193,10 @@ export function useStaffPaginated() {
   const staff_date_from = searchParams.get('staff_date_from') ?? undefined;
   const staff_date_to = searchParams.get('staff_date_to') ?? undefined;
   const enriched_only = searchParams.get('enriched') === '1';
+  const enriched_require_phone = searchParams.get('phone') !== '0';
 
   return useQuery({
-    queryKey: ['execution', 'staff', view, offset, limit, name_search, email_search, staff_date_from, staff_date_to, enriched_only],
+    queryKey: ['execution', 'staff', view, offset, limit, name_search, email_search, staff_date_from, staff_date_to, enriched_only, enriched_require_phone],
     queryFn: () =>
       getStaffPaginated({
         offset,
@@ -205,6 +206,7 @@ export function useStaffPaginated() {
         date_from: staff_date_from || undefined,
         date_to: staff_date_to || undefined,
         enriched_only,
+        enriched_require_phone,
       }),
     enabled: view === 'staff',
     staleTime: 30 * 1000,
@@ -221,11 +223,11 @@ export function useInstitutionCounts(last24h: boolean) {
   });
 }
 
-export function useStaffCounts(last24h: boolean, enriched_only = false) {
+export function useStaffCounts(last24h: boolean, enriched_only = false, enriched_require_phone = true) {
   const view = useExecutionView();
   return useQuery({
-    queryKey: ['execution', 'staff-counts', last24h, enriched_only],
-    queryFn: () => getStaffCounts(last24h, enriched_only),
+    queryKey: ['execution', 'staff-counts', last24h, enriched_only, enriched_require_phone],
+    queryFn: () => getStaffCounts(last24h, enriched_only, enriched_require_phone),
     enabled: view === 'staff',
     staleTime: 60 * 1000,
   });

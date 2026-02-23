@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   DocumentArrowDownIcon,
@@ -90,10 +91,11 @@ export default function ExecutionStaffPage() {
   const limit = getLimit(searchParams);
   const offset = getOffset(searchParams);
   const enriched_only = searchParams.get('enriched') === '1';
+  const require_phone = searchParams.get('phone') !== '0';
 
   const [range, setRange] = useState<'24h' | 'overall'>('24h');
   const staffQuery = useStaffPaginated();
-  const countsQuery = useStaffCounts(range === '24h', enriched_only);
+  const countsQuery = useStaffCounts(range === '24h', enriched_only, require_phone);
   const [exportingStaff, setExportingStaff] = useState(false);
   const { successToast, errorToast } = useToastHelpers();
 
@@ -101,6 +103,14 @@ export default function ExecutionStaffPage() {
     const params = new URLSearchParams(searchParams.toString());
     if (value === 'enriched') params.set('enriched', '1');
     else params.delete('enriched');
+    params.delete('offset');
+    router.push(`${basePath}?${params.toString()}`);
+  };
+
+  const setRequirePhone = (required: boolean) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (required) params.delete('phone');
+    else params.set('phone', '0');
     params.delete('offset');
     router.push(`${basePath}?${params.toString()}`);
   };
@@ -138,11 +148,29 @@ export default function ExecutionStaffPage() {
             />
           </div>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-3">
+          {enriched_only && (
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="require-phone"
+                checked={require_phone}
+                onCheckedChange={(checked) => setRequirePhone(checked === true)}
+                aria-label="Require contact number in criteria"
+              />
+              <Label
+                htmlFor="require-phone"
+                className="text-sm font-normal cursor-pointer select-none text-muted-foreground"
+              >
+                Require contact number (phone optional when unchecked)
+              </Label>
+            </div>
+          )}
           <p className="text-xs text-muted-foreground">
             {enriched_only
-              ? 'Showing only contacts with Name, Role, Email, Contact number, and Institution present. Export CSV uses the same filter.'
-              : 'Show all staff records, or filter to contacts that meet the enrichment target (all fields above).'}
+              ? require_phone
+                ? 'Showing only contacts with Name, Role, proper email (e.g. user@domain.com), Contact number, and Institution. Export CSV uses the same filter.'
+                : 'Showing contacts with Name, Role, proper email (e.g. user@domain.com), and Institution (phone optional). Export CSV uses the same filter.'
+              : 'Show all staff records, or filter to contacts that meet the enrichment target. Email must be a proper format (contains @ and domain).'}
           </p>
           <details className="text-xs text-muted-foreground">
             <summary className="cursor-pointer hover:text-foreground font-medium">Enrichment target criteria</summary>
@@ -238,6 +266,7 @@ export default function ExecutionStaffPage() {
                       date_from: searchParams.get('staff_date_from') || undefined,
                       date_to: searchParams.get('staff_date_to') || undefined,
                       enriched_only,
+                      enriched_require_phone: require_phone,
                     };
                     const rows = await getStaffForExport(params);
                     if (rows.length === 0) {
