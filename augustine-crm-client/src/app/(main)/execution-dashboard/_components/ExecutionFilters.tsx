@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useCallback } from 'react';
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
@@ -16,11 +16,11 @@ import {
 import type { JobStatusFilter } from '@/services/execution/job.service';
 import type { ResultStatusFilter, ResultSourceFilter } from '@/services/execution/result.service';
 
-const BASE = '/execution-dashboard';
-
 function useExecutionParams() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
+  const basePath = pathname ?? '/execution-dashboard';
 
   const setParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -30,9 +30,9 @@ function useExecutionParams() {
         else params.set(k, v);
       }
       if (updates.offset === undefined) params.delete('offset');
-      router.push(`${BASE}?${params.toString()}`);
+      router.push(`${basePath}?${params.toString()}`);
     },
-    [router, searchParams]
+    [router, searchParams, basePath]
   );
 
   return { searchParams, setParams };

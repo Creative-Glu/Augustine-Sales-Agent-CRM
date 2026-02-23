@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import {
   getJobsPaginated,
   type JobStatusFilter,
@@ -23,6 +23,14 @@ const DEFAULT_LIMIT = 10;
 const VIEWS = ['overview', 'institution', 'websites', 'jobs', 'results', 'staff'] as const;
 export type ExecutionView = (typeof VIEWS)[number];
 
+const VIEW_SEGMENTS: Record<Exclude<ExecutionView, 'overview'>, string> = {
+  institution: 'institution',
+  websites: 'websites',
+  jobs: 'jobs',
+  results: 'results',
+  staff: 'staff',
+};
+
 function getOffset(searchParams: URLSearchParams): number {
   const v = searchParams.get('offset');
   const n = v ? parseInt(v, 10) : NaN;
@@ -35,20 +43,32 @@ function getLimit(searchParams: URLSearchParams): number {
   return Number.isNaN(n) || n < 1 ? DEFAULT_LIMIT : Math.min(n, 100);
 }
 
-function getView(searchParams: URLSearchParams): ExecutionView {
+/** Derives execution view from pathname (e.g. /execution-dashboard/institution -> institution). */
+export function getViewFromPathname(pathname: string | null): ExecutionView {
+  if (!pathname) return 'overview';
+  const base = '/execution-dashboard';
+  if (pathname === base || pathname === `${base}/`) return 'overview';
+  for (const [view, segment] of Object.entries(VIEW_SEGMENTS)) {
+    if (pathname === `${base}/${segment}` || pathname.startsWith(`${base}/${segment}/`)) {
+      return view as ExecutionView;
+    }
+  }
+  return 'overview';
+}
+
+export function useExecutionView(): ExecutionView {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const fromPath = getViewFromPathname(pathname);
+  if (fromPath !== 'overview') return fromPath;
   const v = searchParams.get('view');
   if (v && VIEWS.includes(v as ExecutionView)) return v as ExecutionView;
   return 'overview';
 }
 
-export function useExecutionView() {
-  const searchParams = useSearchParams();
-  return getView(searchParams);
-}
-
 export function useInstitutionPaginated() {
   const searchParams = useSearchParams();
-  const view = getView(searchParams);
+  const view = useExecutionView();
   const offset = getOffset(searchParams);
   const limit = getLimit(searchParams);
 
@@ -62,7 +82,7 @@ export function useInstitutionPaginated() {
 
 export function useWebsitesUrlPaginated() {
   const searchParams = useSearchParams();
-  const view = getView(searchParams);
+  const view = useExecutionView();
   const offset = getOffset(searchParams);
   const limit = getLimit(searchParams);
   const status = searchParams.get('status') ?? undefined;
@@ -85,7 +105,7 @@ export function useWebsitesUrlPaginated() {
 
 export function useJobsPaginated() {
   const searchParams = useSearchParams();
-  const view = getView(searchParams);
+  const view = useExecutionView();
   const offset = getOffset(searchParams);
   const limit = getLimit(searchParams);
   const rawStatus = searchParams.get('job_status') ?? 'all';
@@ -104,7 +124,7 @@ export function useJobsPaginated() {
 
 export function useResultsPaginated() {
   const searchParams = useSearchParams();
-  const view = getView(searchParams);
+  const view = useExecutionView();
   const offset = getOffset(searchParams);
   const limit = getLimit(searchParams);
   const status = (searchParams.get('result_status') as ResultStatusFilter) ?? 'all';
@@ -125,8 +145,7 @@ export function useResultsPaginated() {
 }
 
 export function useExecutionStats() {
-  const searchParams = useSearchParams();
-  const view = getView(searchParams);
+  const view = useExecutionView();
 
   const statsQuery = useQuery({
     queryKey: ['execution', 'stats', view],
@@ -166,7 +185,7 @@ export function useExecutionStats() {
 
 export function useStaffPaginated() {
   const searchParams = useSearchParams();
-  const view = getView(searchParams);
+  const view = useExecutionView();
   const offset = getOffset(searchParams);
   const limit = getLimit(searchParams);
   const name_search = searchParams.get('staff_name') ?? undefined;
