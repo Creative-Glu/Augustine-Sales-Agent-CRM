@@ -8,6 +8,8 @@ export interface StaffPaginatedParams {
   email_search?: string;
   date_from?: string; // ISO date YYYY-MM-DD
   date_to?: string;   // ISO date YYYY-MM-DD
+  /** When true, only return staff that meet enrichment target: name, role, email, contact_number, institution_id all present */
+  enriched_only?: boolean;
 }
 
 export interface StaffPaginatedResponse {
@@ -25,6 +27,7 @@ export async function getStaffPaginated({
   email_search,
   date_from,
   date_to,
+  enriched_only,
 }: StaffPaginatedParams): Promise<StaffPaginatedResponse> {
   let query = executionSupabase
     .from('staff')
@@ -41,6 +44,20 @@ export async function getStaffPaginated({
     const toEnd = new Date(date_to);
     toEnd.setUTCHours(23, 59, 59, 999);
     query = query.lte('created_at', toEnd.toISOString());
+  }
+
+  if (enriched_only) {
+    query = query
+      .not('name', 'is', null)
+      .neq('name', '')
+      .not('role', 'is', null)
+      .neq('role', '')
+      .not('email', 'is', null)
+      .neq('email', '')
+      .not('contact_number', 'is', null)
+      .neq('contact_number', '')
+      .not('institution_id', 'is', null)
+      .gt('institution_id', 0);
   }
 
   query = query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
@@ -65,6 +82,8 @@ export interface StaffExportParams {
   email_search?: string;
   date_from?: string;
   date_to?: string;
+  /** When true, only return staff that meet enrichment target (name, role, email, contact number, institution) */
+  enriched_only?: boolean;
 }
 
 export async function getStaffForExport(params: StaffExportParams): Promise<Staff[]> {
@@ -72,7 +91,7 @@ export async function getStaffForExport(params: StaffExportParams): Promise<Staf
     .from('staff')
     .select('*');
 
-  const { result_id, name_search, email_search, date_from, date_to } = params;
+  const { result_id, name_search, email_search, date_from, date_to, enriched_only } = params;
   if (result_id) query = query.eq('result_id', result_id);
   if (name_search?.trim()) query = query.ilike('name', `%${name_search.trim()}%`);
   if (email_search?.trim()) query = query.ilike('email', `%${email_search.trim()}%`);
@@ -85,6 +104,20 @@ export async function getStaffForExport(params: StaffExportParams): Promise<Staf
     const toEnd = new Date(date_to);
     toEnd.setUTCHours(23, 59, 59, 999);
     query = query.lte('created_at', toEnd.toISOString());
+  }
+
+  if (enriched_only) {
+    query = query
+      .not('name', 'is', null)
+      .neq('name', '')
+      .not('role', 'is', null)
+      .neq('role', '')
+      .not('email', 'is', null)
+      .neq('email', '')
+      .not('contact_number', 'is', null)
+      .neq('contact_number', '')
+      .not('institution_id', 'is', null)
+      .gt('institution_id', 0);
   }
 
   query = query.order('created_at', { ascending: false }).limit(EXPORT_MAX_ROWS);
@@ -101,12 +134,25 @@ export interface StaffCounts {
   withoutEmail: number;
 }
 
-/** Count staff with optional 24h filter; includes with/without email breakdown. */
-export async function getStaffCounts(last24h: boolean): Promise<StaffCounts> {
+/** Count staff with optional 24h and enriched_only filters; includes with/without email breakdown. */
+export async function getStaffCounts(last24h: boolean, enriched_only = false): Promise<StaffCounts> {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
   let totalQuery = executionSupabase.from('staff').select('*', { count: 'exact', head: true });
   if (last24h) totalQuery = totalQuery.gte('created_at', since);
+  if (enriched_only) {
+    totalQuery = totalQuery
+      .not('name', 'is', null)
+      .neq('name', '')
+      .not('role', 'is', null)
+      .neq('role', '')
+      .not('email', 'is', null)
+      .neq('email', '')
+      .not('contact_number', 'is', null)
+      .neq('contact_number', '')
+      .not('institution_id', 'is', null)
+      .gt('institution_id', 0);
+  }
   const { count: total, error: totalError } = await totalQuery;
   if (totalError) throw new Error(`Error fetching staff count: ${totalError.message}`);
 
@@ -116,6 +162,17 @@ export async function getStaffCounts(last24h: boolean): Promise<StaffCounts> {
     .not('email', 'is', null)
     .neq('email', '');
   if (last24h) withEmailQuery = withEmailQuery.gte('created_at', since);
+  if (enriched_only) {
+    withEmailQuery = withEmailQuery
+      .not('name', 'is', null)
+      .neq('name', '')
+      .not('role', 'is', null)
+      .neq('role', '')
+      .not('contact_number', 'is', null)
+      .neq('contact_number', '')
+      .not('institution_id', 'is', null)
+      .gt('institution_id', 0);
+  }
   const { count: withEmail, error: withEmailError } = await withEmailQuery;
   if (withEmailError) throw new Error(`Error fetching staff with-email count: ${withEmailError.message}`);
 

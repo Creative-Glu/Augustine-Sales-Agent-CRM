@@ -11,8 +11,17 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { DocumentArrowDownIcon, ArrowPathIcon, CalendarDaysIcon, EnvelopeIcon, EnvelopeSlashIcon } from '@heroicons/react/24/outline';
+import {
+  DocumentArrowDownIcon,
+  ArrowPathIcon,
+  CalendarDaysIcon,
+  EnvelopeIcon,
+  NoSymbolIcon,
+  FunnelIcon,
+} from '@heroicons/react/24/outline';
 import Pagination from '@/components/Pagination';
 import { useStaffPaginated, useStaffCounts } from '@/services/execution/useExecutionData';
 import { getStaffForExport } from '@/services/execution/staff.service';
@@ -65,6 +74,14 @@ function getOffset(searchParams: URLSearchParams): number {
   return Number.isNaN(n) || n < 0 ? 0 : n;
 }
 
+const ENRICHMENT_CRITERIA = [
+  { field: 'Name', confidence: 'High', source: 'Scraped from team/leadership pages' },
+  { field: 'Job title / Role', confidence: 'High', source: 'Scraped from page context' },
+  { field: 'Email', confidence: 'High', source: 'Scraped from team/leadership pages' },
+  { field: 'Phone', confidence: 'Medium', source: 'Scraped where available (contact number)' },
+  { field: 'Institution', confidence: 'High', source: 'Linked to the associated institution' },
+];
+
 export default function ExecutionStaffPage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -72,12 +89,21 @@ export default function ExecutionStaffPage() {
   const basePath = pathname ?? '/execution-dashboard/staff';
   const limit = getLimit(searchParams);
   const offset = getOffset(searchParams);
+  const enriched_only = searchParams.get('enriched') === '1';
 
   const [range, setRange] = useState<'24h' | 'overall'>('24h');
   const staffQuery = useStaffPaginated();
-  const countsQuery = useStaffCounts(range === '24h');
+  const countsQuery = useStaffCounts(range === '24h', enriched_only);
   const [exportingStaff, setExportingStaff] = useState(false);
   const { successToast, errorToast } = useToastHelpers();
+
+  const setEnrichmentFilter = (value: 'all' | 'enriched') => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === 'enriched') params.set('enriched', '1');
+    else params.delete('enriched');
+    params.delete('offset');
+    router.push(`${basePath}?${params.toString()}`);
+  };
 
   const total = staffQuery.data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / limit));
@@ -87,6 +113,61 @@ export default function ExecutionStaffPage() {
 
   return (
     <div className="space-y-6">
+      {/* Main enrichment filter: on/off switch */}
+      <Card className="border-border bg-card">
+        <CardHeader className="flex flex-wrap items-center justify-between gap-3 pb-2">
+          <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+            <FunnelIcon className="h-4 w-4" />
+            Enrichment filter
+          </CardTitle>
+          <div className="flex items-center gap-3">
+            <Label
+              htmlFor="enrichment-switch"
+              className="text-sm font-medium text-muted-foreground cursor-pointer select-none"
+            >
+              Meets enrichment target
+            </Label>
+            <span className="text-xs text-muted-foreground tabular-nums min-w-[2ch]">
+              {enriched_only ? 'On' : 'Off'}
+            </span>
+            <Switch
+              id="enrichment-switch"
+              checked={enriched_only}
+              onCheckedChange={(checked) => setEnrichmentFilter(checked ? 'enriched' : 'all')}
+              aria-label="Filter by enrichment target"
+            />
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <p className="text-xs text-muted-foreground">
+            {enriched_only
+              ? 'Showing only contacts with Name, Role, Email, Contact number, and Institution present. Export CSV uses the same filter.'
+              : 'Show all staff records, or filter to contacts that meet the enrichment target (all fields above).'}
+          </p>
+          <details className="text-xs text-muted-foreground">
+            <summary className="cursor-pointer hover:text-foreground font-medium">Enrichment target criteria</summary>
+            <table className="mt-2 w-full border-collapse border border-border/60 rounded overflow-hidden">
+              <thead>
+                <tr className="bg-muted/40">
+                  <th className="border border-border/60 px-2 py-1.5 text-left font-medium">Field</th>
+                  <th className="border border-border/60 px-2 py-1.5 text-left font-medium">Confidence</th>
+                  <th className="border border-border/60 px-2 py-1.5 text-left font-medium">Source / Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ENRICHMENT_CRITERIA.map((row) => (
+                  <tr key={row.field}>
+                    <td className="border border-border/60 px-2 py-1.5">{row.field}</td>
+                    <td className="border border-border/60 px-2 py-1.5">{row.confidence}</td>
+                    <td className="border border-border/60 px-2 py-1.5">{row.source}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </details>
+        </CardContent>
+      </Card>
+
       <Card className="border-border bg-card">
         <CardHeader className="flex flex-wrap items-center justify-between gap-3 pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -121,7 +202,7 @@ export default function ExecutionStaffPage() {
               with email
             </span>
             <span className="flex items-center gap-1.5 text-muted-foreground">
-              <EnvelopeSlashIcon className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              <NoSymbolIcon className="h-4 w-4 text-amber-600 dark:text-amber-400" />
               <strong className="text-foreground tabular-nums">
                 {countsQuery.isLoading ? '—' : countsQuery.isError ? '—' : countsQuery.data?.withoutEmail ?? 0}
               </strong>
@@ -139,7 +220,8 @@ export default function ExecutionStaffPage() {
               Showing{' '}
               <span className="text-foreground">{staffQuery.data?.data?.length ?? 0}</span>
               {' of '}
-              <span className="text-foreground">{total}</span> staff
+              <span className="text-foreground">{total}</span>
+              {enriched_only ? ' enriched staff' : ' staff'}
             </p>
             <div className="flex items-center gap-3 flex-wrap">
               <Button
@@ -155,6 +237,7 @@ export default function ExecutionStaffPage() {
                       email_search: searchParams.get('staff_email') || undefined,
                       date_from: searchParams.get('staff_date_from') || undefined,
                       date_to: searchParams.get('staff_date_to') || undefined,
+                      enriched_only,
                     };
                     const rows = await getStaffForExport(params);
                     if (rows.length === 0) {
@@ -173,7 +256,7 @@ export default function ExecutionStaffPage() {
                 className="gap-2"
               >
                 <DocumentArrowDownIcon className="w-4 h-4 shrink-0" />
-                {exportingStaff ? 'Exporting…' : 'Export CSV'}
+                {exportingStaff ? 'Exporting…' : enriched_only ? 'Export enriched CSV' : 'Export CSV'}
               </Button>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground font-medium">Per page</span>

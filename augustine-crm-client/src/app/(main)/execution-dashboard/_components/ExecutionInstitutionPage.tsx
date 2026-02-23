@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { ArrowPathIcon, CalendarDaysIcon, EnvelopeIcon, EnvelopeSlashIcon } from '@heroicons/react/24/outline';
+import { ArrowPathIcon, CalendarDaysIcon, EnvelopeIcon, NoSymbolIcon } from '@heroicons/react/24/outline';
 import Pagination from '@/components/Pagination';
 import { useInstitutionPaginated, useInstitutionCounts } from '@/services/execution/useExecutionData';
 import type { Institution } from '@/types/execution';
@@ -94,7 +94,7 @@ export default function ExecutionInstitutionPage() {
               with email
             </span>
             <span className="flex items-center gap-1.5 text-muted-foreground">
-              <EnvelopeSlashIcon className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              <NoSymbolIcon className="h-4 w-4 text-amber-600 dark:text-amber-400" />
               <strong className="text-foreground tabular-nums">
                 {countsQuery.isLoading ? '—' : countsQuery.isError ? '—' : countsQuery.data?.withoutEmail ?? 0}
               </strong>
