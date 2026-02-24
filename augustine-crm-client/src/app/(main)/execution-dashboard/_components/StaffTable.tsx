@@ -68,10 +68,22 @@ export default function StaffTable({
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [panelAnchor, setPanelAnchor] = useState<{ top: number; left: number } | null>(null);
 
+  const PANEL_WIDTH = 280;
+  const PANEL_EST_HEIGHT = 300;
+  const GAP = 4;
+  const MARGIN = 12;
+
   const openPanel = (staffId: number, event: React.MouseEvent<HTMLButtonElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom - MARGIN;
+    const openAbove = spaceBelow < PANEL_EST_HEIGHT;
+    let top = openAbove
+      ? rect.top - PANEL_EST_HEIGHT - GAP
+      : rect.bottom + GAP;
+    if (openAbove) top = Math.max(8, top);
+    const left = Math.max(8, Math.min(rect.left, window.innerWidth - PANEL_WIDTH - MARGIN));
     setExpandedId(staffId);
-    setPanelAnchor({ top: rect.bottom + 4, left: rect.left });
+    setPanelAnchor({ top, left });
   };
 
   const closePanel = () => {
@@ -186,7 +198,7 @@ export default function StaffTable({
                     )}
                   </td>
 
-                  {/* Status – panel opens in portal so row layout is unchanged */}
+                  {/* Status – click opens panel above or below */}
                   <td className="py-3 px-4 align-top">
                     <div className="flex flex-col items-start gap-1.5">
                       {smallSyncBadge(row.sync_status ?? null)}
