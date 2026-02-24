@@ -10,6 +10,8 @@ interface ExecutionStatusCardProps {
   enrichmentConfidence?: number | null;
   webhookStatus?: string | null;
   lastSyncedAt?: string | null;
+  /** When true, use smaller text and padding (e.g. inside the button-attached panel). */
+  compact?: boolean;
 }
 
 function formatRelativeTime(iso: string | null | undefined): string {
@@ -141,6 +143,7 @@ export function ExecutionStatusCard({
   enrichmentConfidence,
   webhookStatus,
   lastSyncedAt,
+  compact,
 }: ExecutionStatusCardProps) {
   const hasAnyData =
     syncStatus != null ||
@@ -150,9 +153,17 @@ export function ExecutionStatusCard({
     (webhookStatus != null && webhookStatus.trim() !== '') ||
     !!lastSyncedAt;
 
+  const cardCls = compact
+    ? 'w-full max-w-[260px] rounded-md border border-border/60 bg-muted px-2 py-1.5'
+    : 'w-full max-w-[260px] rounded-xl border border-border bg-muted px-3 py-2 shadow-sm';
+  const gridCls = compact
+    ? 'grid grid-cols-[auto_minmax(0,1fr)] gap-x-2 gap-y-1 text-[11px]'
+    : 'grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-xs';
+  const badgeCls = compact ? 'h-4 px-1.5 text-[10px] font-medium border' : 'h-5 px-2 text-[11px] font-medium border';
+
   if (!hasAnyData) {
     return (
-      <div className="w-full max-w-[260px] rounded-xl border border-dashed border-border/60 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+      <div className={`${cardCls} text-muted-foreground ${compact ? 'text-[11px]' : 'text-xs'}`}>
         <span className="font-medium">Status:</span> <span className="ml-1">Not enriched yet</span>
       </div>
     );
@@ -165,41 +176,41 @@ export function ExecutionStatusCard({
   const webhook = getWebhookBadge(webhookStatus ?? null);
 
   return (
-    <div className="w-full max-w-[260px] rounded-xl border border-border bg-muted/30 px-3 py-2 shadow-sm">
-      <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-xs">
+    <div className={cardCls}>
+      <div className={gridCls}>
         <div className="text-muted-foreground">Sync status</div>
         <div>
-          <Badge variant="outline" className={`h-5 px-2 text-[11px] font-medium border ${syncBadge.className}`}>
+          <Badge variant="outline" className={`${badgeCls} ${syncBadge.className}`}>
             {syncBadge.label}
           </Badge>
         </div>
 
         <div className="text-muted-foreground">Eligibility</div>
         <div>
-          <Badge variant="outline" className={`h-5 px-2 text-[11px] font-medium border ${eligibility.className}`}>
+          <Badge variant="outline" className={`${badgeCls} ${eligibility.className}`}>
             {eligibility.label}
           </Badge>
         </div>
 
         <div className="text-muted-foreground">HubSpot</div>
         <div>
-          <Badge variant="outline" className={`h-5 px-2 text-[11px] font-medium border ${hubspot.className}`}>
+          <Badge variant="outline" className={`${badgeCls} ${hubspot.className}`}>
             {hubspot.label}
           </Badge>
         </div>
 
         <div className="text-muted-foreground">Confidence</div>
-        <div className={`text-xs font-medium ${confidence.className}`}>{confidence.label}</div>
+        <div className={`font-medium ${confidence.className} ${compact ? 'text-[11px]' : 'text-xs'}`}>{confidence.label}</div>
 
         <div className="text-muted-foreground">Webhook</div>
         <div>
-          <Badge variant="outline" className={`h-5 px-2 text-[11px] font-medium border ${webhook.className}`}>
+          <Badge variant="outline" className={`${badgeCls} ${webhook.className}`}>
             {webhook.label}
           </Badge>
         </div>
 
         <div className="text-muted-foreground">Last sync</div>
-        <div className="text-xs font-medium" title={lastSyncedAt ?? undefined}>
+        <div className={`font-medium ${compact ? 'text-[11px]' : 'text-xs'}`} title={lastSyncedAt ?? undefined}>
           {formatRelativeTime(lastSyncedAt)}
         </div>
       </div>

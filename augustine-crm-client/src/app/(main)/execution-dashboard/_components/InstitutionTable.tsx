@@ -1,8 +1,10 @@
 'use client';
 
+import { useState, Fragment, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { TableHeader } from '@/components/TableHeader';
 import type { Institution } from '@/types/execution';
-import { ExecutionStatusDialog } from './ExecutionStatusDialog';
+import { ExecutionStatusPipelinePanel } from './ExecutionStatusPipelinePanel';
 import { Badge } from '@/components/ui/badge';
 import type { SyncStatus } from '@/types/execution';
 
@@ -61,8 +63,31 @@ export default function InstitutionTable({
   onSelect?: (institution: Institution) => void;
 }) {
   const colSpan = COLUMNS.length;
+  const [expandedId, setExpandedId] = useState<string | number | null>(null);
+  const [panelAnchor, setPanelAnchor] = useState<{ top: number; left: number } | null>(null);
+
+  const openPanel = (rowId: string | number, event: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    setExpandedId(rowId);
+    setPanelAnchor({ top: rect.bottom + 4, left: rect.left });
+  };
+
+  const closePanel = () => {
+    setExpandedId(null);
+    setPanelAnchor(null);
+  };
+
+  useEffect(() => {
+    if (!expandedId) return;
+    const onScroll = () => closePanel();
+    window.addEventListener('scroll', onScroll, true);
+    return () => window.removeEventListener('scroll', onScroll, true);
+  }, [expandedId]);
+
+  const expandedRow = expandedId != null ? rows.find((r) => r.id === expandedId) : null;
 
   return (
+    <>
     <div className="w-full rounded-lg border border-border overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -97,13 +122,13 @@ export default function InstitutionTable({
             {!isLoading &&
               !isError &&
               rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer align-top"
-                  onClick={() => onSelect?.(row)}
-                >
-                  {/* Institution info block */}
-                  <td className="py-3 px-4 align-top">
+                <Fragment key={row.id}>
+                  <tr
+                    className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer align-top"
+                    onClick={() => onSelect?.(row)}
+                  >
+                    {/* Institution info block */}
+                    <td className="py-3 px-4 align-top">
                     <div className="flex flex-col gap-1.5">
                       <div className="text-base font-semibold text-foreground truncate">{cell(row.name)}</div>
                       {row.website_url && (
@@ -152,19 +177,17 @@ export default function InstitutionTable({
                     </div>
                   </td>
 
-                  {/* Status panel – stop propagation so row click doesn't open staff modal */}
+                  {/* Status – panel opens in portal so row layout is unchanged */}
                   <td className="py-3 px-4 align-top" onClick={(e) => e.stopPropagation()}>
                     <div className="flex flex-col items-start gap-1.5">
                       {smallSyncBadge(row.sync_status ?? null)}
-                      <ExecutionStatusDialog
-                        entityLabel={row.name}
-                        enrichmentConfidence={row.enrichment_confidence ?? null}
-                        isEligible={row.is_eligible ?? null}
-                        syncedToHubspot={row.synced_to_hubspot ?? null}
-                        syncStatus={row.sync_status ?? null}
-                        webhookStatus={row.webhook_status ?? null}
-                        lastSyncedAt={row.last_synced_at ?? null}
-                      />
+                      <button
+                        type="button"
+                        onClick={(e) => (expandedId === row.id ? closePanel() : openPanel(row.id, e))}
+                        className="text-xs text-primary hover:underline underline-offset-2 text-left"
+                      >
+                        {expandedId === row.id ? 'Hide sync pipeline' : 'View sync pipeline'}
+                      </button>
                     </div>
                   </td>
 
@@ -173,10 +196,38 @@ export default function InstitutionTable({
                     {formatDate(row.created_at)}
                   </td>
                 </tr>
+                </Fragment>
               ))}
           </tbody>
         </table>
       </div>
     </div>
+    {expandedRow && panelAnchor && typeof document !== 'undefined' && createPortal(
+      <>
+        <div
+          className="fixed inset-0 z-40"
+          aria-hidden
+          onClick={closePanel}
+        />
+        <div
+          className="z-50"
+          style={{ position: 'fixed', top: panelAnchor.top, left: panelAnchor.left }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ExecutionStatusPipelinePanel
+            entityLabel={expandedRow.name}
+            enrichmentConfidence={expandedRow.enrichment_confidence ?? null}
+            isEligible={expandedRow.is_eligible ?? null}
+            syncedToHubspot={expandedRow.synced_to_hubspot ?? null}
+            syncStatus={expandedRow.sync_status ?? null}
+            webhookStatus={expandedRow.webhook_status ?? null}
+            lastSyncedAt={expandedRow.last_synced_at ?? null}
+            onClose={closePanel}
+          />
+        </div>
+      </>,
+      document.body
+    )}
+    </>
   );
 }
