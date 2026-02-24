@@ -55,7 +55,7 @@ function staffToCsv(rows: Staff[], enrichedFormat: boolean): string {
         r.name,
         r.role,
         r.email,
-        r.contact_number ?? r.contact ?? '',
+        r.contact_number ?? '',
         r.institutions?.name ?? String(r.institution_id ?? ''),
       ]
         .map(escapeCsvCell)

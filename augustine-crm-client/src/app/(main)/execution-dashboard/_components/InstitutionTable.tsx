@@ -8,7 +8,7 @@ import type { SyncStatus } from '@/types/execution';
 
 const COLUMNS = [
   { label: 'Institution', align: 'left' as const },
-  { label: 'Contact', align: 'left' as const },
+  { label: 'Contact number', align: 'left' as const },
   { label: 'Address', align: 'left' as const },
   { label: 'Status', align: 'left' as const },
   { label: 'Created', align: 'left' as const },
@@ -125,7 +125,7 @@ export default function InstitutionTable({
                     </div>
                   </td>
 
-                  {/* Contact / email */}
+                  {/* Email + contact number (institution has contact stored as contact number) */}
                   <td className="py-3 px-4 align-top">
                     <div className="flex flex-col gap-1.5 text-xs">
                       <div>
@@ -135,7 +135,7 @@ export default function InstitutionTable({
                         </div>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Contact</span>
+                        <span className="text-muted-foreground">Contact number</span>
                         <div className="text-sm text-foreground">
                           {row.contact ? cell(row.contact) : (
                             <span className="text-muted-foreground">Not available</span>

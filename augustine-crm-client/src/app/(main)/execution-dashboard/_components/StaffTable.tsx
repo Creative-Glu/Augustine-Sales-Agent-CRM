@@ -9,7 +9,7 @@ import type { SyncStatus } from '@/types/execution';
 
 const COLUMNS = [
   { label: 'Staff', align: 'left' as const },
-  { label: 'Contact', align: 'left' as const },
+  { label: 'Contact number', align: 'left' as const },
   { label: 'Institution', align: 'left' as const },
   { label: 'Status', align: 'left' as const },
   { label: 'Created', align: 'left' as const },
@@ -112,7 +112,7 @@ export default function StaffTable({
                     </div>
                   </td>
 
-                  {/* Contact info */}
+                  {/* Email + contact number only (no contact field) */}
                   <td className="py-3 px-4 align-top">
                     <div className="flex flex-col gap-1.5 text-xs">
                       <div>
@@ -128,7 +128,7 @@ export default function StaffTable({
                         </div>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Contact</span>
+                        <span className="text-muted-foreground">Contact number</span>
                         <div className="text-sm text-foreground">
                           {row.contact_number ? cell(row.contact_number) : (
                             <span className="text-muted-foreground">Not available</span>

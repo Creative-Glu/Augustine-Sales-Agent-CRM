@@ -154,7 +154,7 @@ export default function InstitutionStaffModal({
                 <dl className="text-sm">
                   <DetailRow label="Name" value={institution.name} />
                   <DetailRow label="Email" value={institution.email} />
-                  <DetailRow label="Contact" value={institution.contact} />
+                  <DetailRow label="Contact number" value={institution.contact} />
                   <DetailRow label="Website" value={institution.website_url} />
                   <DetailRow label="Address" value={institution.address} />
                   <DetailRow label="Type" value={institution.type} />
