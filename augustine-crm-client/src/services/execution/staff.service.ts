@@ -16,7 +16,9 @@ export interface StaffPaginatedParams {
   is_eligible?: boolean | null;
   synced_to_hubspot?: boolean | null;
   sync_status?: SyncStatus | null;
+  /** Min confidence in percentage 0–100 (UI). Stored in DB as 0–1, so we map before query. */
   confidence_min?: number | null;
+  /** Max confidence in percentage 0–100 (UI). Stored in DB as 0–1, so we map before query. */
   confidence_max?: number | null;
 }
 
@@ -64,8 +66,15 @@ export async function getStaffPaginated({
   if (is_eligible != null) query = query.eq('is_eligible', is_eligible);
   if (synced_to_hubspot != null) query = query.eq('synced_to_hubspot', synced_to_hubspot);
   if (sync_status != null) query = query.eq('sync_status', sync_status);
-  if (confidence_min != null) query = query.gte('enrichment_confidence', confidence_min);
-  if (confidence_max != null) query = query.lte('enrichment_confidence', confidence_max);
+  // DB stores enrichment_confidence as 0–1; filters are in % (0–100)
+  if (confidence_min != null) {
+    const minDecimal = Math.min(1, Math.max(0, Number(confidence_min) / 100));
+    query = query.gte('enrichment_confidence', minDecimal);
+  }
+  if (confidence_max != null) {
+    const maxDecimal = Math.min(1, Math.max(0, Number(confidence_max) / 100));
+    query = query.lte('enrichment_confidence', maxDecimal);
+  }
 
   if (enriched_only) {
     query = query

@@ -243,28 +243,38 @@ export function InstitutionFilters() {
         </Select>
       </div>
       <div className="space-y-1">
-        <Label className="text-xs">Confidence min</Label>
-        <Input
-          type="number"
-          min={0}
-          max={100}
-          placeholder="0"
-          className="w-[88px]"
-          value={confidence_min}
-          onChange={(e) => setParams({ confidence_min: e.target.value || null, offset: null })}
-        />
+        <Label className="text-xs">Confidence min (%)</Label>
+        <div className="flex items-center gap-1">
+          <Input
+            type="text"
+            inputMode="numeric"
+            placeholder="0"
+            className="w-[72px] text-right tabular-nums"
+            value={confidence_min}
+            onChange={(e) => {
+              const digits = e.target.value.replace(/\D/g, '').slice(0, 3);
+              setParams({ confidence_min: digits || null, offset: null });
+            }}
+          />
+          <span className="text-xs text-muted-foreground">%</span>
+        </div>
       </div>
       <div className="space-y-1">
-        <Label className="text-xs">Confidence max</Label>
-        <Input
-          type="number"
-          min={0}
-          max={100}
-          placeholder="100"
-          className="w-[88px]"
-          value={confidence_max}
-          onChange={(e) => setParams({ confidence_max: e.target.value || null, offset: null })}
-        />
+        <Label className="text-xs">Confidence max (%)</Label>
+        <div className="flex items-center gap-1">
+          <Input
+            type="text"
+            inputMode="numeric"
+            placeholder="100"
+            className="w-[72px] text-right tabular-nums"
+            value={confidence_max}
+            onChange={(e) => {
+              const digits = e.target.value.replace(/\D/g, '').slice(0, 3);
+              setParams({ confidence_max: digits || null, offset: null });
+            }}
+          />
+          <span className="text-xs text-muted-foreground">%</span>
+        </div>
       </div>
       <Button
         type="button"
@@ -389,27 +399,33 @@ export function StaffFilters() {
         </Select>
       </div>
       <div className="space-y-1">
-        <Label className="text-xs">Confidence</Label>
+        <Label className="text-xs">Confidence (%)</Label>
         <div className="flex items-center gap-1">
           <Input
-            type="number"
-            min={0}
-            max={100}
-            placeholder="Min"
-            className="w-[72px]"
+            type="text"
+            inputMode="numeric"
+            placeholder="0"
+            className="w-[64px] text-right tabular-nums"
             value={confidence_min}
-            onChange={(e) => setParams({ confidence_min: e.target.value || null, offset: null })}
+            onChange={(e) => {
+              const digits = e.target.value.replace(/\D/g, '').slice(0, 3);
+              setParams({ confidence_min: digits || null, offset: null });
+            }}
           />
+          <span className="text-xs text-muted-foreground">%</span>
           <span className="text-muted-foreground">–</span>
           <Input
-            type="number"
-            min={0}
-            max={100}
-            placeholder="Max"
-            className="w-[72px]"
+            type="text"
+            inputMode="numeric"
+            placeholder="100"
+            className="w-[64px] text-right tabular-nums"
             value={confidence_max}
-            onChange={(e) => setParams({ confidence_max: e.target.value || null, offset: null })}
+            onChange={(e) => {
+              const digits = e.target.value.replace(/\D/g, '').slice(0, 3);
+              setParams({ confidence_max: digits || null, offset: null });
+            }}
           />
+          <span className="text-xs text-muted-foreground">%</span>
         </div>
       </div>
       <Button
