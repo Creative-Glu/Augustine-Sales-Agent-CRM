@@ -152,7 +152,7 @@ export function ExecutionStatusCard({
 
   if (!hasAnyData) {
     return (
-      <div className="w-full sm:w-[260px] lg:w-[300px] rounded-xl border border-dashed border-border/60 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+      <div className="w-full max-w-[260px] rounded-xl border border-dashed border-border/60 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
         <span className="font-medium">Status:</span> <span className="ml-1">Not enriched yet</span>
       </div>
     );
@@ -165,7 +165,7 @@ export function ExecutionStatusCard({
   const webhook = getWebhookBadge(webhookStatus ?? null);
 
   return (
-    <div className="w-full sm:w-[260px] lg:w-[300px] rounded-xl border border-border bg-muted/30 px-3 py-2 shadow-sm">
+    <div className="w-full max-w-[260px] rounded-xl border border-border bg-muted/30 px-3 py-2 shadow-sm">
       <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-xs">
         <div className="text-muted-foreground">Sync status</div>
         <div>

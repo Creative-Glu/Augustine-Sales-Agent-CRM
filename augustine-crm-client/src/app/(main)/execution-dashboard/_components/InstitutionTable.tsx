@@ -2,7 +2,9 @@
 
 import { TableHeader } from '@/components/TableHeader';
 import type { Institution } from '@/types/execution';
-import { ExecutionStatusCard } from './ExecutionStatusCard';
+import { ExecutionStatusDialog } from './ExecutionStatusDialog';
+import { Badge } from '@/components/ui/badge';
+import type { SyncStatus } from '@/types/execution';
 
 const COLUMNS = [
   { label: 'Institution', align: 'left' as const },
@@ -22,6 +24,27 @@ function formatDate(iso: string): string {
   } catch {
     return iso;
   }
+}
+
+function smallSyncBadge(status: SyncStatus | null | undefined) {
+  if (!status) {
+    return <span className="text-xs text-muted-foreground">Sync: Not available</span>;
+  }
+  let className =
+    'border-border/60 bg-muted text-muted-foreground';
+  if (status === 'success') {
+    className = 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';
+  } else if (status === 'failed') {
+    className = 'border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-400';
+  }
+  return (
+    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+      <span>Sync:</span>
+      <Badge variant="outline" className={`h-5 px-2 text-[11px] font-medium border ${className}`}>
+        {status}
+      </Badge>
+    </span>
+  );
 }
 
 export default function InstitutionTable({
@@ -122,17 +145,19 @@ export default function InstitutionTable({
                     </div>
                   </td>
 
-                  {/* Address */}
-                  <td className="py-3 px-4 align-top">
-                    <div className="max-w-xs text-sm text-foreground">
+                  {/* Address – fixed min width so address wraps in readable chunks, not one word per line */}
+                  <td className="py-3 px-4 align-top" style={{ minWidth: '220px' }}>
+                    <div className="text-sm text-foreground break-words" title={row.address ?? undefined}>
                       {row.address ? cell(row.address) : <span className="text-muted-foreground">Not available</span>}
                     </div>
                   </td>
 
-                  {/* Status panel */}
-                  <td className="py-3 px-4 align-top">
-                    <div className="flex justify-end lg:justify-center">
-                      <ExecutionStatusCard
+                  {/* Status panel – stop propagation so row click doesn't open staff modal */}
+                  <td className="py-3 px-4 align-top" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex flex-col items-start gap-1.5">
+                      {smallSyncBadge(row.sync_status ?? null)}
+                      <ExecutionStatusDialog
+                        entityLabel={row.name}
                         enrichmentConfidence={row.enrichment_confidence ?? null}
                         isEligible={row.is_eligible ?? null}
                         syncedToHubspot={row.synced_to_hubspot ?? null}
