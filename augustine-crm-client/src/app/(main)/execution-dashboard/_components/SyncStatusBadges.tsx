@@ -62,56 +62,52 @@ export function SyncStatusBadges({
   const confidenceValid = !Number.isNaN(numConf) && numConf >= 0;
   const confidenceValue = confidenceValid ? String(enrichmentConfidence) : '—';
 
-  const pipe = <span className="text-muted-foreground/50 px-0.5" aria-hidden>·</span>;
-
-  /** Label: value pair for consistent pipeline readability */
-  const Field = ({ label, value, valueClassName }: { label: string; value: string; valueClassName?: string }) => (
-    <span>
-      <span className="font-medium text-foreground/80">{label}:</span>{' '}
-      <span className={valueClassName ?? 'tabular-nums'}>{value}</span>
-    </span>
-  );
-
   return (
-    <div className={`flex flex-wrap items-center gap-x-0 gap-y-1 text-xs text-muted-foreground ${className}`}>
-      <Field
-        label="Enrichment confidence"
-        value={confidenceValue}
-        valueClassName={`tabular-nums ${confidenceValid ? confidenceVariant(numConf) : ''}`}
-      />
-      {pipe}
-      <Field label="Eligible" value={isEligible === true ? 'Yes' : isEligible === false ? 'No' : '—'} />
-      {pipe}
-      <Field label="HubSpot" value={syncedToHubspot === true ? 'Yes' : syncedToHubspot === false ? 'No' : '—'} />
-      {pipe}
-      <span>
-        <span className="font-medium text-foreground/80">Sync:</span>{' '}
+    <div className={`flex flex-col gap-0.5 text-xs text-muted-foreground ${className}`}>
+      {/* Each line is a simple key–value pair for clarity */}
+      <div className="flex items-center gap-2">
+        <span className="font-medium text-foreground/80">Sync:</span>
         {syncStatus != null && syncStatus !== undefined ? (
-          <Badge variant={syncStatusVariant(syncStatus)} className="text-xs font-normal">
+          <Badge variant={syncStatusVariant(syncStatus)} className="text-xs font-normal px-2 py-0.5">
             {syncStatus}
           </Badge>
         ) : (
           <span>—</span>
         )}
-      </span>
-      {pipe}
-      <Field
-        label="Webhook"
-        value={webhookStatus != null && String(webhookStatus).trim() !== '' ? String(webhookStatus) : '—'}
-      />
-      {pipe}
-      <Field label="Synced" value={formatRelativeTime(lastSyncedAt)} />
+      </div>
+
+      <div>
+        <span className="font-medium text-foreground/80">Eligible:</span>{' '}
+        <span>{isEligible === true ? 'Yes' : isEligible === false ? 'No' : '—'}</span>
+      </div>
+
+      <div>
+        <span className="font-medium text-foreground/80">HubSpot:</span>{' '}
+        <span>{syncedToHubspot === true ? 'Synced' : syncedToHubspot === false ? 'Not synced' : '—'}</span>
+      </div>
+
+      <div>
+        <span className="font-medium text-foreground/80">Enrichment confidence:</span>{' '}
+        <span className={`tabular-nums ${confidenceValid ? confidenceVariant(numConf) : ''}`}>{confidenceValue}</span>
+      </div>
+
+      <div>
+        <span className="font-medium text-foreground/80">Webhook:</span>{' '}
+        <span>
+          {webhookStatus != null && String(webhookStatus).trim() !== '' ? String(webhookStatus) : '—'}
+        </span>
+      </div>
+
+      <div>
+        <span className="font-medium text-foreground/80">Last synced:</span>{' '}
+        <span title={lastSyncedAt ?? undefined}>{formatRelativeTime(lastSyncedAt)}</span>
+      </div>
+
       {showLowConfidence && isEligible === false && (
-        <>
-          {pipe}
-          <span className="text-amber-600 dark:text-amber-400">Low confidence</span>
-        </>
+        <div className="text-amber-600 dark:text-amber-400">Low confidence</div>
       )}
       {showReadyForSync && isEligible === true && syncedToHubspot !== true && (
-        <>
-          {pipe}
-          <span className="text-emerald-600 dark:text-emerald-400">Ready for sync</span>
-        </>
+        <div className="text-emerald-600 dark:text-emerald-400">Ready for sync</div>
       )}
     </div>
   );
