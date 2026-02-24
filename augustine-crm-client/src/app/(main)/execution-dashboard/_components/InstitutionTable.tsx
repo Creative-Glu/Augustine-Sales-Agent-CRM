@@ -8,7 +8,7 @@ import type { SyncStatus } from '@/types/execution';
 
 const COLUMNS = [
   { label: 'Institution', align: 'left' as const },
-  { label: 'Contact number', align: 'left' as const },
+  { label: 'Contact', align: 'left' as const },
   { label: 'Address', align: 'left' as const },
   { label: 'Status', align: 'left' as const },
   { label: 'Created', align: 'left' as const },
