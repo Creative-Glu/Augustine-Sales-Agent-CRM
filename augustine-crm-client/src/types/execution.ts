@@ -33,6 +33,9 @@ export interface Result {
   created_at: string;
 }
 
+/** Sync status for HubSpot pipeline (staging in Supabase, source of truth in HubSpot). */
+export type SyncStatus = 'pending' | 'success' | 'failed';
+
 /** Staff – extracted staff details, linked to institution via institution_id */
 export interface Staff {
   staff_id: number;
@@ -46,6 +49,16 @@ export interface Staff {
   created_at: string;
   /** Set when staff is fetched with institution join (e.g. list view). */
   institutions?: { name: string } | null;
+  /** Pipeline / HubSpot sync fields (optional until DB columns exist). */
+  is_eligible?: boolean | null;
+  synced_to_hubspot?: boolean | null;
+  sync_status?: SyncStatus | null;
+  enrichment_confidence?: number | null;
+  webhook_attempts?: number | null;
+  webhook_status?: string | null;
+  last_synced_at?: string | null;
+  sync_error?: string | null;
+  hubspot_contact_id?: string | null;
 }
 
 /** Institution – from execution DB table institutions (id may be number or string from API) */
@@ -58,6 +71,16 @@ export interface Institution {
   address: string | null;
   type: string | null;
   created_at: string;
+  /** Pipeline / HubSpot sync fields (optional until DB columns exist). */
+  is_eligible?: boolean | null;
+  synced_to_hubspot?: boolean | null;
+  sync_status?: SyncStatus | null;
+  enrichment_confidence?: number | null;
+  webhook_attempts?: number | null;
+  webhook_status?: string | null;
+  last_synced_at?: string | null;
+  sync_error?: string | null;
+  hubspot_company_id?: string | null;
 }
 
 export interface PaginatedResponse<T> {

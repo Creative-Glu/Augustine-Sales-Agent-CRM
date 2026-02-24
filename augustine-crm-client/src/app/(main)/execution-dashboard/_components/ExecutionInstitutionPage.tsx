@@ -16,6 +16,7 @@ import { ArrowPathIcon, CalendarDaysIcon, EnvelopeIcon, NoSymbolIcon } from '@he
 import Pagination from '@/components/Pagination';
 import { useInstitutionPaginated, useInstitutionCounts } from '@/services/execution/useExecutionData';
 import type { Institution } from '@/types/execution';
+import { InstitutionFilters } from './ExecutionFilters';
 import InstitutionTable from './InstitutionTable';
 import InstitutionStaffModal from './InstitutionStaffModal';
 
@@ -106,6 +107,7 @@ export default function ExecutionInstitutionPage() {
 
       <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
         <div className="p-6">
+          <InstitutionFilters />
           <div className="flex items-center justify-between gap-4 flex-wrap py-4 border-b border-border/60">
             <p className="text-sm text-muted-foreground font-medium">
               Showing{' '}

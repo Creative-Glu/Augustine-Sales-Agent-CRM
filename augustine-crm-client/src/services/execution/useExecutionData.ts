@@ -11,8 +11,9 @@ import {
   type ResultStatusFilter,
   type ResultSourceFilter,
 } from './result.service';
-import { getStaffPaginated, getStaffCounts } from './staff.service';
+import { getStaffPaginated, getStaffCounts, getSyncLogs } from './staff.service';
 import { getInstitutionPaginated, getInstitutionCounts } from './institution.service';
+import type { SyncStatus } from '@/types/execution';
 import {
   getWebsitesUrlPaginated,
   type WebsitesUrlPaginatedParams,
@@ -20,7 +21,7 @@ import {
 import { getExecutionStats, getRecentJobs, getRecentFailedResults } from './stats.service';
 
 const DEFAULT_LIMIT = 10;
-const VIEWS = ['overview', 'institution', 'websites', 'jobs', 'results', 'staff'] as const;
+const VIEWS = ['overview', 'institution', 'websites', 'jobs', 'results', 'staff', 'sync-logs'] as const;
 export type ExecutionView = (typeof VIEWS)[number];
 
 const VIEW_SEGMENTS: Record<Exclude<ExecutionView, 'overview'>, string> = {
@@ -29,6 +30,7 @@ const VIEW_SEGMENTS: Record<Exclude<ExecutionView, 'overview'>, string> = {
   jobs: 'jobs',
   results: 'results',
   staff: 'staff',
+  'sync-logs': 'sync-logs',
 };
 
 function getOffset(searchParams: URLSearchParams): number {
@@ -66,17 +68,46 @@ export function useExecutionView(): ExecutionView {
   return 'overview';
 }
 
+function parseBoolParam(sp: URLSearchParams, key: string): boolean | undefined {
+  const v = sp.get(key);
+  if (v === '1' || v === 'true') return true;
+  if (v === '0' || v === 'false') return false;
+  return undefined;
+}
+
+function parseNumParam(sp: URLSearchParams, key: string): number | undefined {
+  const v = sp.get(key);
+  if (v == null || v === '') return undefined;
+  const n = Number(v);
+  return Number.isNaN(n) ? undefined : n;
+}
+
 export function useInstitutionPaginated() {
   const searchParams = useSearchParams();
   const view = useExecutionView();
   const offset = getOffset(searchParams);
   const limit = getLimit(searchParams);
+  const is_eligible = parseBoolParam(searchParams, 'is_eligible');
+  const synced_to_hubspot = parseBoolParam(searchParams, 'synced_to_hubspot');
+  const sync_status = (searchParams.get('sync_status') as SyncStatus | null) || undefined;
+  const confidence_min = parseNumParam(searchParams, 'confidence_min');
+  const confidence_max = parseNumParam(searchParams, 'confidence_max');
 
   return useQuery({
-    queryKey: ['execution', 'institution', view, offset, limit],
-    queryFn: () => getInstitutionPaginated({ offset, limit }),
+    queryKey: ['execution', 'institution', view, offset, limit, is_eligible, synced_to_hubspot, sync_status, confidence_min, confidence_max],
+    queryFn: () =>
+      getInstitutionPaginated({
+        offset,
+        limit,
+        is_eligible: is_eligible ?? null,
+        synced_to_hubspot: synced_to_hubspot ?? null,
+        sync_status: sync_status ?? null,
+        confidence_min: confidence_min ?? null,
+        confidence_max: confidence_max ?? null,
+      }),
     enabled: view === 'institution',
-    staleTime: 30 * 1000,
+    staleTime: 20 * 1000,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -194,9 +225,31 @@ export function useStaffPaginated() {
   const staff_date_to = searchParams.get('staff_date_to') ?? undefined;
   const enriched_only = searchParams.get('enriched') === '1';
   const enriched_require_phone = searchParams.get('phone') !== '0';
+  const is_eligible = parseBoolParam(searchParams, 'is_eligible');
+  const synced_to_hubspot = parseBoolParam(searchParams, 'synced_to_hubspot');
+  const sync_status = (searchParams.get('sync_status') as SyncStatus | null) || undefined;
+  const confidence_min = parseNumParam(searchParams, 'confidence_min');
+  const confidence_max = parseNumParam(searchParams, 'confidence_max');
 
   return useQuery({
-    queryKey: ['execution', 'staff', view, offset, limit, name_search, email_search, staff_date_from, staff_date_to, enriched_only, enriched_require_phone],
+    queryKey: [
+      'execution',
+      'staff',
+      view,
+      offset,
+      limit,
+      name_search,
+      email_search,
+      staff_date_from,
+      staff_date_to,
+      enriched_only,
+      enriched_require_phone,
+      is_eligible,
+      synced_to_hubspot,
+      sync_status,
+      confidence_min,
+      confidence_max,
+    ],
     queryFn: () =>
       getStaffPaginated({
         offset,
@@ -207,9 +260,15 @@ export function useStaffPaginated() {
         date_to: staff_date_to || undefined,
         enriched_only,
         enriched_require_phone,
+        is_eligible: is_eligible ?? undefined,
+        synced_to_hubspot: synced_to_hubspot ?? undefined,
+        sync_status: sync_status ?? undefined,
+        confidence_min: confidence_min ?? undefined,
+        confidence_max: confidence_max ?? undefined,
       }),
     enabled: view === 'staff',
-    staleTime: 30 * 1000,
+    staleTime: 20 * 1000,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -230,5 +289,16 @@ export function useStaffCounts(last24h: boolean, enriched_only = false, enriched
     queryFn: () => getStaffCounts(last24h, enriched_only, enriched_require_phone),
     enabled: view === 'staff',
     staleTime: 60 * 1000,
+  });
+}
+
+export function useSyncLogs(offset: number) {
+  const view = useExecutionView();
+  return useQuery({
+    queryKey: ['execution', 'sync-logs', view, offset],
+    queryFn: () => getSyncLogs(offset),
+    enabled: view === 'sync-logs',
+    staleTime: 20 * 1000,
+    refetchOnWindowFocus: true,
   });
 }

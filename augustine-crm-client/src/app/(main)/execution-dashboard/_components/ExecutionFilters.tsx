@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import type { JobStatusFilter } from '@/services/execution/job.service';
 import type { ResultStatusFilter, ResultSourceFilter } from '@/services/execution/result.service';
+import type { SyncStatus } from '@/types/execution';
 
 function useExecutionParams() {
   const router = useRouter();
@@ -182,12 +183,123 @@ export function ResultsFilters() {
   );
 }
 
+export function InstitutionFilters() {
+  const { searchParams, setParams } = useExecutionParams();
+  const is_eligible = searchParams.get('is_eligible') ?? '';
+  const synced_to_hubspot = searchParams.get('synced_to_hubspot') ?? '';
+  const sync_status = searchParams.get('sync_status') ?? '';
+  const confidence_min = searchParams.get('confidence_min') ?? '';
+  const confidence_max = searchParams.get('confidence_max') ?? '';
+
+  return (
+    <div className={filterBarClass}>
+      <div className="space-y-1">
+        <Label className="text-xs">Eligible</Label>
+        <Select
+          value={is_eligible || 'all'}
+          onValueChange={(v) => setParams({ is_eligible: v === 'all' ? null : v, offset: null })}
+        >
+          <SelectTrigger className="w-[100px]">
+            <SelectValue placeholder="All" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="1">Yes</SelectItem>
+            <SelectItem value="0">No</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1">
+        <Label className="text-xs">Synced to HubSpot</Label>
+        <Select
+          value={synced_to_hubspot || 'all'}
+          onValueChange={(v) => setParams({ synced_to_hubspot: v === 'all' ? null : v, offset: null })}
+        >
+          <SelectTrigger className="w-[100px]">
+            <SelectValue placeholder="All" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="1">Yes</SelectItem>
+            <SelectItem value="0">No</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1">
+        <Label className="text-xs">Sync status</Label>
+        <Select
+          value={sync_status || 'all'}
+          onValueChange={(v) => setParams({ sync_status: v === 'all' ? null : (v as SyncStatus), offset: null })}
+        >
+          <SelectTrigger className="w-[110px]">
+            <SelectValue placeholder="All" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="success">Success</SelectItem>
+            <SelectItem value="failed">Failed</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1">
+        <Label className="text-xs">Confidence min</Label>
+        <Input
+          type="number"
+          min={0}
+          max={100}
+          placeholder="0"
+          className="w-[88px]"
+          value={confidence_min}
+          onChange={(e) => setParams({ confidence_min: e.target.value || null, offset: null })}
+        />
+      </div>
+      <div className="space-y-1">
+        <Label className="text-xs">Confidence max</Label>
+        <Input
+          type="number"
+          min={0}
+          max={100}
+          placeholder="100"
+          className="w-[88px]"
+          value={confidence_max}
+          onChange={(e) => setParams({ confidence_max: e.target.value || null, offset: null })}
+        />
+      </div>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() =>
+          setParams({
+            is_eligible: null,
+            synced_to_hubspot: null,
+            sync_status: null,
+            confidence_min: null,
+            confidence_max: null,
+            offset: null,
+          })
+        }
+        className="gap-2 cursor-pointer"
+      >
+        <ArrowPathIcon className="w-4 h-4 shrink-0" />
+        Reset
+      </Button>
+    </div>
+  );
+}
+
 export function StaffFilters() {
   const { searchParams, setParams } = useExecutionParams();
   const staff_name = searchParams.get('staff_name') ?? '';
   const staff_email = searchParams.get('staff_email') ?? '';
   const staff_date_from = searchParams.get('staff_date_from') ?? '';
   const staff_date_to = searchParams.get('staff_date_to') ?? '';
+  const is_eligible = searchParams.get('is_eligible') ?? '';
+  const synced_to_hubspot = searchParams.get('synced_to_hubspot') ?? '';
+  const sync_status = searchParams.get('sync_status') ?? '';
+  const confidence_min = searchParams.get('confidence_min') ?? '';
+  const confidence_max = searchParams.get('confidence_max') ?? '';
 
   return (
     <div className={filterBarClass}>
@@ -227,6 +339,79 @@ export function StaffFilters() {
           onChange={(e) => setParams({ staff_date_to: e.target.value || null, offset: null })}
         />
       </div>
+      <div className="space-y-1">
+        <Label className="text-xs">Eligible</Label>
+        <Select
+          value={is_eligible || 'all'}
+          onValueChange={(v) => setParams({ is_eligible: v === 'all' ? null : v, offset: null })}
+        >
+          <SelectTrigger className="w-[100px]">
+            <SelectValue placeholder="All" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="1">Yes</SelectItem>
+            <SelectItem value="0">No</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1">
+        <Label className="text-xs">Synced to HubSpot</Label>
+        <Select
+          value={synced_to_hubspot || 'all'}
+          onValueChange={(v) => setParams({ synced_to_hubspot: v === 'all' ? null : v, offset: null })}
+        >
+          <SelectTrigger className="w-[100px]">
+            <SelectValue placeholder="All" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="1">Yes</SelectItem>
+            <SelectItem value="0">No</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1">
+        <Label className="text-xs">Sync status</Label>
+        <Select
+          value={sync_status || 'all'}
+          onValueChange={(v) => setParams({ sync_status: v === 'all' ? null : (v as SyncStatus), offset: null })}
+        >
+          <SelectTrigger className="w-[110px]">
+            <SelectValue placeholder="All" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="success">Success</SelectItem>
+            <SelectItem value="failed">Failed</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1">
+        <Label className="text-xs">Confidence</Label>
+        <div className="flex items-center gap-1">
+          <Input
+            type="number"
+            min={0}
+            max={100}
+            placeholder="Min"
+            className="w-[72px]"
+            value={confidence_min}
+            onChange={(e) => setParams({ confidence_min: e.target.value || null, offset: null })}
+          />
+          <span className="text-muted-foreground">–</span>
+          <Input
+            type="number"
+            min={0}
+            max={100}
+            placeholder="Max"
+            className="w-[72px]"
+            value={confidence_max}
+            onChange={(e) => setParams({ confidence_max: e.target.value || null, offset: null })}
+          />
+        </div>
+      </div>
       <Button
         type="button"
         variant="outline"
@@ -237,6 +422,11 @@ export function StaffFilters() {
             staff_email: null,
             staff_date_from: null,
             staff_date_to: null,
+            is_eligible: null,
+            synced_to_hubspot: null,
+            sync_status: null,
+            confidence_min: null,
+            confidence_max: null,
             offset: null,
           })
         }

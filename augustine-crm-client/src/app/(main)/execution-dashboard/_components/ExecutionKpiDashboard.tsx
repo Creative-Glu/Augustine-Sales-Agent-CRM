@@ -132,12 +132,43 @@ export default function ExecutionKpiDashboard({
     );
   }
 
-  const { jobs, websites, results, institutions, staff } = stats;
+  const { jobs, websites, results, institutions, staff, institutionSync, staffSync } = stats;
   const successRate =
     results.total > 0 ? Math.round((results.success / results.total) * 100) : null;
+  const instSync = institutionSync ?? { eligible: 0, synced: 0, failed: 0 };
+  const stSync = staffSync ?? { eligible: 0, synced: 0, failed: 0 };
 
   return (
     <div className="space-y-8">
+      {/* Metrics summary – pipeline visibility */}
+      <div>
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+          Pipeline summary
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          <KpiCard title="Total institutions" value={institutions} icon={BuildingOffice2Icon} />
+          <KpiCard title="Total staff" value={staff} icon={UserGroupIcon} />
+          <KpiCard
+            title="Eligible (inst + staff)"
+            value={(instSync.eligible ?? 0) + (stSync.eligible ?? 0)}
+            sub={`${instSync.eligible ?? 0} inst · ${stSync.eligible ?? 0} staff`}
+            icon={UserGroupIcon}
+          />
+          <KpiCard
+            title="Synced to HubSpot"
+            value={(instSync.synced ?? 0) + (stSync.synced ?? 0)}
+            sub={`${instSync.synced ?? 0} inst · ${stSync.synced ?? 0} staff`}
+            icon={DocumentCheckIcon}
+          />
+          <KpiCard
+            title="Failed sync"
+            value={(instSync.failed ?? 0) + (stSync.failed ?? 0)}
+            sub={`${instSync.failed ?? 0} inst · ${stSync.failed ?? 0} staff`}
+            icon={ExclamationTriangleIcon}
+          />
+        </div>
+      </div>
+
       {/* Top-level KPIs */}
       <div>
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">

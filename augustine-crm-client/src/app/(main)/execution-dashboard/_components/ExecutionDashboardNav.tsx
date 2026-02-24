@@ -8,11 +8,12 @@ import type { ExecutionView } from '@/services/execution/useExecutionData';
 
 const VIEW_LABELS: Record<ExecutionView, string> = {
   overview: 'Overview',
-  institution: 'Institution',
+  institution: 'Institutions',
   websites: 'Website URLs',
   jobs: 'Jobs',
   results: 'Results',
   staff: 'Staff',
+  'sync-logs': 'Sync logs',
 };
 
 const VIEW_PATHS: Record<ExecutionView, string> = {
@@ -22,6 +23,7 @@ const VIEW_PATHS: Record<ExecutionView, string> = {
   jobs: '/execution-dashboard/jobs',
   results: '/execution-dashboard/results',
   staff: '/execution-dashboard/staff',
+  'sync-logs': '/execution-dashboard/sync-logs',
 };
 
 export default function ExecutionDashboardNav() {

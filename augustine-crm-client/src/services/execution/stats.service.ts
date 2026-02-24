@@ -25,12 +25,21 @@ export interface ResultCounts {
   error: number;
 }
 
+export interface SyncPipelineCounts {
+  eligible: number;
+  synced: number;
+  failed: number;
+}
+
 export interface ExecutionStats {
   jobs: JobCounts;
   websites: WebsiteCounts;
   results: ResultCounts;
   institutions: number;
   staff: number;
+  /** Pipeline metrics: eligible / synced / failed (staff + institutions). */
+  institutionSync?: SyncPipelineCounts;
+  staffSync?: SyncPipelineCounts;
 }
 
 async function countJobsByStatus(status: string): Promise<number> {
@@ -118,15 +127,47 @@ async function getStaffCount(): Promise<number> {
   return count ?? 0;
 }
 
+async function getSyncPipelineCounts(
+  table: 'institutions' | 'staff',
+  eligibleCol: string,
+  syncedCol: string,
+  statusCol: string
+): Promise<SyncPipelineCounts> {
+  try {
+    const [eligibleRes, syncedRes, failedRes] = await Promise.all([
+      executionSupabase.from(table).select('*', { count: 'exact', head: true }).eq(eligibleCol, true),
+      executionSupabase.from(table).select('*', { count: 'exact', head: true }).eq(syncedCol, true),
+      executionSupabase.from(table).select('*', { count: 'exact', head: true }).eq(statusCol, 'failed'),
+    ]);
+    return {
+      eligible: eligibleRes.error ? 0 : (eligibleRes.count ?? 0),
+      synced: syncedRes.error ? 0 : (syncedRes.count ?? 0),
+      failed: failedRes.error ? 0 : (failedRes.count ?? 0),
+    };
+  } catch {
+    return { eligible: 0, synced: 0, failed: 0 };
+  }
+}
+
 export async function getExecutionStats(): Promise<ExecutionStats> {
-  const [jobs, websites, results, institutions, staff] = await Promise.all([
+  const [jobs, websites, results, institutions, staff, institutionSync, staffSync] = await Promise.all([
     getJobCounts(),
     getWebsiteCounts(),
     getResultCounts(),
     getInstitutionCount(),
     getStaffCount(),
+    getSyncPipelineCounts('institutions', 'is_eligible', 'synced_to_hubspot', 'sync_status'),
+    getSyncPipelineCounts('staff', 'is_eligible', 'synced_to_hubspot', 'sync_status'),
   ]);
-  return { jobs, websites, results, institutions, staff };
+  return {
+    jobs,
+    websites,
+    results,
+    institutions,
+    staff,
+    institutionSync,
+    staffSync,
+  };
 }
 
 const RECENT_JOBS_LIMIT = 15;

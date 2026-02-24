@@ -1,5 +1,6 @@
 import { executionSupabase } from '@/lib/executionSupabaseClient';
 import { Staff } from '@/types/execution';
+import type { SyncStatus } from '@/types/execution';
 
 export interface StaffPaginatedParams {
   offset: number;
@@ -12,6 +13,11 @@ export interface StaffPaginatedParams {
   enriched_only?: boolean;
   /** When true with enriched_only, require contact_number. When false, phone is optional. */
   enriched_require_phone?: boolean;
+  is_eligible?: boolean | null;
+  synced_to_hubspot?: boolean | null;
+  sync_status?: SyncStatus | null;
+  confidence_min?: number | null;
+  confidence_max?: number | null;
 }
 
 export interface StaffPaginatedResponse {
@@ -32,6 +38,11 @@ export async function getStaffPaginated({
   date_to,
   enriched_only,
   enriched_require_phone = true,
+  is_eligible,
+  synced_to_hubspot,
+  sync_status,
+  confidence_min,
+  confidence_max,
 }: StaffPaginatedParams): Promise<StaffPaginatedResponse> {
   let query = executionSupabase
     .from('staff')
@@ -49,6 +60,12 @@ export async function getStaffPaginated({
     toEnd.setUTCHours(23, 59, 59, 999);
     query = query.lte('created_at', toEnd.toISOString());
   }
+
+  if (is_eligible != null) query = query.eq('is_eligible', is_eligible);
+  if (synced_to_hubspot != null) query = query.eq('synced_to_hubspot', synced_to_hubspot);
+  if (sync_status != null) query = query.eq('sync_status', sync_status);
+  if (confidence_min != null) query = query.gte('enrichment_confidence', confidence_min);
+  if (confidence_max != null) query = query.lte('enrichment_confidence', confidence_max);
 
   if (enriched_only) {
     query = query
@@ -239,4 +256,73 @@ export async function getStaffByInstitutionId(institution_id: number | string): 
 
   if (error) throw new Error(`Error fetching staff by institution: ${error.message}`);
   return (data ?? []) as Staff[];
+}
+
+/** Row shape for Sync Logs page: staff and institutions with sync fields. */
+export interface SyncLogEntry {
+  type: 'staff' | 'institution';
+  id: number | string;
+  name: string;
+  sync_error: string | null;
+  webhook_attempts: number | null;
+  last_synced_at: string | null;
+  sync_status: string | null;
+  synced_to_hubspot: boolean | null;
+}
+
+const SYNC_LOGS_PAGE_SIZE = 50;
+
+export async function getSyncLogs(offset = 0): Promise<{ data: SyncLogEntry[]; total: number; hasMore: boolean }> {
+  const limit = SYNC_LOGS_PAGE_SIZE * 2;
+  const [staffRes, instRes] = await Promise.all([
+    executionSupabase
+      .from('staff')
+      .select('staff_id, name, sync_error, webhook_attempts, last_synced_at, sync_status, synced_to_hubspot', {
+        count: 'exact',
+        head: false,
+      })
+      .order('last_synced_at', { ascending: false, nullsFirst: false })
+      .range(0, limit - 1),
+    executionSupabase
+      .from('institutions')
+      .select('id, name, sync_error, webhook_attempts, last_synced_at, sync_status, synced_to_hubspot', {
+        count: 'exact',
+        head: false,
+      })
+      .order('last_synced_at', { ascending: false, nullsFirst: false })
+      .range(0, limit - 1),
+  ]);
+
+  const staffData = (staffRes.data ?? []).map((r: Record<string, unknown>) => ({
+    type: 'staff' as const,
+    id: r.staff_id,
+    name: String(r.name ?? '—'),
+    sync_error: r.sync_error != null ? String(r.sync_error) : null,
+    webhook_attempts: typeof r.webhook_attempts === 'number' ? r.webhook_attempts : null,
+    last_synced_at: r.last_synced_at != null ? String(r.last_synced_at) : null,
+    sync_status: r.sync_status != null ? String(r.sync_status) : null,
+    synced_to_hubspot: r.synced_to_hubspot === true,
+  }));
+
+  const instData = (instRes.data ?? []).map((r: Record<string, unknown>) => ({
+    type: 'institution' as const,
+    id: r.id,
+    name: String(r.name ?? '—'),
+    sync_error: r.sync_error != null ? String(r.sync_error) : null,
+    webhook_attempts: typeof r.webhook_attempts === 'number' ? r.webhook_attempts : null,
+    last_synced_at: r.last_synced_at != null ? String(r.last_synced_at) : null,
+    sync_status: r.sync_status != null ? String(r.sync_status) : null,
+    synced_to_hubspot: r.synced_to_hubspot === true,
+  }));
+
+  const combined = [...staffData, ...instData].sort((a, b) => {
+    const aTime = a.last_synced_at ? new Date(a.last_synced_at).getTime() : 0;
+    const bTime = b.last_synced_at ? new Date(b.last_synced_at).getTime() : 0;
+    return bTime - aTime;
+  });
+  const total = (staffRes.count ?? 0) + (instRes.count ?? 0);
+  const page = combined.slice(offset, offset + SYNC_LOGS_PAGE_SIZE);
+  const hasMore = offset + page.length < combined.length || combined.length >= limit * 2;
+
+  return { data: page, total, hasMore };
 }

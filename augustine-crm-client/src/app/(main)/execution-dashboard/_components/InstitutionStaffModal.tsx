@@ -12,6 +12,41 @@ import type { Institution } from '@/types/execution';
 import type { Staff } from '@/types/execution';
 import { getStaffByInstitutionId } from '@/services/execution/staff.service';
 
+function ManagedInHubSpotBanner({
+  entityType,
+  hubspotId,
+  portalId,
+}: {
+  entityType: 'institution' | 'staff';
+  hubspotId?: string | null;
+  portalId?: string;
+}) {
+  const href =
+    portalId && hubspotId
+      ? entityType === 'staff'
+        ? `https://app.hubspot.com/contacts/${portalId}/contact/${hubspotId}`
+        : `https://app.hubspot.com/contacts/${portalId}/company/${hubspotId}`
+      : null;
+
+  return (
+    <div className="rounded-lg border border-border/60 bg-muted/40 px-3 py-2 flex items-center justify-between gap-2 mb-4">
+      <span className="text-sm font-medium text-muted-foreground">Managed in HubSpot</span>
+      {href ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-primary hover:underline"
+        >
+          Open in HubSpot
+        </a>
+      ) : (
+        <span className="text-xs text-muted-foreground">Configure NEXT_PUBLIC_HUBSPOT_PORTAL_ID for link</span>
+      )}
+    </div>
+  );
+}
+
 const STAFF_COLUMNS = [
   { label: 'Name', align: 'left' as const },
   { label: 'Role', align: 'left' as const },
@@ -108,15 +143,24 @@ export default function InstitutionStaffModal({
             !institution ? (
               <p className="text-sm text-muted-foreground py-4">No institution selected.</p>
             ) : (
-              <dl className="text-sm">
-                <DetailRow label="Name" value={institution.name} />
-                <DetailRow label="Email" value={institution.email} />
-                <DetailRow label="Contact" value={institution.contact} />
-                <DetailRow label="Website" value={institution.website_url} />
-                <DetailRow label="Address" value={institution.address} />
-                <DetailRow label="Type" value={institution.type} />
-                <DetailRow label="Created" value={formatDate(institution.created_at)} />
-              </dl>
+              <>
+                {institution.synced_to_hubspot === true && (
+                  <ManagedInHubSpotBanner
+                    entityType="institution"
+                    hubspotId={institution.hubspot_company_id}
+                    portalId={process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID}
+                  />
+                )}
+                <dl className="text-sm">
+                  <DetailRow label="Name" value={institution.name} />
+                  <DetailRow label="Email" value={institution.email} />
+                  <DetailRow label="Contact" value={institution.contact} />
+                  <DetailRow label="Website" value={institution.website_url} />
+                  <DetailRow label="Address" value={institution.address} />
+                  <DetailRow label="Type" value={institution.type} />
+                  <DetailRow label="Created" value={formatDate(institution.created_at)} />
+                </dl>
+              </>
             )
           ) : (
             <>
@@ -132,15 +176,36 @@ export default function InstitutionStaffModal({
                   </p>
                 </div>
               ) : (
-                <table className="w-full">
-                  <TableHeader columns={STAFF_COLUMNS} />
-                  <tbody>
-                    {staff.map((row) => (
-                      <tr
-                        key={row.staff_id}
-                        className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="py-3 px-4 font-medium text-card-foreground">{cell(row.name)}</td>
+                <>
+                  {staff.some((s) => s.synced_to_hubspot === true) && (
+                    <ManagedInHubSpotBanner
+                      entityType="staff"
+                      portalId={process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID}
+                    />
+                  )}
+                  <table className="w-full">
+                    <TableHeader columns={STAFF_COLUMNS} />
+                    <tbody>
+                      {staff.map((row) => (
+                        <tr
+                          key={row.staff_id}
+                          className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+                        >
+                          <td className="py-3 px-4 font-medium text-foreground">
+                            <div className="flex flex-col gap-0.5">
+                              {cell(row.name)}
+                              {row.synced_to_hubspot === true && row.hubspot_contact_id && process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID && (
+                                <a
+                                  href={`https://app.hubspot.com/contacts/${process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID}/contact/${row.hubspot_contact_id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-primary hover:underline"
+                                >
+                                  Open in HubSpot
+                                </a>
+                              )}
+                            </div>
+                          </td>
                         <td className="py-3 px-4 text-sm text-muted-foreground">{cell(row.role)}</td>
                         <td className="py-3 px-4 text-sm">
                           {row.email ? (
@@ -152,13 +217,14 @@ export default function InstitutionStaffModal({
                           )}
                         </td>
                         <td className="py-3 px-4 text-sm text-muted-foreground">{cell(row.contact_number)}</td>
-                        <td className="py-3 px-4 text-sm text-muted-foreground">
-                          {formatDate(row.created_at)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                          <td className="py-3 px-4 text-sm text-muted-foreground">
+                            {formatDate(row.created_at)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </>
               )}
             </>
           )}

@@ -1,6 +1,7 @@
 'use client';
 
 import { TableHeader } from '@/components/TableHeader';
+import { SyncStatusBadges } from '@/app/(main)/execution-dashboard/_components/SyncStatusBadges';
 import type { Institution } from '@/types/execution';
 
 const COLUMNS = [
@@ -10,6 +11,7 @@ const COLUMNS = [
   { label: 'Website', align: 'left' as const },
   { label: 'Address', align: 'left' as const },
   { label: 'Type', align: 'left' as const },
+  { label: 'Sync status', align: 'left' as const },
   { label: 'Created', align: 'left' as const },
 ];
 
@@ -80,7 +82,28 @@ export default function InstitutionTable({
                   className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer"
                   onClick={() => onSelect?.(row)}
                 >
-                  <td className="py-3 px-4 font-medium text-foreground">{cell(row.name)}</td>
+                  <td className="py-3 px-4 font-medium text-foreground">
+                    <div className="flex flex-col gap-1">
+                      <span>{cell(row.name)}</span>
+                      {row.synced_to_hubspot === true && (
+                        <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
+                          <span className="text-xs text-muted-foreground font-medium">Managed in HubSpot</span>
+                          {row.hubspot_company_id && process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID ? (
+                            <a
+                              href={`https://app.hubspot.com/contacts/${process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID}/company/${row.hubspot_company_id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-primary hover:underline"
+                            >
+                              Open in HubSpot
+                            </a>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Open in HubSpot (set portal ID)</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </td>
                   <td className="py-3 px-4 text-muted-foreground">{cell(row.email)}</td>
                   <td className="py-3 px-4 text-muted-foreground">{cell(row.contact)}</td>
                   <td className="py-3 px-4">
@@ -102,6 +125,16 @@ export default function InstitutionTable({
                     {cell(row.address)}
                   </td>
                   <td className="py-3 px-4 text-muted-foreground">{cell(row.type)}</td>
+                  <td className="py-3 px-4">
+                    <SyncStatusBadges
+                      enrichmentConfidence={row.enrichment_confidence}
+                      isEligible={row.is_eligible}
+                      syncedToHubspot={row.synced_to_hubspot}
+                      syncStatus={row.sync_status ?? undefined}
+                      webhookStatus={row.webhook_status}
+                      lastSyncedAt={row.last_synced_at}
+                    />
+                  </td>
                   <td className="py-3 px-4 text-muted-foreground">
                     {formatDate(row.created_at)}
                   </td>

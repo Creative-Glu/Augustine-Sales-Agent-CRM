@@ -1,9 +1,15 @@
 import { executionSupabase } from '@/lib/executionSupabaseClient';
 import { Institution } from '@/types/execution';
+import type { SyncStatus } from '@/types/execution';
 
 export interface InstitutionPaginatedParams {
   offset: number;
   limit: number;
+  is_eligible?: boolean | null;
+  synced_to_hubspot?: boolean | null;
+  sync_status?: SyncStatus | null;
+  confidence_min?: number | null;
+  confidence_max?: number | null;
 }
 
 export interface InstitutionPaginatedResponse {
@@ -15,12 +21,24 @@ export interface InstitutionPaginatedResponse {
 export async function getInstitutionPaginated({
   offset,
   limit,
+  is_eligible,
+  synced_to_hubspot,
+  sync_status,
+  confidence_min,
+  confidence_max,
 }: InstitutionPaginatedParams): Promise<InstitutionPaginatedResponse> {
-  const { data, error, count } = await executionSupabase
+  let query = executionSupabase
     .from('institutions')
     .select('*', { count: 'exact', head: false })
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
+    .order('created_at', { ascending: false });
+
+  if (is_eligible != null) query = query.eq('is_eligible', is_eligible);
+  if (synced_to_hubspot != null) query = query.eq('synced_to_hubspot', synced_to_hubspot);
+  if (sync_status != null) query = query.eq('sync_status', sync_status);
+  if (confidence_min != null) query = query.gte('enrichment_confidence', confidence_min);
+  if (confidence_max != null) query = query.lte('enrichment_confidence', confidence_max);
+
+  const { data, error, count } = await query.range(offset, offset + limit - 1);
 
   if (error) throw new Error(`Error fetching institution: ${error.message}`);
 
