@@ -40,7 +40,7 @@ export function ExecutionStatusPipelinePanel({
         )}
       </div>
       <p className="text-[11px] text-muted-foreground">
-        <span className="font-medium text-foreground">1. Enrichment</span> → <span className="font-medium text-foreground">2. Eligibility</span> → <span className="font-medium text-foreground">3. HubSpot</span> → <span className="font-medium text-foreground">4. Webhook</span>
+        <span className="font-medium text-foreground">1. Enrichment</span> → <span className="font-medium text-foreground">2. Eligibility</span> → <span className="font-medium text-foreground">3. HubSpot</span> → <span className="font-medium text-foreground">4. Queue job</span>
       </p>
       <div className="mt-1.5 border-t border-border/60 pt-1.5">
         <ExecutionStatusCard

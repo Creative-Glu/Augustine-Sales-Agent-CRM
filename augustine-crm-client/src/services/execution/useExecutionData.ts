@@ -19,9 +19,10 @@ import {
   type WebsitesUrlPaginatedParams,
 } from '@/services/websites-url/websitesUrl.service';
 import { getExecutionStats, getRecentJobs, getRecentFailedResults } from './stats.service';
+import type { SyncQueueResponse } from '@/types/execution';
 
 const DEFAULT_LIMIT = 10;
-const VIEWS = ['overview', 'institution', 'websites', 'jobs', 'results', 'staff', 'sync-logs'] as const;
+const VIEWS = ['overview', 'institution', 'websites', 'jobs', 'results', 'staff', 'sync-queue'] as const;
 export type ExecutionView = (typeof VIEWS)[number];
 
 const VIEW_SEGMENTS: Record<Exclude<ExecutionView, 'overview'>, string> = {
@@ -30,7 +31,7 @@ const VIEW_SEGMENTS: Record<Exclude<ExecutionView, 'overview'>, string> = {
   jobs: 'jobs',
   results: 'results',
   staff: 'staff',
-  'sync-logs': 'sync-logs',
+  'sync-queue': 'sync-queue',
 };
 
 function getOffset(searchParams: URLSearchParams): number {
@@ -299,6 +300,33 @@ export function useSyncLogs(offset: number) {
     queryFn: () => getSyncLogs(offset),
     enabled: view === 'sync-logs',
     staleTime: 20 * 1000,
+    refetchOnWindowFocus: true,
+  });
+}
+
+async function fetchSyncQueue(params: {
+  status?: string;
+  entity_type?: string;
+  limit?: number;
+}): Promise<SyncQueueResponse> {
+  const sp = new URLSearchParams();
+  if (params.status) sp.set('status', params.status);
+  if (params.entity_type) sp.set('entity_type', params.entity_type);
+  sp.set('limit', String(params.limit ?? 50));
+  const res = await fetch(`/api/sync-queue?${sp.toString()}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error('Failed to fetch sync queue');
+  return res.json();
+}
+
+export function useSyncQueue(params: { status?: string; entity_type?: string; limit?: number }) {
+  const view = useExecutionView();
+  const limit = params.limit ?? 50;
+  return useQuery({
+    queryKey: ['execution', 'sync-queue', view, params.status, params.entity_type, limit],
+    queryFn: () => fetchSyncQueue({ ...params, limit }),
+    enabled: view === 'sync-queue',
+    staleTime: 10 * 1000,
+    refetchInterval: 10000,
     refetchOnWindowFocus: true,
   });
 }

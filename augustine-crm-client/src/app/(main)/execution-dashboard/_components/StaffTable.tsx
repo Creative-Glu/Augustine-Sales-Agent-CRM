@@ -39,6 +39,10 @@ function smallSyncBadge(status: SyncStatus | null | undefined) {
     className = 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';
   } else if (status === 'failed') {
     className = 'border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-400';
+  } else if (status === 'processing') {
+    className = 'border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-400';
+  } else if (status === 'pending') {
+    className = 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400';
   }
   return (
     <span className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -47,6 +51,42 @@ function smallSyncBadge(status: SyncStatus | null | undefined) {
         {status}
       </Badge>
     </span>
+  );
+}
+
+function queueBadge(syncStatus: SyncStatus | null | undefined, syncedToHubspot: boolean | null | undefined) {
+  if (syncStatus === 'success' || syncedToHubspot === true) {
+    return (
+      <Badge variant="outline" className="h-5 px-2 text-[11px] font-medium border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+        Synced
+      </Badge>
+    );
+  }
+  if (syncStatus === 'pending') {
+    return (
+      <Badge variant="outline" className="h-5 px-2 text-[11px] font-medium border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400">
+        Queued
+      </Badge>
+    );
+  }
+  if (syncStatus === 'processing') {
+    return (
+      <Badge variant="outline" className="h-5 px-2 text-[11px] font-medium border border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-400">
+        Processing
+      </Badge>
+    );
+  }
+  if (syncStatus === 'failed') {
+    return (
+      <Badge variant="outline" className="h-5 px-2 text-[11px] font-medium border border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-400">
+        Failed
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="outline" className="h-5 px-2 text-[11px] font-medium border border-border/60 bg-muted text-muted-foreground">
+      Not queued
+    </Badge>
   );
 }
 
@@ -198,10 +238,13 @@ export default function StaffTable({
                     )}
                   </td>
 
-                  {/* Status – click opens panel above or below */}
+                  {/* Status – sync + queue badges, click opens panel above or below */}
                   <td className="py-3 px-4 align-top">
                     <div className="flex flex-col items-start gap-1.5">
-                      {smallSyncBadge(row.sync_status ?? null)}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {smallSyncBadge(row.sync_status ?? null)}
+                        {queueBadge(row.sync_status ?? null, row.synced_to_hubspot ?? null)}
+                      </div>
                       <button
                         type="button"
                         onClick={(e) => (expandedId === row.staff_id ? closePanel() : openPanel(row.staff_id, e))}

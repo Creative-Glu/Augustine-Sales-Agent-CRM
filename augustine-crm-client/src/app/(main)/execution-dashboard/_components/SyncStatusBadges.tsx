@@ -38,6 +38,7 @@ export interface SyncStatusBadgesProps {
   isEligible?: boolean | null;
   syncedToHubspot?: boolean | null;
   syncStatus?: SyncStatus | null;
+  /** Deprecated: webhook-based sync is no longer used; kept for compat but ignored. */
   webhookStatus?: string | null;
   lastSyncedAt?: string | null;
   /** When true, show "Low Confidence" badge (is_eligible = false). */
@@ -89,13 +90,6 @@ export function SyncStatusBadges({
       <div>
         <span className="font-medium text-foreground/80">Enrichment confidence:</span>{' '}
         <span className={`tabular-nums ${confidenceValid ? confidenceVariant(numConf) : ''}`}>{confidenceValue}</span>
-      </div>
-
-      <div>
-        <span className="font-medium text-foreground/80">Webhook:</span>{' '}
-        <span>
-          {webhookStatus != null && String(webhookStatus).trim() !== '' ? String(webhookStatus) : '—'}
-        </span>
       </div>
 
       <div>

@@ -160,6 +160,16 @@ export default function InstitutionStaffModal({
                   <DetailRow label="Type" value={institution.type} />
                   <DetailRow label="Created" value={formatDate(institution.created_at)} />
                 </dl>
+                <div className="mt-4 pt-4 border-t border-border/60">
+                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">HubSpot Sync Status</h4>
+                  <dl className="text-sm space-y-1">
+                    <DetailRow label="Sync Status" value={institution.sync_status ?? '—'} />
+                    <DetailRow label="HubSpot ID" value={institution.hubspot_company_id ?? '—'} />
+                    <DetailRow label="Last Sync Time" value={institution.last_synced_at ? formatDate(institution.last_synced_at) : '—'} />
+                    <DetailRow label="Sync Error" value={institution.sync_error ?? '—'} />
+                    <DetailRow label="Current Queue Status" value={institution.sync_status ? String(institution.sync_status) : 'Not in sync queue'} />
+                  </dl>
+                </div>
               </>
             )
           ) : (

@@ -1,6 +1,7 @@
 import { Header } from '@/components/Header';
 import { ChartBarSquareIcon } from '@heroicons/react/24/outline';
 import ExecutionDashboardNav from './_components/ExecutionDashboardNav';
+import ExecutionDashboardBanners from './_components/ExecutionDashboardBanners';
 
 export default function ExecutionDashboardLayout({
   children,
@@ -16,7 +17,8 @@ export default function ExecutionDashboardLayout({
         showLive={true}
       />
 
-      <div className="mt-5">
+      <div className="mt-5 px-4">
+        <ExecutionDashboardBanners />
         <ExecutionDashboardNav />
         {children}
       </div>

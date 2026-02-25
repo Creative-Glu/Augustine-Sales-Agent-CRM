@@ -8,6 +8,7 @@ interface ExecutionStatusCardProps {
   isEligible?: boolean | null;
   syncedToHubspot?: boolean | null;
   enrichmentConfidence?: number | null;
+  /** Deprecated: webhook-based sync is no longer used; kept for backward compat but ignored. */
   webhookStatus?: string | null;
   lastSyncedAt?: string | null;
   /** When true, use smaller text and padding (e.g. inside the button-attached panel). */
@@ -46,6 +47,12 @@ function getSyncBadgeVariant(status: SyncStatus | null | undefined): { className
     return {
       className: 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30',
       label: 'Failed',
+    };
+  }
+  if (status === 'processing') {
+    return {
+      className: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/30',
+      label: 'Processing',
     };
   }
   return {
@@ -112,36 +119,11 @@ function getConfidenceDisplay(raw: number | null | undefined): { label: string; 
   };
 }
 
-function getWebhookBadge(status: string | null | undefined): { label: string; className: string } {
-  const value = status?.toLowerCase().trim();
-  if (!value) return { label: 'Not available', className: 'bg-muted text-muted-foreground border-border/60' };
-  if (value === 'failed' || value === 'error') {
-    return {
-      label: 'Failed',
-      className: 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30',
-    };
-  }
-  if (value === 'success' || value === 'sent') {
-    return {
-      label: 'Sent',
-      className: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30',
-    };
-  }
-  if (value === 'pending') {
-    return {
-      label: 'Pending',
-      className: 'bg-muted text-muted-foreground border-border/60',
-    };
-  }
-  return { label: status ?? 'Not available', className: 'bg-muted text-muted-foreground border-border/60' };
-}
-
 export function ExecutionStatusCard({
   syncStatus,
   isEligible,
   syncedToHubspot,
   enrichmentConfidence,
-  webhookStatus,
   lastSyncedAt,
   compact,
 }: ExecutionStatusCardProps) {
@@ -150,7 +132,6 @@ export function ExecutionStatusCard({
     isEligible != null ||
     syncedToHubspot != null ||
     (enrichmentConfidence != null && !Number.isNaN(Number(enrichmentConfidence))) ||
-    (webhookStatus != null && webhookStatus.trim() !== '') ||
     !!lastSyncedAt;
 
   const cardCls = compact
@@ -173,8 +154,6 @@ export function ExecutionStatusCard({
   const eligibility = getEligibilityBadge(isEligible ?? null);
   const hubspot = getHubspotBadge(syncedToHubspot ?? null);
   const confidence = getConfidenceDisplay(enrichmentConfidence);
-  const webhook = getWebhookBadge(webhookStatus ?? null);
-
   return (
     <div className={cardCls}>
       <div className={gridCls}>
@@ -201,13 +180,6 @@ export function ExecutionStatusCard({
 
         <div className="text-muted-foreground">Confidence</div>
         <div className={`font-medium ${confidence.className} ${compact ? 'text-[11px]' : 'text-xs'}`}>{confidence.label}</div>
-
-        <div className="text-muted-foreground">Webhook</div>
-        <div>
-          <Badge variant="outline" className={`${badgeCls} ${webhook.className}`}>
-            {webhook.label}
-          </Badge>
-        </div>
 
         <div className="text-muted-foreground">Last sync</div>
         <div className={`font-medium ${compact ? 'text-[11px]' : 'text-xs'}`} title={lastSyncedAt ?? undefined}>

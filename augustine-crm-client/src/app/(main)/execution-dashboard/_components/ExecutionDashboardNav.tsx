@@ -13,7 +13,7 @@ const VIEW_LABELS: Record<ExecutionView, string> = {
   jobs: 'Jobs',
   results: 'Results',
   staff: 'Staff',
-  'sync-logs': 'Sync logs',
+  'sync-queue': 'Sync Queue',
 };
 
 const VIEW_PATHS: Record<ExecutionView, string> = {
@@ -23,7 +23,7 @@ const VIEW_PATHS: Record<ExecutionView, string> = {
   jobs: '/execution-dashboard/jobs',
   results: '/execution-dashboard/results',
   staff: '/execution-dashboard/staff',
-  'sync-logs': '/execution-dashboard/sync-logs',
+  'sync-queue': '/execution-dashboard/sync-queue',
 };
 
 export default function ExecutionDashboardNav() {

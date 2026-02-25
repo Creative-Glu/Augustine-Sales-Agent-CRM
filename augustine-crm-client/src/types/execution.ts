@@ -34,7 +34,42 @@ export interface Result {
 }
 
 /** Sync status for HubSpot pipeline (staging in Supabase, source of truth in HubSpot). */
-export type SyncStatus = 'pending' | 'success' | 'failed';
+export type SyncStatus = 'pending' | 'processing' | 'success' | 'failed';
+
+/** HubSpot health from GET /api/hubspot-health */
+export interface HubSpotHealth {
+  enabled: boolean;
+  worker_running: boolean;
+}
+
+/** Sync queue job from GET /api/sync-queue */
+export type SyncQueueStatus = 'pending' | 'processing' | 'success' | 'failed';
+
+export interface SyncQueueJob {
+  queue_id: string;
+  entity_type: 'institution' | 'staff';
+  entity_id: string | number;
+  entity_name: string;
+  status: SyncQueueStatus;
+  attempts: number;
+  next_retry_at: string | null;
+  last_error: string | null;
+  created_at: string;
+}
+
+export interface SyncQueueResponse {
+  data: SyncQueueJob[];
+  total: number;
+  metrics?: {
+    total: number;
+    pending: number;
+    processing: number;
+    failed: number;
+    success: number;
+    avg_attempts: number;
+    oldest_pending_at: string | null;
+  };
+}
 
 /** Staff – extracted staff details, linked to institution via institution_id */
 export interface Staff {

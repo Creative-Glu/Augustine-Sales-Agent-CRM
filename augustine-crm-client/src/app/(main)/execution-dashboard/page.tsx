@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import ExecutionOverviewPage from './_components/ExecutionOverviewPage';
 
-const TABLE_VIEWS = ['institution', 'websites', 'jobs', 'results', 'staff', 'sync-logs'] as const;
+const TABLE_VIEWS = ['institution', 'websites', 'jobs', 'results', 'staff', 'sync-queue'] as const;
 
 export default async function ExecutionDashboardPage({
   searchParams,

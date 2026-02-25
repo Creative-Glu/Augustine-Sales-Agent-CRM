@@ -5,9 +5,9 @@ import ExecutionWebsitesPage from '../_components/ExecutionWebsitesPage';
 import ExecutionJobsPage from '../_components/ExecutionJobsPage';
 import ExecutionResultsPage from '../_components/ExecutionResultsPage';
 import ExecutionStaffPage from '../_components/ExecutionStaffPage';
-import ExecutionSyncLogsPage from '../_components/ExecutionSyncLogsPage';
+import ExecutionSyncQueuePage from '../_components/ExecutionSyncQueuePage';
 
-const VALID_VIEWS = ['institution', 'websites', 'jobs', 'results', 'staff', 'sync-logs'] as const;
+const VALID_VIEWS = ['institution', 'websites', 'jobs', 'results', 'staff', 'sync-queue'] as const;
 
 type ViewSegment = (typeof VALID_VIEWS)[number];
 
@@ -32,7 +32,7 @@ export default async function ExecutionViewPage({ params }: ExecutionViewPagePro
     jobs: ExecutionJobsPage,
     results: ExecutionResultsPage,
     staff: ExecutionStaffPage,
-    'sync-logs': ExecutionSyncLogsPage,
+    'sync-queue': ExecutionSyncQueuePage,
   }[view];
 
   return (
