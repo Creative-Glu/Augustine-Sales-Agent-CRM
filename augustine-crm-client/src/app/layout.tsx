@@ -1,7 +1,8 @@
 import { QueryProvider } from '../providers/QueryProvider';
 import './globals.css';
 import { ToastProvider } from '../hooks/use-toast';
-import { ClerkProvider } from '@clerk/nextjs';
+import { AuthProvider } from '../providers/AuthProvider';
+
 export const metadata = {
   title: 'Augustine CRM',
   description: 'Sales & Leads Management Platform',
@@ -9,15 +10,16 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body>
-          <main className="">
-            <QueryProvider>{children}</QueryProvider>
-            <ToastProvider />
-          </main>{' '}
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en">
+      <body>
+        <main>
+          <QueryProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </QueryProvider>
+          <ToastProvider />
+        </main>
+      </body>
+    </html>
   );
 }
+
