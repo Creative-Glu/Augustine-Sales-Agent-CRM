@@ -4,12 +4,6 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Header } from '@/components/Header';
 import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from '@/components/ui/tabs';
-import {
   Table,
   TableBody,
   TableCell,
@@ -20,7 +14,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import {
   listPendingOutreach,
@@ -42,6 +35,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Inbox, RefreshCw, ChevronDown, ChevronRight, Info, Send, Check, X } from 'lucide-react';
 
 type TabKey = 'pending' | 'approved_unsent' | 'sent' | 'rejected';
 
@@ -57,22 +61,43 @@ function isReviewerOrAdmin(role: 'Admin' | 'Reviewer' | 'Viewer'): boolean {
   return role === 'Reviewer' || role === 'Admin';
 }
 
-function StatusBadge({ status }: { status: OutreachStatus }) {
-  const map: Record<OutreachStatus, { label: string; variant: 'default' | 'secondary' | 'outline' }>= {
-    generated: { label: 'Generated', variant: 'secondary' },
-    under_review: { label: 'Under review', variant: 'secondary' },
-    edited: { label: 'Edited', variant: 'secondary' },
-    approved: { label: 'Approved', variant: 'default' },
-    rejected: { label: 'Rejected', variant: 'outline' },
-    sent: { label: 'Sent', variant: 'default' },
-  };
-  const cfg = map[status];
-  return (
-    <Badge variant={cfg.variant} className="text-[11px]">
-      {cfg.label}
-    </Badge>
-  );
+function statusGroup(status: OutreachStatus): 'pending' | 'approved' | 'sent' | 'rejected' {
+  if (status === 'generated' || status === 'under_review' || status === 'edited') return 'pending';
+  if (status === 'approved') return 'approved';
+  if (status === 'sent') return 'sent';
+  return 'rejected';
 }
+
+function StatusBadge({ status }: { status: OutreachStatus }) {
+  const group = statusGroup(status);
+  const labels: Record<OutreachStatus, string> = {
+    generated: 'Generated',
+    under_review: 'Under review',
+    edited: 'Edited',
+    approved: 'Approved',
+    rejected: 'Rejected',
+    sent: 'Sent',
+  };
+  const label = labels[status];
+  const base = 'inline-flex rounded-md text-xs font-medium px-2 py-1';
+  const styles: Record<typeof group, string> = {
+    pending:
+      'border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300',
+    approved:
+      'border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300',
+    sent: 'border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-300',
+    rejected:
+      'border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-300',
+  };
+  return <span className={`${base} ${styles[group]}`}>{label}</span>;
+}
+
+const TABS: { key: TabKey; label: string }[] = [
+  { key: 'pending', label: 'Pending' },
+  { key: 'approved_unsent', label: 'Approved' },
+  { key: 'sent', label: 'Sent' },
+  { key: 'rejected', label: 'Rejected' },
+];
 
 export default function OutreachPage() {
   const [activeTab, setActiveTab] = useState<TabKey>('pending');
@@ -81,10 +106,10 @@ export default function OutreachPage() {
   const [editBody, setEditBody] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [bulkLimit, setBulkLimit] = useState(100);
-  const [campaignGenerateCampaignId, setCampaignGenerateCampaignId] = useState<
-    number | ''
-  >('');
+  const [campaignGenerateCampaignId, setCampaignGenerateCampaignId] = useState<number | ''>('');
   const [campaignGenerateLimit, setCampaignGenerateLimit] = useState(50);
+  const [generateOpen, setGenerateOpen] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
   const { user } = useAuth();
   const role = user?.role ?? 'Viewer';
   const canAct = isReviewerOrAdmin(role);
@@ -113,9 +138,7 @@ export default function OutreachPage() {
     staleTime: 30_000,
   });
 
-  const activeCampaigns = (campaignsQuery.data ?? []).filter(
-    (c) => c.status === 'active'
-  );
+  const activeCampaigns = (campaignsQuery.data ?? []).filter((c) => c.status === 'active');
 
   const approveMutation = useMutation({
     mutationFn: (id: number) => approveOutreach(id, 'Ops Reviewer'),
@@ -123,10 +146,10 @@ export default function OutreachPage() {
       toast({ title: 'Approved', description: 'Message approved successfully.' });
       queryClient.invalidateQueries({ queryKey: ['outreach'] });
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
       toast({
         title: 'Unable to approve',
-        description: err?.message ?? 'Check your permissions or try again later.',
+        description: err instanceof Error ? err.message : 'Check your permissions or try again later.',
         variant: 'destructive',
       });
     },
@@ -139,10 +162,10 @@ export default function OutreachPage() {
       toast({ title: 'Rejected', description: 'Message rejected.' });
       queryClient.invalidateQueries({ queryKey: ['outreach'] });
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
       toast({
         title: 'Unable to reject',
-        description: err?.message ?? 'Check your permissions or try again later.',
+        description: err instanceof Error ? err.message : 'Check your permissions or try again later.',
         variant: 'destructive',
       });
     },
@@ -154,10 +177,10 @@ export default function OutreachPage() {
       toast({ title: 'Sent', description: 'Message sent (backend will handle delivery).' });
       queryClient.invalidateQueries({ queryKey: ['outreach'] });
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
       toast({
         title: 'Unable to send',
-        description: err?.message ?? 'Check approval status or daily limits.',
+        description: err instanceof Error ? err.message : 'Check approval status or daily limits.',
         variant: 'destructive',
       });
     },
@@ -170,10 +193,10 @@ export default function OutreachPage() {
       toast({ title: 'Saved', description: 'Draft updated.' });
       queryClient.invalidateQueries({ queryKey: ['outreach'] });
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
       toast({
         title: 'Unable to save edits',
-        description: err?.message ?? 'Try again or contact an admin.',
+        description: err instanceof Error ? err.message : 'Try again or contact an admin.',
         variant: 'destructive',
       });
     },
@@ -188,12 +211,11 @@ export default function OutreachPage() {
       });
       queryClient.invalidateQueries({ queryKey: ['outreach'] });
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
       toast({
         title: 'Unable to bulk generate',
         description:
-          err?.message ??
-          'If you see a 429 error, reduce the limit or try again later.',
+          err instanceof Error ? err.message : 'If you see a 429 error, reduce the limit or try again later.',
         variant: 'destructive',
       });
     },
@@ -209,28 +231,23 @@ export default function OutreachPage() {
       });
       queryClient.invalidateQueries({ queryKey: ['outreach'] });
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
       toast({
         title: 'Unable to generate for campaign',
         description:
-          err?.message ??
-          'Campaign must be active and have an ICP linked. Check Campaigns or try again.',
+          err instanceof Error
+            ? err.message
+            : 'Campaign must be active and have an ICP linked. Check Campaigns or try again.',
         variant: 'destructive',
       });
     },
   });
 
   const activeItems =
-    activeTab === 'pending'
-      ? pendingQuery.data?.items ?? []
-      : tabQuery.data?.items ?? [];
-
+    activeTab === 'pending' ? pendingQuery.data?.items ?? [] : tabQuery.data?.items ?? [];
   const totalCount = activeItems.length;
-
-  const isLoading =
-    activeTab === 'pending' ? pendingQuery.isLoading : tabQuery.isLoading;
-  const isError =
-    activeTab === 'pending' ? pendingQuery.isError : tabQuery.isError;
+  const isLoading = activeTab === 'pending' ? pendingQuery.isLoading : tabQuery.isLoading;
+  const isError = activeTab === 'pending' ? pendingQuery.isError : tabQuery.isError;
 
   function openDetail(item: OutreachItem) {
     setSelected(item);
@@ -239,401 +256,505 @@ export default function OutreachPage() {
     setRejectionReason('');
   }
 
+  function refetchAll() {
+    pendingQuery.refetch();
+    tabQuery.refetch();
+  }
+
   const disableActions = !canAct;
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50/30 to-slate-50 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950">
       <Header
-        title="Outreach approval"
-        subtitle="Review AI-generated drafts, approve or reject, and send when ready."
-        icon={<span className="text-white text-lg font-semibold">AI</span>}
+        title="Outreach Approval"
+        subtitle="Review and control AI-generated outreach before sending."
+        icon={<Inbox className="w-6 h-6 text-white" />}
         showLive
       />
 
-      <div className="mt-6 grid grid-cols-1 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1.1fr)] gap-6 items-start">
-        <div className="space-y-4">
-          <Tabs
-            value={activeTab}
-            onValueChange={(v) => setActiveTab(v as TabKey)}
-            className="w-full"
+      <div className="border-b border-border/60 bg-background/50" />
+
+      <div className="px-6 py-8 space-y-6">
+        {/* ——— SEGMENTED STATUS TABS ——— */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div
+            role="tablist"
+            className="inline-flex rounded-lg border border-border bg-muted/30 p-1 gap-0.5"
           >
-            <TabsList className="w-full justify-start overflow-x-auto rounded-xl bg-muted/60 p-1.5">
-              <TabsTrigger
-                value="pending"
-                className="px-4 py-2 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                Pending
-              </TabsTrigger>
-              <TabsTrigger
-                value="approved_unsent"
-                className="px-4 py-2 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                Approved (unsent)
-              </TabsTrigger>
-              <TabsTrigger
-                value="sent"
-                className="px-4 py-2 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                Sent
-              </TabsTrigger>
-              <TabsTrigger
-                value="rejected"
-                className="px-4 py-2 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                Rejected
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value={activeTab} className="mt-4">
-              <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-                <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-border/60">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">
-                      {activeTab === 'pending'
-                        ? 'Pending review queue'
-                        : 'Outreach messages'}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {disableActions
-                        ? 'You are in Viewer mode. Switch to Reviewer/Admin to approve or send.'
-                        : 'Only Reviewer/Admin can edit, approve, reject, or send.'}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span>
-                      Showing {totalCount} {totalCount === 1 ? 'message' : 'messages'}
+            {TABS.map((tab) => {
+              const isActive = activeTab === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`
+                    inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium
+                    transition-all duration-150 ease-out
+                    ${isActive
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                    }
+                  `}
+                >
+                  {tab.label}
+                  {isActive && (
+                    <span className="min-w-5 rounded-full bg-white/20 px-1.5 py-0.5 text-xs font-semibold">
+                      {totalCount}
                     </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        pendingQuery.refetch();
-                        tabQuery.refetch();
-                      }}
-                    >
-                      Refresh
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <Table className="min-w-[820px] w-full table-fixed text-sm">
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-1/2">Subject</TableHead>
-                        <TableHead className="w-1/6">Campaign</TableHead>
-                        <TableHead className="w-1/6">Status</TableHead>
-                        <TableHead className="w-1/6">Generated</TableHead>
-                        <TableHead className="w-[120px] text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {isLoading && (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center text-sm py-6">
-                            Loading outreach messages…
-                          </TableCell>
-                        </TableRow>
-                      )}
-                      {isError && !isLoading && (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center text-sm py-6">
-                            Failed to load outreach. Please try again.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                      {!isLoading && !isError && activeItems.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center text-sm py-6">
-                            No outreach messages in this bucket yet.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                      {!isLoading &&
-                        !isError &&
-                        activeItems.map((item) => (
-                          <TableRow
-                            key={item.id}
-                            className={selected?.id === item.id ? 'bg-muted/70' : ''}
-                          >
-                            <TableCell className="max-w-[320px]">
-                              <button
-                                type="button"
-                                className="text-left text-[13px] font-medium text-foreground hover:text-primary hover:underline truncate block"
-                                onClick={() => openDetail(item)}
-                              >
-                                {item.subject || '(no subject)'}
-                              </button>
-                              <div className="text-xs text-muted-foreground line-clamp-1">
-                                {item.body}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-xs text-muted-foreground">
-                              {item.campaign_id ? `Campaign #${item.campaign_id}` : '—'}
-                            </TableCell>
-                            <TableCell>
-                              <StatusBadge status={item.status} />
-                            </TableCell>
-                            <TableCell className="text-xs text-muted-foreground">
-                              {item.generated_at
-                                ? new Date(item.generated_at).toLocaleString()
-                                : '—'}
-                            </TableCell>
-                            <TableCell className="text-right whitespace-nowrap">
-                              <div className="flex justify-end gap-2">
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="secondary"
-                                  disabled={disableActions}
-                                  onClick={() => openDetail(item)}
-                                >
-                                  Review
-                                </Button>
-                                {canAct && activeTab === 'pending' && (
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="default"
-                                    disabled={approveMutation.isPending}
-                                    onClick={() => approveMutation.mutate(item.id)}
-                                  >
-                                    Approve
-                                  </Button>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-
-          <div className="rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-900 dark:text-amber-200">
-            <p className="font-medium">How drafts get their campaign</p>
-            <p className="mt-1 text-xs text-amber-800 dark:text-amber-300/90">
-              <strong>Bulk generate</strong> does not let you choose a campaign: all new drafts are
-              assigned to the <strong>Default</strong> campaign (often Campaign #1). To create drafts
-              for a specific campaign (e.g. Institution Campaign), use <strong>Generate for
-              campaign</strong> below — the campaign must be <strong>active</strong> and have an
-              ICP linked.
-            </p>
+                  )}
+                </button>
+              );
+            })}
           </div>
+        </div>
 
-          <div className="bg-card rounded-xl border border-border shadow-sm p-4 space-y-3">
-            <div className="flex items-center justify-between gap-3">
+        {/* ——— TWO COLUMN: QUEUE (60%) | DETAIL (40%) ——— */}
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] gap-6 items-start">
+          {/* LEFT: Message Queue */}
+          <section className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border/60">
               <div>
-                <p className="text-sm font-medium">Bulk generate outreach</p>
-                <p className="text-xs text-muted-foreground">
-                  New drafts go to the Default campaign (limit 1–500).
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  {activeTab === 'pending' ? 'Pending review queue' : 'Outreach messages'}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {disableActions
+                    ? 'Viewer mode. Switch to Reviewer/Admin to approve or send.'
+                    : 'Select a row to review and approve, reject, or send.'}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  min={1}
-                  max={500}
-                  className="w-20 h-8"
-                  value={bulkLimit}
-                  onChange={(e) => setBulkLimit(Number(e.target.value) || 1)}
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={bulkGenerateMutation.isPending}
-                  onClick={() => {
-                    const safe = Math.min(500, Math.max(1, bulkLimit || 1));
-                    setBulkLimit(safe);
-                    bulkGenerateMutation.mutate(safe);
-                  }}
-                >
-                  Generate
-                </Button>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              If you hit a 429 rate or cost limit, reduce the limit or try again later.
-            </p>
-          </div>
-
-          <div className="bg-card rounded-xl border border-border shadow-sm p-4 space-y-3">
-            <div>
-              <p className="text-sm font-medium">Generate for campaign</p>
-              <p className="text-xs text-muted-foreground">
-                Create drafts for one campaign only. Campaign must be active and have an ICP.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-end gap-3">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Campaign</label>
-                <Select
-                  value={campaignGenerateCampaignId === '' ? '' : String(campaignGenerateCampaignId)}
-                  onValueChange={(v) => setCampaignGenerateCampaignId(v === '' ? '' : Number(v))}
-                >
-                  <SelectTrigger className="w-[220px]">
-                    <SelectValue placeholder="Select active campaign" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {activeCampaigns.map((c) => (
-                      <SelectItem key={c.id} value={String(c.id)}>
-                        {c.name} (#{c.id})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Limit</label>
-                <Input
-                  type="number"
-                  min={1}
-                  max={500}
-                  className="w-20 h-9"
-                  value={campaignGenerateLimit}
-                  onChange={(e) =>
-                    setCampaignGenerateLimit(Math.min(500, Math.max(1, Number(e.target.value) || 1)))
-                  }
-                />
-              </div>
               <Button
-                type="button"
-                size="sm"
-                disabled={
-                  campaignGenerateCampaignId === '' ||
-                  activeCampaigns.length === 0 ||
-                  generateForCampaignMutation.isPending
-                }
-                onClick={() => {
-                  if (campaignGenerateCampaignId === '') return;
-                  const limit = Math.min(500, Math.max(1, campaignGenerateLimit || 1));
-                  setCampaignGenerateLimit(limit);
-                  generateForCampaignMutation.mutate({
-                    campaign_id: campaignGenerateCampaignId,
-                    limit,
-                  });
-                }}
+                variant="ghost"
+                size="icon"
+                onClick={refetchAll}
+                disabled={isLoading}
+                className="shrink-0 text-muted-foreground hover:text-foreground transition-colors duration-150"
+                aria-label="Refresh"
               >
-                Generate for campaign
+                <RefreshCw
+                  className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`}
+                />
               </Button>
             </div>
-            {(activeCampaigns.length === 0 && !campaignsQuery.isLoading) ||
-            (campaignsQuery.data && campaignsQuery.data.some((c) => c.status !== 'active')) ? (
-              <p className="text-xs text-muted-foreground">
-                {activeCampaigns.length === 0 && !campaignsQuery.isLoading
-                  ? 'No active campaigns. Set a campaign to active in Campaigns to use it.'
-                  : 'Only active campaigns appear here. Set a campaign to active in Campaigns to use it.'}
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-border/60 hover:bg-transparent">
+                    <TableHead className="py-3 pl-6 pr-3 font-medium text-muted-foreground text-xs">
+                      Subject
+                    </TableHead>
+                    <TableHead className="py-3 px-3 font-medium text-muted-foreground text-xs w-[100px]">
+                      Campaign
+                    </TableHead>
+                    <TableHead className="py-3 px-3 font-medium text-muted-foreground text-xs w-[90px]">
+                      Status
+                    </TableHead>
+                    <TableHead className="py-3 px-3 font-medium text-muted-foreground text-xs w-[120px]">
+                      Generated
+                    </TableHead>
+                    <TableHead className="py-3 pl-3 pr-6 text-right font-medium text-muted-foreground text-xs w-[100px]">
+                      Actions
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading && (
+                    <>
+                      {[1, 2, 3, 4].map((i) => (
+                        <TableRow key={i} className="border-border/40">
+                          <TableCell className="py-3 pl-6 pr-3">
+                            <div className="h-4 w-3/4 rounded bg-muted/60 animate-pulse" />
+                            <div className="h-3 w-full rounded bg-muted/40 animate-pulse mt-2" />
+                          </TableCell>
+                          <TableCell className="py-3 px-3">
+                            <div className="h-4 w-8 rounded bg-muted/50 animate-pulse" />
+                          </TableCell>
+                          <TableCell className="py-3 px-3">
+                            <div className="h-5 w-16 rounded bg-muted/50 animate-pulse" />
+                          </TableCell>
+                          <TableCell className="py-3 px-3">
+                            <div className="h-4 w-20 rounded bg-muted/50 animate-pulse" />
+                          </TableCell>
+                          <TableCell className="py-3 pl-3 pr-6">
+                            <div className="h-8 w-14 rounded bg-muted/50 animate-pulse ml-auto" />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </>
+                  )}
+                  {isError && !isLoading && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="py-12 text-center text-sm text-muted-foreground">
+                        Failed to load. Try again.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {!isLoading && !isError && activeItems.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="py-12 text-center text-sm text-muted-foreground">
+                        No messages in this tab.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {!isLoading &&
+                    !isError &&
+                    activeItems.map((item) => (
+                      <TableRow
+                        key={item.id}
+                        className={`
+                          border-border/40 cursor-pointer transition-colors duration-150
+                          ${selected?.id === item.id
+                            ? 'bg-indigo-50/70 dark:bg-indigo-950/30'
+                            : 'hover:bg-muted/40'
+                          }
+                        `}
+                        onClick={() => openDetail(item)}
+                      >
+                        <TableCell className="py-3 pl-6 pr-3 max-w-0">
+                          <p className="font-medium text-slate-800 dark:text-slate-100 truncate">
+                            {item.subject || '(no subject)'}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">
+                            {item.body}
+                          </p>
+                        </TableCell>
+                        <TableCell className="py-3 px-3 text-xs text-muted-foreground">
+                          {item.campaign_id ? `#${item.campaign_id}` : '—'}
+                        </TableCell>
+                        <TableCell className="py-3 px-3">
+                          <StatusBadge status={item.status} />
+                        </TableCell>
+                        <TableCell className="py-3 px-3 text-xs text-muted-foreground">
+                          {item.generated_at
+                            ? new Date(item.generated_at).toLocaleDateString(undefined, {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })
+                            : '—'}
+                        </TableCell>
+                        <TableCell className="py-3 pl-3 pr-6 text-right">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={disableActions}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openDetail(item);
+                            }}
+                            className="transition-all duration-150"
+                          >
+                            Review
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </div>
+          </section>
+
+          {/* RIGHT: Message Detail Panel */}
+          <section className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col min-h-[420px]">
+            <div className="px-6 py-4 border-b border-border/60">
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                Message detail
               </p>
-            ) : null}
-          </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Edit subject and body, then approve, reject, or send.
+              </p>
+            </div>
+
+            {!selected ? (
+              <div className="flex-1 flex items-center justify-center p-8">
+                <p className="text-sm text-muted-foreground text-center">
+                  Select a message from the queue to review and take action.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                  <div className="p-6 space-y-4 overflow-y-auto">
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        Subject
+                      </label>
+                      <Input
+                        value={editSubject}
+                        onChange={(e) => setEditSubject(e.target.value)}
+                        disabled={disableActions}
+                        className="transition-[color,box-shadow] duration-150"
+                      />
+                    </div>
+                    <div className="border-t border-border/60 pt-4" />
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        Body
+                      </label>
+                      <Textarea
+                        className="min-h-[200px] resize-none transition-[color,box-shadow] duration-150"
+                        value={editBody}
+                        onChange={(e) => setEditBody(e.target.value)}
+                        disabled={disableActions}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Sticky action bar */}
+                  <div className="mt-auto border-t border-border/60 bg-muted/20 px-6 py-4 space-y-4">
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        disabled={disableActions || editMutation.isPending}
+                        onClick={() =>
+                          editMutation.mutate({
+                            id: selected.id,
+                            subject: editSubject,
+                            body: editBody,
+                          })
+                        }
+                        className="transition-all duration-150"
+                      >
+                        Save edits
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-150"
+                        disabled={disableActions || approveMutation.isPending}
+                        onClick={() => approveMutation.mutate(selected.id)}
+                      >
+                        <Check className="w-4 h-4 mr-1" />
+                        Approve
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/30 transition-all duration-150"
+                        disabled={disableActions || rejectMutation.isPending}
+                        onClick={() =>
+                          rejectMutation.mutate({
+                            id: selected.id,
+                            reason: rejectionReason,
+                          })
+                        }
+                      >
+                        <X className="w-4 h-4 mr-1" />
+                        Reject
+                      </Button>
+                      {selected.status === 'approved' && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700 text-white transition-all duration-150"
+                          disabled={disableActions || sendMutation.isPending}
+                          onClick={() => sendMutation.mutate(selected.id)}
+                        >
+                          <Send className="w-4 h-4 mr-1" />
+                          Send
+                        </Button>
+                      )}
+                    </div>
+                    <div className="space-y-2 pt-2 border-t border-border/40">
+                      <label className="text-xs font-medium text-muted-foreground">
+                        Rejection reason (optional)
+                      </label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={rejectionReason}
+                          onChange={(e) => setRejectionReason(e.target.value)}
+                          disabled={disableActions}
+                          placeholder="Reason for rejection"
+                          className="flex-1 text-sm transition-[color,box-shadow] duration-150"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </section>
         </div>
 
-        <div className="bg-card rounded-xl border border-border shadow-sm p-4 space-y-4">
-          <div>
-            <p className="text-sm font-medium">Message detail</p>
-            <p className="text-xs text-muted-foreground">
-              Full body with inline editing for subject and content.
-            </p>
+        {/* ——— COLLAPSIBLE: Generate New Drafts ——— */}
+        <Collapsible open={generateOpen} onOpenChange={setGenerateOpen}>
+          <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-muted/30 transition-colors duration-150"
+              >
+                <div className="flex items-center gap-2">
+                  {generateOpen ? (
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  )}
+                  <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                    Generate New Drafts
+                  </span>
+                </div>
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="px-6 pb-6 pt-0 space-y-6 border-t border-border/60">
+                {/* Mode A: Quick Generate */}
+                <div className="flex flex-wrap items-end gap-4">
+                  <div className="space-y-2 min-w-[140px]">
+                    <label className="text-xs font-medium text-muted-foreground">Quick generate</label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min={1}
+                        max={500}
+                        className="w-20 h-9"
+                        value={bulkLimit}
+                        onChange={(e) => setBulkLimit(Number(e.target.value) || 1)}
+                      />
+                      <Button
+                        size="sm"
+                        disabled={bulkGenerateMutation.isPending}
+                        onClick={() => {
+                          const safe = Math.min(500, Math.max(1, bulkLimit || 1));
+                          setBulkLimit(safe);
+                          bulkGenerateMutation.mutate(safe);
+                        }}
+                        className="transition-all duration-150"
+                      >
+                        Generate
+                      </Button>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    New drafts go to Default campaign (1–500).
+                  </p>
+                </div>
+
+                {/* Mode B: Generate for Campaign */}
+                <div className="flex flex-wrap items-end gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Campaign</label>
+                    <Select
+                      value={campaignGenerateCampaignId === '' ? '' : String(campaignGenerateCampaignId)}
+                      onValueChange={(v) => setCampaignGenerateCampaignId(v === '' ? '' : Number(v))}
+                    >
+                      <SelectTrigger className="w-[220px] h-9">
+                        <SelectValue placeholder="Select active campaign" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {activeCampaigns.map((c) => (
+                          <SelectItem key={c.id} value={String(c.id)}>
+                            {c.name} (#{c.id})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Limit</label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={500}
+                      className="w-20 h-9"
+                      value={campaignGenerateLimit}
+                      onChange={(e) =>
+                        setCampaignGenerateLimit(
+                          Math.min(500, Math.max(1, Number(e.target.value) || 1))
+                        )
+                      }
+                    />
+                  </div>
+                  <Button
+                    size="sm"
+                    disabled={
+                      campaignGenerateCampaignId === '' ||
+                      activeCampaigns.length === 0 ||
+                      generateForCampaignMutation.isPending
+                    }
+                    onClick={() => {
+                      if (campaignGenerateCampaignId === '') return;
+                      const limit = Math.min(500, Math.max(1, campaignGenerateLimit || 1));
+                      setCampaignGenerateLimit(limit);
+                      generateForCampaignMutation.mutate({
+                        campaign_id: campaignGenerateCampaignId,
+                        limit,
+                      });
+                    }}
+                    className="transition-all duration-150"
+                  >
+                    Generate for campaign
+                  </Button>
+                </div>
+                {activeCampaigns.length === 0 && !campaignsQuery.isLoading && (
+                  <p className="text-xs text-muted-foreground">
+                    No active campaigns. Set a campaign to active in Campaigns to use it.
+                  </p>
+                )}
+              </div>
+            </CollapsibleContent>
           </div>
+        </Collapsible>
 
-          {!selected && (
-            <p className="text-sm text-muted-foreground">
-              Select a message from the table to review its content and approve, reject, or send.
-            </p>
-          )}
-
-          {selected && (
-            <>
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">Subject</label>
-                <Input
-                  value={editSubject}
-                  onChange={(e) => setEditSubject(e.target.value)}
-                  disabled={disableActions}
-                />
+        {/* ——— COLLAPSIBLE: How campaign assignment works ——— */}
+        <Collapsible open={infoOpen} onOpenChange={setInfoOpen}>
+          <div className="rounded-xl border border-border/60 bg-muted/20 overflow-hidden">
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/30 transition-colors duration-150"
+              >
+                <div className="flex items-center gap-2">
+                  {infoOpen ? (
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  )}
+                  <span className="text-sm font-medium text-muted-foreground">
+                    How campaign assignment works
+                  </span>
+                  <span onClick={(e) => e.stopPropagation()}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex text-muted-foreground hover:text-foreground cursor-help">
+                          <Info className="w-4 h-4" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[260px]">
+                        Bulk generate assigns drafts to the Default campaign. Use &quot;Generate for
+                        campaign&quot; to target a specific active campaign with an ICP.
+                      </TooltipContent>
+                    </Tooltip>
+                  </span>
+                </div>
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="px-4 pb-4 pt-0 text-xs text-muted-foreground space-y-2 border-t border-border/40">
+                <p>
+                  <strong className="text-foreground/80">Bulk generate</strong> does not let you
+                  choose a campaign: all new drafts are assigned to the <strong className="text-foreground/80">Default</strong> campaign
+                  (often Campaign #1).
+                </p>
+                <p>
+                  To create drafts for a specific campaign (e.g. Institution Campaign), use{' '}
+                  <strong className="text-foreground/80">Generate for campaign</strong>. The campaign
+                  must be <strong className="text-foreground/80">active</strong> and have an ICP
+                  linked.
+                </p>
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">Body</label>
-                <Textarea
-                  className="min-h-[220px]"
-                  value={editBody}
-                  onChange={(e) => setEditBody(e.target.value)}
-                  disabled={disableActions}
-                />
-              </div>
-
-              <div className="flex flex-wrap gap-2 pt-2 border-t border-border/60">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  disabled={disableActions || editMutation.isPending}
-                  onClick={() =>
-                    editMutation.mutate({
-                      id: selected.id,
-                      subject: editSubject,
-                      body: editBody,
-                    })
-                  }
-                >
-                  Save edits
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="default"
-                  disabled={disableActions || approveMutation.isPending}
-                  onClick={() => approveMutation.mutate(selected.id)}
-                >
-                  Approve
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="destructive"
-                  disabled={
-                    disableActions ||
-                    sendMutation.isPending ||
-                    selected.status !== 'approved'
-                  }
-                  onClick={() => sendMutation.mutate(selected.id)}
-                >
-                  Send
-                </Button>
-              </div>
-
-              <div className="space-y-2 pt-3 border-t border-border/60">
-                <label className="text-xs font-medium text-muted-foreground">
-                  Rejection reason (optional)
-                </label>
-                <Textarea
-                  className="min-h-[80px]"
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  disabled={disableActions}
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  disabled={disableActions || rejectMutation.isPending}
-                  onClick={() =>
-                    rejectMutation.mutate({
-                      id: selected.id,
-                      reason: rejectionReason,
-                    })
-                  }
-                >
-                  Reject
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
+            </CollapsibleContent>
+          </div>
+        </Collapsible>
       </div>
     </div>
   );
 }
-

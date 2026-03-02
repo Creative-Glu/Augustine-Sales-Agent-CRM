@@ -1,7 +1,7 @@
 import { QueryProvider } from '../providers/QueryProvider';
 import './globals.css';
-import { ToastProvider } from '../hooks/use-toast';
 import { AuthProvider } from '../providers/AuthProvider';
+import { Toaster } from '@/components/ui/toaster';
 
 export const metadata = {
   title: 'Augustine CRM',
@@ -16,7 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <QueryProvider>
             <AuthProvider>{children}</AuthProvider>
           </QueryProvider>
-          <ToastProvider />
+          <Toaster />
         </main>
       </body>
     </html>
