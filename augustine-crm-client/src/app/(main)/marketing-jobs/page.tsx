@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -10,12 +10,55 @@ import { useToast } from '@/components/ui/use-toast';
 import {
   deleteJob,
   getJob,
+  getJobProgress,
   getJobResults,
   listJobs,
   submitJob,
 } from '@/services/augustine/jobs.service';
-import type { JobDetail, JobResultItem, JobsListItem, JobStatus } from '@/types/augustine';
-import { Activity, Plus, RefreshCw } from 'lucide-react';
+import type {
+  JobDetail,
+  JobProgressEvent,
+  JobProgressSummary,
+  JobResultItem,
+  JobsListItem,
+  JobStatus,
+} from '@/types/augustine';
+import { cn } from '@/lib/utils';
+import { Activity, Copy, Plus, RefreshCw } from 'lucide-react';
+
+const STAGES_ORDER = [
+  'job_started',
+  'url_processing',
+  'extraction',
+  'db_saving',
+  'hubspot_sync',
+  'completed',
+] as const;
+type StepKey = (typeof STAGES_ORDER)[number];
+type StepState = 'pending' | 'active' | 'completed' | 'failed';
+
+function eventStageToStep(stage: string): StepKey | null {
+  if (stage.startsWith('job_started') || stage === 'job_started') return 'job_started';
+  if (stage.startsWith('url_')) return 'url_processing';
+  if (stage.startsWith('extraction')) return 'extraction';
+  if (stage.startsWith('db_')) return 'db_saving';
+  if (stage.startsWith('hubspot')) return 'hubspot_sync';
+  if (stage.includes('completed') || stage.includes('failed')) return 'completed';
+  return null;
+}
+
+function eventDotColor(stage: string): string {
+  if (stage.includes('failed') || stage.includes('error'))
+    return 'bg-destructive';
+  if (stage.includes('completed') || stage === 'job_completed')
+    return 'bg-green-500';
+  if (stage.startsWith('hubspot')) return 'bg-teal-500';
+  if (stage.startsWith('url_')) return 'bg-indigo-500';
+  if (stage.startsWith('extraction')) return 'bg-purple-500';
+  if (stage.startsWith('fallback')) return 'bg-amber-500';
+  if (stage.startsWith('db_')) return 'bg-blue-500';
+  return 'bg-blue-500';
+}
 
 const JOBS_DISPLAY_LIMIT = 100;
 const RESULTS_DISPLAY_LIMIT = 300;
@@ -46,6 +89,14 @@ export default function MarketingJobsPage() {
   const [urlsText, setUrlsText] = useState('');
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [polling, setPolling] = useState(false);
+  const [progressEvents, setProgressEvents] = useState<JobProgressEvent[]>([]);
+  const [progressSummary, setProgressSummary] = useState<JobProgressSummary | null>(null);
+  const [progressStatus, setProgressStatus] = useState<JobStatus | null>(null);
+  const [lastEventId, setLastEventId] = useState<number | null>(null);
+  const [isProgressLoading, setIsProgressLoading] = useState(false);
+  const [autoScrollTimeline, setAutoScrollTimeline] = useState(true);
+  const [showOnlyErrors, setShowOnlyErrors] = useState(false);
+  const timelineRef = useRef<HTMLDivElement | null>(null);
   const { toast } = useToast();
 
   const jobsQuery = useQuery({
@@ -78,6 +129,95 @@ export default function MarketingJobsPage() {
       setPolling(false);
     }
   }, [jobDetailQuery.data?.status]);
+
+  // Initial progress load when job selected
+  useEffect(() => {
+    setProgressEvents([]);
+    setProgressSummary(null);
+    setProgressStatus(null);
+    setLastEventId(null);
+    setAutoScrollTimeline(true);
+    if (!selectedJobId) return;
+    let cancelled = false;
+    setIsProgressLoading(true);
+    getJobProgress(selectedJobId)
+      .then((res) => {
+        if (cancelled) return;
+        setProgressEvents(res.events ?? []);
+        setProgressSummary(res.summary ?? null);
+        setProgressStatus(res.job_status);
+        const maxId =
+          res.events?.length ? Math.max(...res.events.map((e) => e.id)) : null;
+        setLastEventId(maxId);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setProgressStatus(null);
+          setProgressSummary(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsProgressLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedJobId]);
+
+  // Poll progress every 1500ms while running/pending
+  useEffect(() => {
+    if (!selectedJobId) return;
+    const effectiveStatus = progressStatus ?? jobDetailQuery.data?.status;
+    if (effectiveStatus !== 'pending' && effectiveStatus !== 'running') return;
+
+    let cancelled = false;
+    const id = window.setInterval(async () => {
+      try {
+        const res = await getJobProgress(
+          selectedJobId,
+          lastEventId ?? undefined
+        );
+        if (cancelled) return;
+        if (res.events?.length) {
+          setProgressEvents((prev) => {
+            const existingIds = new Set(prev.map((e) => e.id));
+            const merged = [
+              ...prev,
+              ...res.events.filter((e) => !existingIds.has(e.id)),
+            ];
+            return merged.sort((a, b) => a.id - b.id);
+          });
+          const maxId = Math.max(...res.events.map((e) => e.id));
+          setLastEventId((prev) =>
+            prev == null ? maxId : Math.max(prev, maxId)
+          );
+        }
+        setProgressSummary(res.summary ?? null);
+        setProgressStatus(res.job_status);
+      } catch {
+        // ignore polling errors
+      }
+    }, 1500);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [selectedJobId, progressStatus, jobDetailQuery.data?.status, lastEventId]);
+
+  // Auto-scroll timeline to bottom when new events and auto-scroll on
+  useEffect(() => {
+    if (!autoScrollTimeline || !timelineRef.current) return;
+    const el = timelineRef.current;
+    el.scrollTop = el.scrollHeight;
+  }, [progressEvents.length, autoScrollTimeline]);
+
+  const handleTimelineScroll = useCallback(() => {
+    if (!timelineRef.current) return;
+    const el = timelineRef.current;
+    const distanceFromBottom =
+      el.scrollHeight - (el.scrollTop + el.clientHeight);
+    setAutoScrollTimeline(distanceFromBottom < 24);
+  }, []);
 
   const submitMutation = useMutation({
     mutationFn: (urls: string[]) => submitJob(urls),
@@ -149,6 +289,74 @@ export default function MarketingJobsPage() {
     () => resultsQuery.data?.summary ?? selectedJob?.summary ?? null,
     [resultsQuery.data?.summary, selectedJob?.summary]
   );
+
+  const effectiveStatus =
+    progressStatus ?? selectedJob?.status ?? ('pending' as JobStatus);
+  const rawTotal =
+    progressSummary?.urls_total ?? summary?.total_websites ?? 0;
+  const rawProcessed =
+    progressSummary?.urls_processed ?? summary?.successfully_processed ?? 0;
+  const urlsTotal =
+    typeof rawTotal === 'number' && Number.isFinite(rawTotal) ? rawTotal : 0;
+  const urlsProcessed =
+    typeof rawProcessed === 'number' && Number.isFinite(rawProcessed)
+      ? rawProcessed
+      : 0;
+  const progressPct =
+    urlsTotal > 0 ? Math.round((urlsProcessed / urlsTotal) * 100) : 0;
+
+  const visibleEvents = useMemo(() => {
+    if (!showOnlyErrors) return progressEvents;
+    return progressEvents.filter(
+      (e) =>
+        (typeof e.stage === 'string' && e.stage.includes('failed')) ||
+        (typeof e.stage === 'string' && e.stage.includes('error')) ||
+        (typeof e.message === 'string' &&
+          e.message.toLowerCase().includes('error'))
+    );
+  }, [progressEvents, showOnlyErrors]);
+
+  const stepStates = useMemo(() => {
+    let highestReached = -1;
+    let failedIdx = -1;
+    const stageStr = (s: unknown) =>
+      typeof s === 'string' ? s : s != null ? String(s) : '';
+    progressEvents.forEach((e) => {
+      const stage = stageStr(e.stage);
+      const step = eventStageToStep(stage);
+      if (!step) return;
+      const idx = STAGES_ORDER.indexOf(step);
+      if (idx > highestReached) highestReached = idx;
+      if (stage.includes('failed') && failedIdx < 0) failedIdx = idx;
+    });
+    const states: Record<StepKey, StepState> = {} as Record<StepKey, StepState>;
+    STAGES_ORDER.forEach((key, idx) => {
+      if (idx === failedIdx) states[key] = 'failed';
+      else if (idx < highestReached) states[key] = 'completed';
+      else if (idx === highestReached)
+        states[key] =
+          effectiveStatus === 'completed' ? 'completed' : 'active';
+      else states[key] = 'pending';
+    });
+    return states;
+  }, [progressEvents, effectiveStatus]);
+
+  const copyLogs = useCallback(() => {
+    const msgStr = (v: unknown) =>
+      typeof v === 'string' ? v : v != null ? JSON.stringify(v) : '';
+    const text = progressEvents
+      .map(
+        (e) =>
+          `[${new Date(e.created_at).toISOString()}] ${e.stage}: ${msgStr(e.message)}${
+            e.details ? `\n  ${msgStr(e.details)}` : ''
+          }`
+      )
+      .join('\n');
+    navigator.clipboard.writeText(text).then(
+      () => toast({ title: 'Logs copied to clipboard' }),
+      () => toast({ title: 'Failed to copy', variant: 'destructive' })
+    );
+  }, [progressEvents, toast]);
 
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-950 dark:via-blue-950 dark:to-slate-950">
@@ -372,6 +580,201 @@ export default function MarketingJobsPage() {
               </div>
             )}
 
+            {selectedJobId && (
+              <>
+                {effectiveStatus === 'completed' && (
+                  <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-xs text-green-800 dark:border-green-800 dark:bg-green-950/40 dark:text-green-200">
+                    Job completed successfully.
+                  </div>
+                )}
+                {effectiveStatus === 'failed' && (
+                  <div className="mb-4 rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-2 text-xs text-destructive">
+                    Job failed. Check event timeline and error details below.
+                  </div>
+                )}
+
+                <div className="mb-4 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <JobStatusBadge status={effectiveStatus} />
+                      <span className="text-xs text-muted-foreground">
+                        {urlsProcessed} / {urlsTotal || '—'} URLs
+                      </span>
+                    </div>
+                    <div className="flex gap-4 text-xs text-muted-foreground">
+                      <span>
+                        Institutions:{' '}
+                        {typeof progressSummary?.institutions_extracted === 'number'
+                          ? progressSummary.institutions_extracted
+                          : '—'}
+                      </span>
+                      <span>
+                        Staff:{' '}
+                        {typeof progressSummary?.staff_extracted === 'number'
+                          ? progressSummary.staff_extracted
+                          : '—'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                    <div
+                      className={cn(
+                        'h-full rounded-full transition-[width] duration-500',
+                        effectiveStatus === 'completed' && 'bg-green-500',
+                        effectiveStatus === 'failed' && 'bg-destructive',
+                        effectiveStatus === 'running' && 'bg-indigo-500',
+                        (effectiveStatus === 'pending' || effectiveStatus === 'running') &&
+                          'animate-pulse',
+                        effectiveStatus === 'pending' && 'bg-muted-foreground/60'
+                      )}
+                      style={{
+                        width: `${Math.min(100, progressPct)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div className="mb-4 flex items-center justify-between gap-2">
+                  {STAGES_ORDER.map((stage, idx) => {
+                    const state = stepStates[stage];
+                    const isLast = idx === STAGES_ORDER.length - 1;
+                    return (
+                      <div key={stage} className="flex flex-1 items-center">
+                        <div className="flex flex-col items-center gap-1">
+                          <div
+                            className={cn(
+                              'flex items-center justify-center rounded-full border-2 size-6 text-[10px] font-semibold',
+                              state === 'pending' &&
+                                'border-muted-foreground/40 bg-transparent text-muted-foreground',
+                              state === 'active' &&
+                                'border-indigo-500 bg-indigo-500/20 text-indigo-600 dark:text-indigo-400',
+                              state === 'active' && 'animate-pulse',
+                              state === 'completed' &&
+                                'border-green-500 bg-green-500 text-white',
+                              state === 'failed' &&
+                                'border-destructive bg-destructive text-destructive-foreground'
+                            )}
+                          >
+                            {idx + 1}
+                          </div>
+                          <span className="text-[10px] text-muted-foreground text-center leading-tight">
+                            {stage.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+                        {!isLast && (
+                          <div className="flex-1 h-px mx-0.5 bg-border/60 min-w-2" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="mb-4 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      Live events
+                    </p>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <Input
+                          type="checkbox"
+                          className="h-3.5 w-3.5 rounded border-border"
+                          checked={showOnlyErrors}
+                          onChange={(e) => setShowOnlyErrors(e.target.checked)}
+                        />
+                        Errors only
+                      </label>
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <Input
+                          type="checkbox"
+                          className="h-3.5 w-3.5 rounded border-border"
+                          checked={autoScrollTimeline}
+                          onChange={(e) => setAutoScrollTimeline(e.target.checked)}
+                        />
+                        Auto-scroll
+                      </label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 gap-1 text-muted-foreground"
+                        onClick={copyLogs}
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        Copy logs
+                      </Button>
+                    </div>
+                  </div>
+                  <div
+                    ref={timelineRef}
+                    onScroll={handleTimelineScroll}
+                    className="border border-border/60 rounded-xl bg-muted/30 max-h-[200px] overflow-y-auto px-4 py-3 space-y-3"
+                  >
+                    {isProgressLoading && progressEvents.length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Loading job progress…
+                      </p>
+                    )}
+                    {!isProgressLoading && visibleEvents.length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Waiting for job to start…
+                      </p>
+                    )}
+                    {visibleEvents.map((e) => {
+                      const msg =
+                        typeof e.message === 'string'
+                          ? e.message
+                          : e.message != null
+                            ? JSON.stringify(e.message)
+                            : '';
+                      const details =
+                        typeof e.details === 'string'
+                          ? e.details
+                          : e.details != null
+                            ? JSON.stringify(e.details)
+                            : null;
+                      const stageStr =
+                        typeof e.stage === 'string'
+                          ? e.stage
+                          : e.stage != null
+                            ? String(e.stage)
+                            : '';
+                      return (
+                        <div
+                          key={e.id}
+                          className="flex gap-3 animate-in fade-in-0 duration-200"
+                        >
+                          <div className="flex flex-col items-center pt-0.5">
+                            <span
+                              className={cn(
+                                'size-2 rounded-full shrink-0',
+                                eventDotColor(stageStr)
+                              )}
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0 space-y-0.5">
+                            <p className="text-xs font-medium text-slate-800 dark:text-slate-100 wrap-break-word">
+                              {msg}
+                            </p>
+                            {details && (
+                              <p className="text-[11px] text-muted-foreground whitespace-pre-line wrap-break-word">
+                                {details}
+                              </p>
+                            )}
+                            <p className="text-[10px] text-muted-foreground">
+                              {typeof e.created_at === 'string'
+                                ? new Date(e.created_at).toLocaleTimeString()
+                                : '—'}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
+
             {selectedJobId && !selectedJob && jobDetailQuery.isLoading && (
               <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-3">
@@ -434,15 +837,25 @@ export default function MarketingJobsPage() {
                   <div className="grid grid-cols-3 gap-4 py-3 border-y border-border/60 text-sm mb-4">
                     <div>
                       <p className="text-xs text-muted-foreground">Websites</p>
-                      <p className="font-medium">{summary.total_websites ?? '—'}</p>
+                      <p className="font-medium">
+                        {typeof summary.total_websites === 'number'
+                          ? summary.total_websites
+                          : '—'}
+                      </p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Processed</p>
-                      <p className="font-medium">{summary.successfully_processed ?? '—'}</p>
+                      <p className="font-medium">
+                        {typeof summary.successfully_processed === 'number'
+                          ? summary.successfully_processed
+                          : '—'}
+                      </p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Failed</p>
-                      <p className="font-medium">{summary.failed ?? '—'}</p>
+                      <p className="font-medium">
+                        {typeof summary.failed === 'number' ? summary.failed : '—'}
+                      </p>
                     </div>
                   </div>
                 )}

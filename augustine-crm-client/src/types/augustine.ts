@@ -138,6 +138,28 @@ export interface JobResultsResponse {
   summary: JobSummary;
 }
 
+export interface JobProgressEvent {
+  id: number;
+  stage: string;
+  message: string;
+  details?: string | null;
+  created_at: string;
+}
+
+export interface JobProgressSummary {
+  urls_total: number;
+  urls_processed: number;
+  institutions_extracted: number;
+  staff_extracted: number;
+}
+
+export interface JobProgressResponse {
+  job_id: string;
+  job_status: JobStatus;
+  events: JobProgressEvent[];
+  summary: JobProgressSummary;
+}
+
 // ---------- ICP ----------
 
 export interface IcpFilters {

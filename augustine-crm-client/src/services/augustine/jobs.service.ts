@@ -1,6 +1,7 @@
 import { apiDelete, apiGet, apiPost } from '@/lib/augustineApiClient';
 import type {
   JobDetail,
+  JobProgressResponse,
   JobResultsResponse,
   JobsListResponse,
   JobSubmitResponse,
@@ -20,6 +21,15 @@ export async function getJob(jobId: string): Promise<JobDetail> {
 
 export async function getJobResults(jobId: string): Promise<JobResultsResponse> {
   return apiGet<JobResultsResponse>(`/jobs/${jobId}/results`);
+}
+
+export async function getJobProgress(
+  jobId: string,
+  sinceId?: number
+): Promise<JobProgressResponse> {
+  const query = sinceId != null ? `?since_id=${sinceId}` : '';
+  // Progress endpoint is namespaced under /api/jobs even though core jobs use /jobs
+  return apiGet<JobProgressResponse>(`/api/jobs/${jobId}/progress${query}`);
 }
 
 export async function deleteJob(jobId: string): Promise<void> {
