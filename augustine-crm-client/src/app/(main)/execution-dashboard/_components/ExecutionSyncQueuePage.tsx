@@ -195,7 +195,7 @@ export default function ExecutionSyncQueuePage() {
     return () => {
       cancelled = true;
     };
-  }, [user?.role, errorToast]);
+  }, [user?.role]);
 
   const handleToggleSync = async (next: boolean) => {
     if (user?.role !== 'Admin') return;

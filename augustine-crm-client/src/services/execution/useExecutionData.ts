@@ -326,7 +326,7 @@ export function useSyncQueue(params: { status?: string; entity_type?: string; li
     queryFn: () => fetchSyncQueue({ ...params, limit }),
     enabled: view === 'sync-queue',
     staleTime: 10 * 1000,
-    refetchInterval: 10000,
-    refetchOnWindowFocus: true,
+    // No automatic polling; refresh is manual via the UI "Refresh" button.
+    refetchOnWindowFocus: false,
   });
 }
