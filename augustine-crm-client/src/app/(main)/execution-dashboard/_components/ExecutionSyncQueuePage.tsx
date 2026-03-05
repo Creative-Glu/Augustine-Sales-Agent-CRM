@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,16 @@ import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { useSyncQueue } from '@/services/execution/useExecutionData';
 import type { SyncQueueJob, SyncQueueStatus } from '@/types/execution';
 import { useToastHelpers } from '@/lib/toast';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import {
+  getHubspotSyncConfig,
+  getHubspotExtendedHealth,
+  runHubspotBatchSync,
+  updateHubspotSyncConfig,
+  type HubspotEntityType,
+} from '@/services/augustine/hubspotSync.service';
+import { useAuth } from '@/providers/AuthProvider';
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -90,6 +100,7 @@ const COLUMNS = [
 ];
 
 export default function ExecutionSyncQueuePage() {
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const statusParam = searchParams.get('status') ?? '';
@@ -111,6 +122,19 @@ export default function ExecutionSyncQueuePage() {
   const metrics = queueQuery.data?.metrics;
   const isLoading = queueQuery.isLoading;
   const isError = queueQuery.isError;
+
+  // HubSpot sync config + health
+  const [hubspotSyncEnabled, setHubspotSyncEnabled] = useState<boolean | null>(null);
+  const [hubspotConfigured, setHubspotConfigured] = useState<boolean | null>(null);
+  const [hubspotWorkerRunning, setHubspotWorkerRunning] = useState<boolean | null>(null);
+  const [hubspotSyncAllowed, setHubspotSyncAllowed] = useState<boolean | null>(null);
+  const [loadingConfig, setLoadingConfig] = useState(false);
+  const [updatingConfig, setUpdatingConfig] = useState(false);
+
+  // Batch sync form
+  const [batchEntityType, setBatchEntityType] = useState<'all' | HubspotEntityType>('all');
+  const [batchLimit, setBatchLimit] = useState<number>(100);
+  const [runningBatch, setRunningBatch] = useState(false);
 
   const handleRetry = async (job: SyncQueueJob) => {
     setRetryingId(job.queue_id);
@@ -139,15 +163,227 @@ export default function ExecutionSyncQueuePage() {
     }
   };
 
+  // Load initial HubSpot config + health (admin only)
+  useEffect(() => {
+    if (user?.role !== 'Admin') return;
+    let cancelled = false;
+    const load = async () => {
+      try {
+        setLoadingConfig(true);
+        const [config, health] = await Promise.all([
+          getHubspotSyncConfig(),
+          getHubspotExtendedHealth(),
+        ]);
+        if (cancelled) return;
+        setHubspotSyncEnabled(config.enabled);
+        setHubspotConfigured(health.enabled);
+        setHubspotWorkerRunning(health.worker_running);
+        setHubspotSyncAllowed(health.sync_enabled);
+      } catch (e) {
+        if (!cancelled) {
+          errorToast(
+            e instanceof Error
+              ? e.message
+              : 'Failed to load HubSpot sync configuration.'
+          );
+        }
+      } finally {
+        if (!cancelled) setLoadingConfig(false);
+      }
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.role, errorToast]);
+
+  const handleToggleSync = async (next: boolean) => {
+    if (user?.role !== 'Admin') return;
+    const prev = hubspotSyncEnabled;
+    setHubspotSyncEnabled(next);
+    setUpdatingConfig(true);
+    try {
+      const res = await updateHubspotSyncConfig(next);
+      setHubspotSyncEnabled(res.enabled);
+      // refresh health so sync_enabled stays in sync
+      const health = await getHubspotExtendedHealth();
+      setHubspotConfigured(health.enabled);
+      setHubspotWorkerRunning(health.worker_running);
+      setHubspotSyncAllowed(health.sync_enabled);
+      successToast(
+        res.enabled ? 'HubSpot sync enabled.' : 'HubSpot sync disabled.'
+      );
+    } catch (e) {
+      setHubspotSyncEnabled(prev ?? false);
+      errorToast(
+        e instanceof Error
+          ? e.message
+          : 'Failed to update HubSpot sync configuration.'
+      );
+    } finally {
+      setUpdatingConfig(false);
+    }
+  };
+
+  const handleRunBatch = async () => {
+    if (user?.role !== 'Admin') return;
+    if (!Number.isFinite(batchLimit) || batchLimit < 1 || batchLimit > 1000) {
+      errorToast('Limit must be between 1 and 1000.');
+      return;
+    }
+    setRunningBatch(true);
+    try {
+      const entity_type: HubspotEntityType | null =
+        batchEntityType === 'all' ? null : batchEntityType;
+      const res = await runHubspotBatchSync(entity_type, batchLimit);
+      if (!res.enabled) {
+        errorToast('HubSpot sync is currently turned off.');
+      } else {
+        successToast('Batch HubSpot sync triggered.');
+        await Promise.all([
+          queueQuery.refetch(),
+          queryClient.invalidateQueries({ queryKey: ['execution', 'sync-queue'] }),
+          queryClient.invalidateQueries({ queryKey: ['execution', 'institution'] }),
+          queryClient.invalidateQueries({ queryKey: ['execution', 'staff'] }),
+          queryClient.invalidateQueries({ queryKey: ['execution', 'stats'] }),
+        ]);
+      }
+    } catch (e) {
+      errorToast(
+        e instanceof Error ? e.message : 'Failed to run batch HubSpot sync.'
+      );
+    } finally {
+      setRunningBatch(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card className="border-border bg-card">
         <CardHeader>
-          <CardTitle className="text-base">Sync Queue</CardTitle>
+          <CardTitle className="text-base">HubSpot Sync</CardTitle>
           <p className="text-sm text-muted-foreground">
-            HubSpot sync queue jobs. Retry failed items or inspect status and attempts.
+            Control HubSpot sync behaviour and inspect the sync queue.
           </p>
         </CardHeader>
+        {user?.role === 'Admin' && (
+          <CardContent className="border-t border-border/60 pt-4 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-3">
+                  <Switch
+                    id="hubspot-sync-toggle"
+                    checked={!!hubspotSyncEnabled}
+                    onCheckedChange={handleToggleSync}
+                    disabled={updatingConfig}
+                  />
+                  <Label
+                    htmlFor="hubspot-sync-toggle"
+                    className="text-sm font-medium text-foreground"
+                  >
+                    HubSpot sync
+                  </Label>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  When off, no new HubSpot sync jobs are queued.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div className="space-y-0.5">
+                  <p className="text-muted-foreground">HubSpot configured</p>
+                  <p className="font-semibold">
+                    {hubspotConfigured == null
+                      ? '—'
+                      : hubspotConfigured
+                        ? 'Yes'
+                        : 'No'}
+                  </p>
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-muted-foreground">Sync worker running</p>
+                  <p className="font-semibold">
+                    {hubspotWorkerRunning == null
+                      ? '—'
+                      : hubspotWorkerRunning
+                        ? 'Yes'
+                        : 'No'}
+                  </p>
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-muted-foreground">Sync allowed</p>
+                  <p className="font-semibold">
+                    {hubspotSyncAllowed == null
+                      ? '—'
+                      : hubspotSyncAllowed
+                        ? 'On'
+                        : 'Off'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-border/60 space-y-3">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Manual batch sync
+              </p>
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs">Entity type</Label>
+                  <Select
+                    value={batchEntityType}
+                    onValueChange={(v) =>
+                      setBatchEntityType(
+                        v as 'all' | HubspotEntityType
+                      )
+                    }
+                  >
+                    <SelectTrigger className="w-[170px] h-9 text-xs">
+                      <SelectValue placeholder="Entity type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="institution">Institutions only</SelectItem>
+                      <SelectItem value="staff">Staff only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <Label htmlFor="batch-limit" className="text-xs">
+                    Max to sync now
+                  </Label>
+                  <input
+                    id="batch-limit"
+                    type="number"
+                    min={1}
+                    max={1000}
+                    value={batchLimit}
+                    onChange={(e) =>
+                      setBatchLimit(
+                        Number.isNaN(Number(e.target.value))
+                          ? 100
+                          : Number(e.target.value)
+                      )
+                    }
+                    className="h-9 w-28 rounded-md border border-border bg-background px-2 text-xs"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="gap-2"
+                  onClick={handleRunBatch}
+                  disabled={runningBatch}
+                >
+                  {runningBatch ? 'Running…' : 'Run batch HubSpot sync'}
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Batch sync respects the current HubSpot sync toggle. If sync is
+                disabled, the operation is effectively a no-op.
+              </p>
+            </div>
+          </CardContent>
+        )}
       </Card>
 
       {metrics && (

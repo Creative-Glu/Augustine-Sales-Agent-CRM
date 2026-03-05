@@ -11,8 +11,17 @@ export async function submitJob(urls: string[]): Promise<JobSubmitResponse> {
   return apiPost<JobSubmitResponse, { urls: string[] }>('/jobs', { urls });
 }
 
-export async function listJobs(): Promise<JobsListResponse> {
-  return apiGet<JobsListResponse>('/jobs');
+// Supports optional server-side pagination: latest jobs with limit/offset.
+export async function listJobs(
+  limit?: number,
+  offset?: number
+): Promise<JobsListResponse> {
+  const sp = new URLSearchParams();
+  if (limit != null) sp.set('limit', String(limit));
+  if (offset != null) sp.set('offset', String(offset));
+  const qs = sp.toString();
+  const path = qs ? `/jobs?${qs}` : '/jobs';
+  return apiGet<JobsListResponse>(path);
 }
 
 export async function getJob(jobId: string): Promise<JobDetail> {

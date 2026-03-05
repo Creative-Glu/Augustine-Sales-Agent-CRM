@@ -11,6 +11,10 @@ import { TableHeader } from '@/components/TableHeader';
 import type { Institution } from '@/types/execution';
 import type { Staff } from '@/types/execution';
 import { getStaffByInstitutionId } from '@/services/execution/staff.service';
+import { Button } from '@/components/ui/button';
+import { useToastHelpers } from '@/lib/toast';
+import { runHubspotSingleSync } from '@/services/augustine/hubspotSync.service';
+import { useAuth } from '@/providers/AuthProvider';
 
 function ManagedInHubSpotBanner({
   entityType,
@@ -112,9 +116,11 @@ export default function InstitutionStaffModal({
   onOpenChange,
   mode = 'staff',
 }: InstitutionStaffModalProps) {
+  const { user } = useAuth();
   const [staff, setStaff] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { successToast, errorToast } = useToastHelpers();
 
   useEffect(() => {
     if (mode !== 'staff' || !open || !institution) {
@@ -169,6 +175,37 @@ export default function InstitutionStaffModal({
                     <DetailRow label="Sync Error" value={institution.sync_error ?? '—'} />
                     <DetailRow label="Current Queue Status" value={institution.sync_status ? String(institution.sync_status) : 'Not in sync queue'} />
                   </dl>
+                  {user?.role === 'Admin' && (
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={async () => {
+                          if (!institution?.id) return;
+                          try {
+                            const res = await runHubspotSingleSync(
+                              'institution',
+                              Number(institution.id)
+                            );
+                            if (!res.enabled) {
+                              errorToast('HubSpot sync is currently turned off.');
+                              return;
+                            }
+                            successToast('Institution sync to HubSpot queued.');
+                          } catch (e) {
+                            errorToast(
+                              e instanceof Error
+                                ? e.message
+                                : 'Failed to trigger HubSpot sync.'
+                            );
+                          }
+                        }}
+                      >
+                        Sync to HubSpot now
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </>
             )
@@ -204,29 +241,72 @@ export default function InstitutionStaffModal({
                           <td className="py-3 px-4 font-medium text-foreground">
                             <div className="flex flex-col gap-0.5">
                               {cell(row.name)}
-                              {row.synced_to_hubspot === true && row.hubspot_contact_id && process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID && (
-                                <a
-                                  href={`https://app.hubspot.com/contacts/${process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID}/contact/${row.hubspot_contact_id}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs text-primary hover:underline"
-                                >
-                                  Open in HubSpot
-                                </a>
+                              {row.synced_to_hubspot === true &&
+                                row.hubspot_contact_id &&
+                                process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID && (
+                                  <a
+                                    href={`https://app.hubspot.com/contacts/${process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID}/contact/${row.hubspot_contact_id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-primary hover:underline"
+                                  >
+                                    Open in HubSpot
+                                  </a>
+                                )}
+                              {user?.role === 'Admin' && (
+                                <div className="mt-1">
+                                  <Button
+                                    type="button"
+                                    size="xs"
+                                    variant="outline"
+                                    onClick={async () => {
+                                      try {
+                                        const res = await runHubspotSingleSync(
+                                          'staff',
+                                          row.staff_id
+                                        );
+                                        if (!res.enabled) {
+                                          errorToast(
+                                            'HubSpot sync is currently turned off.'
+                                          );
+                                          return;
+                                        }
+                                        successToast(
+                                          'Staff sync to HubSpot queued.'
+                                        );
+                                      } catch (e) {
+                                        errorToast(
+                                          e instanceof Error
+                                            ? e.message
+                                            : 'Failed to trigger HubSpot sync.'
+                                        );
+                                      }
+                                    }}
+                                  >
+                                    Sync to HubSpot now
+                                  </Button>
+                                </div>
                               )}
                             </div>
                           </td>
-                        <td className="py-3 px-4 text-sm text-muted-foreground">{cell(row.role)}</td>
-                        <td className="py-3 px-4 text-sm">
-                          {row.email ? (
-                            <a href={`mailto:${row.email}`} className="text-blue-600 hover:underline">
-                              {row.email}
-                            </a>
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
-                          )}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-muted-foreground">{cell(row.contact_number)}</td>
+                          <td className="py-3 px-4 text-sm text-muted-foreground">
+                            {cell(row.role)}
+                          </td>
+                          <td className="py-3 px-4 text-sm">
+                            {row.email ? (
+                              <a
+                                href={`mailto:${row.email}`}
+                                className="text-blue-600 hover:underline"
+                              >
+                                {row.email}
+                              </a>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-muted-foreground">
+                            {cell(row.contact_number)}
+                          </td>
                           <td className="py-3 px-4 text-sm text-muted-foreground">
                             {formatDate(row.created_at)}
                           </td>

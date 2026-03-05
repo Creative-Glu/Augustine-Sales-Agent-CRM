@@ -35,7 +35,7 @@ const STAGES_ORDER = [
   'completed',
 ] as const;
 type StepKey = (typeof STAGES_ORDER)[number];
-type StepState = 'pending' | 'active' | 'completed' | 'failed';
+type StepState = 'pending' | 'active' | 'completed' | 'failed' | 'skipped';
 
 function eventStageToStep(stage: string): StepKey | null {
   if (stage.startsWith('job_started') || stage === 'job_started') return 'job_started';
@@ -50,6 +50,7 @@ function eventStageToStep(stage: string): StepKey | null {
 function eventDotColor(stage: string): string {
   if (stage.includes('failed') || stage.includes('error'))
     return 'bg-destructive';
+  if (stage.includes('skipped')) return 'bg-amber-500';
   if (stage.includes('completed') || stage === 'job_completed')
     return 'bg-green-500';
   if (stage.startsWith('hubspot')) return 'bg-teal-500';
@@ -60,7 +61,7 @@ function eventDotColor(stage: string): string {
   return 'bg-blue-500';
 }
 
-const JOBS_DISPLAY_LIMIT = 100;
+const JOBS_PAGE_SIZE = 10;
 const RESULTS_DISPLAY_LIMIT = 300;
 
 function parseUrls(raw: string): string[] {
@@ -88,6 +89,7 @@ function JobStatusBadge({ status }: { status: JobStatus }) {
 export default function MarketingJobsPage() {
   const [urlsText, setUrlsText] = useState('');
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [jobsOffset, setJobsOffset] = useState(0);
   const [polling, setPolling] = useState(false);
   const [progressEvents, setProgressEvents] = useState<JobProgressEvent[]>([]);
   const [progressSummary, setProgressSummary] = useState<JobProgressSummary | null>(null);
@@ -100,9 +102,10 @@ export default function MarketingJobsPage() {
   const { toast } = useToast();
 
   const jobsQuery = useQuery({
-    queryKey: ['augustine', 'jobs', 'list'],
-    queryFn: listJobs,
+    queryKey: ['augustine', 'jobs', 'list', { limit: JOBS_PAGE_SIZE, offset: jobsOffset }],
+    queryFn: () => listJobs(JOBS_PAGE_SIZE, jobsOffset),
     staleTime: 15_000,
+    keepPreviousData: true,
   });
 
   const jobDetailQuery = useQuery({
@@ -226,6 +229,7 @@ export default function MarketingJobsPage() {
         title: 'Job submitted',
         description: `Job ${res.job_id} queued with ${res.urls.length} URLs.`,
       });
+      setJobsOffset(0);
       jobsQuery.refetch();
       setSelectedJobId(res.job_id);
       setPolling(true);
@@ -243,6 +247,7 @@ export default function MarketingJobsPage() {
     mutationFn: (jobId: string) => deleteJob(jobId),
     onSuccess: (_, jobId) => {
       toast({ title: 'Job deleted', description: `Job ${jobId} was deleted.` });
+      setJobsOffset(0);
       jobsQuery.refetch();
       if (selectedJobId === jobId) setSelectedJobId(null);
     },
@@ -257,11 +262,9 @@ export default function MarketingJobsPage() {
 
   const allJobs: JobsListItem[] = jobsQuery.data?.jobs ?? [];
   const totalJobs = jobsQuery.data?.total_jobs ?? allJobs.length;
-  const jobs = useMemo(
-    () => allJobs.slice(0, JOBS_DISPLAY_LIMIT),
-    [allJobs]
-  );
-  const hasMoreJobs = totalJobs > JOBS_DISPLAY_LIMIT;
+  const jobs = allJobs;
+  const hasPrevJobs = jobsOffset > 0;
+  const hasNextJobs = jobsOffset + jobs.length < totalJobs;
 
   const allResults: JobResultItem[] = resultsQuery.data?.results ?? [];
   const results = useMemo(
@@ -319,6 +322,7 @@ export default function MarketingJobsPage() {
   const stepStates = useMemo(() => {
     let highestReached = -1;
     let failedIdx = -1;
+    const skippedIdxs = new Set<number>();
     const stageStr = (s: unknown) =>
       typeof s === 'string' ? s : s != null ? String(s) : '';
     progressEvents.forEach((e) => {
@@ -328,10 +332,12 @@ export default function MarketingJobsPage() {
       const idx = STAGES_ORDER.indexOf(step);
       if (idx > highestReached) highestReached = idx;
       if (stage.includes('failed') && failedIdx < 0) failedIdx = idx;
+      if (stage.includes('skipped')) skippedIdxs.add(idx);
     });
     const states: Record<StepKey, StepState> = {} as Record<StepKey, StepState>;
     STAGES_ORDER.forEach((key, idx) => {
       if (idx === failedIdx) states[key] = 'failed';
+      else if (skippedIdxs.has(idx)) states[key] = 'skipped';
       else if (idx < highestReached) states[key] = 'completed';
       else if (idx === highestReached)
         states[key] =
@@ -403,7 +409,7 @@ export default function MarketingJobsPage() {
             </section>
 
             <section className="bg-card rounded-2xl border border-border shadow-sm p-6">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-2">
                 <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Jobs</h2>
                 <Button
                   type="button"
@@ -419,11 +425,39 @@ export default function MarketingJobsPage() {
                   />
                 </Button>
               </div>
-              {hasMoreJobs && (
-                <p className="text-xs text-muted-foreground mb-3">
-                  Showing latest {JOBS_DISPLAY_LIMIT} of {totalJobs} jobs
+              <div className="flex items-center justify-between gap-3 mb-3 text-xs text-muted-foreground">
+                <p>
+                  {jobs.length > 0
+                    ? `Showing ${jobsOffset + 1}–${jobsOffset + jobs.length} of ${totalJobs} jobs`
+                    : 'No jobs.'}
                 </p>
-              )}
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2"
+                    disabled={!hasPrevJobs || jobsQuery.isLoading}
+                    onClick={() =>
+                      setJobsOffset((prev) => Math.max(0, prev - JOBS_PAGE_SIZE))
+                    }
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2"
+                    disabled={!hasNextJobs || jobsQuery.isLoading}
+                    onClick={() =>
+                      setJobsOffset((prev) => prev + JOBS_PAGE_SIZE)
+                    }
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
               <div className="border border-border/60 rounded-xl overflow-hidden bg-muted/30 max-h-[380px] overflow-y-auto">
                 <table className="min-w-full text-sm">
                   <thead>
