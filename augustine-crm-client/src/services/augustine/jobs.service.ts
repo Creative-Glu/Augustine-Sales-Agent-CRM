@@ -11,7 +11,8 @@ export async function submitJob(urls: string[]): Promise<JobSubmitResponse> {
   return apiPost<JobSubmitResponse, { urls: string[] }>('/jobs', { urls });
 }
 
-// Supports optional server-side pagination: latest jobs with limit/offset.
+// Server-side pagination: GET /jobs?limit=&offset= (e.g. limit=20, offset=0 for page 1).
+// Response includes jobs[] and total_jobs; use total_jobs to compute totalPages.
 export async function listJobs(
   limit?: number,
   offset?: number

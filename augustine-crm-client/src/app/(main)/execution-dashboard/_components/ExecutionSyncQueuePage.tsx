@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -101,11 +101,13 @@ const COLUMNS = [
 
 export default function ExecutionSyncQueuePage() {
   const { user } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const statusParam = searchParams.get('status') ?? '';
   const entityTypeParam = searchParams.get('entity_type') ?? '';
   const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') ?? '50', 10) || 50));
+  const offset = Math.max(0, parseInt(searchParams.get('offset') ?? '0', 10) || 0);
 
   const [status, setStatus] = useState(statusParam || 'all');
   const [entityType, setEntityType] = useState(entityTypeParam || 'all');
@@ -114,14 +116,31 @@ export default function ExecutionSyncQueuePage() {
     status: status === 'all' ? undefined : status,
     entity_type: entityType === 'all' ? undefined : entityType,
     limit,
+    offset,
   });
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const { successToast, errorToast } = useToastHelpers();
 
   const data = queueQuery.data?.data ?? [];
   const metrics = queueQuery.data?.metrics;
+  const total = queueQuery.data?.total ?? metrics?.total ?? 0;
+  const pageSize = limit;
+  const currentPage = pageSize > 0 ? Math.floor(offset / pageSize) + 1 : 1;
+  const totalPages = pageSize > 0 && total > 0 ? Math.max(1, Math.ceil(total / pageSize)) : 1;
+  const pageStart = total === 0 ? 0 : offset + 1;
+  const pageEnd = total === 0 ? 0 : Math.min(offset + pageSize, total);
+  const canPrev = offset > 0;
+  const canNext = offset + pageSize < total;
   const isLoading = queueQuery.isLoading;
   const isError = queueQuery.isError;
+
+  const handlePageChange = (nextOffset: number) => {
+    const clampedOffset = Math.max(0, nextOffset);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('offset', String(clampedOffset));
+    params.set('limit', String(pageSize));
+    router.push(`?${params.toString()}`);
+  };
 
   // HubSpot sync config + health
   const [hubspotSyncEnabled, setHubspotSyncEnabled] = useState<boolean | null>(null);
@@ -571,6 +590,41 @@ export default function ExecutionSyncQueuePage() {
             </tbody>
           </table>
         </div>
+        {total > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-border/60 text-xs text-muted-foreground">
+            <div>
+              Showing{' '}
+              <span className="font-medium text-foreground">{pageStart}</span>–
+              <span className="font-medium text-foreground">{pageEnd}</span> of{' '}
+              <span className="font-medium text-foreground">{total}</span> jobs
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={!canPrev || isLoading}
+                onClick={() => handlePageChange(offset - pageSize)}
+              >
+                Previous
+              </Button>
+              <span className="text-[11px]">
+                Page{' '}
+                <span className="font-semibold text-foreground">{currentPage}</span> of{' '}
+                <span className="font-semibold text-foreground">{totalPages}</span>
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={!canNext || isLoading}
+                onClick={() => handlePageChange(offset + pageSize)}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

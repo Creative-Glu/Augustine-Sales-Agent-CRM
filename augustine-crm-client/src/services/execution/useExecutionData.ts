@@ -308,22 +308,30 @@ async function fetchSyncQueue(params: {
   status?: string;
   entity_type?: string;
   limit?: number;
+  offset?: number;
 }): Promise<SyncQueueResponse> {
   const sp = new URLSearchParams();
   if (params.status) sp.set('status', params.status);
   if (params.entity_type) sp.set('entity_type', params.entity_type);
   sp.set('limit', String(params.limit ?? 50));
+  sp.set('offset', String(params.offset ?? 0));
   const res = await fetch(`/api/sync-queue?${sp.toString()}`, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch sync queue');
   return res.json();
 }
 
-export function useSyncQueue(params: { status?: string; entity_type?: string; limit?: number }) {
+export function useSyncQueue(params: {
+  status?: string;
+  entity_type?: string;
+  limit?: number;
+  offset?: number;
+}) {
   const view = useExecutionView();
   const limit = params.limit ?? 50;
+  const offset = params.offset ?? 0;
   return useQuery({
-    queryKey: ['execution', 'sync-queue', view, params.status, params.entity_type, limit],
-    queryFn: () => fetchSyncQueue({ ...params, limit }),
+    queryKey: ['execution', 'sync-queue', view, params.status, params.entity_type, limit, offset],
+    queryFn: () => fetchSyncQueue({ ...params, limit, offset }),
     enabled: view === 'sync-queue',
     staleTime: 10 * 1000,
     // No automatic polling; refresh is manual via the UI "Refresh" button.

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -21,7 +22,9 @@ import type {
   JobProgressSummary,
   JobResultItem,
   JobsListItem,
+  JobsListResponse,
   JobStatus,
+  JobSummary,
 } from '@/types/augustine';
 import { cn } from '@/lib/utils';
 import { Activity, Copy, Plus, RefreshCw } from 'lucide-react';
@@ -79,7 +82,7 @@ function eventDotColor(stage: string): string {
   return 'bg-blue-500';
 }
 
-const JOBS_PAGE_SIZE = 10;
+const JOBS_PAGE_SIZE = 20;
 const RESULTS_DISPLAY_LIMIT = 300;
 
 function parseUrls(raw: string): string[] {
@@ -104,10 +107,23 @@ function JobStatusBadge({ status }: { status: JobStatus }) {
   return <span className={`${base} ${styles[status]}`}>{status}</span>;
 }
 
+function getJobsPage(searchParams: URLSearchParams): number {
+  const p = searchParams.get('page');
+  const n = p ? parseInt(p, 10) : NaN;
+  return Number.isNaN(n) || n < 1 ? 1 : n;
+}
+
+function getJobsLimit(searchParams: URLSearchParams, defaultLimit: number): number {
+  const p = searchParams.get('limit');
+  const n = p ? parseInt(p, 10) : NaN;
+  return Number.isNaN(n) || n < 1 ? defaultLimit : Math.min(100, n);
+}
+
 export default function MarketingJobsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [urlsText, setUrlsText] = useState('');
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
-  const [jobsOffset, setJobsOffset] = useState(0);
   const [polling, setPolling] = useState(false);
   const [progressEvents, setProgressEvents] = useState<JobProgressEvent[]>([]);
   const [progressSummary, setProgressSummary] = useState<JobProgressSummary | null>(null);
@@ -119,11 +135,14 @@ export default function MarketingJobsPage() {
   const timelineRef = useRef<HTMLDivElement | null>(null);
   const { toast } = useToast();
 
+  const page = getJobsPage(searchParams);
+  const limit = getJobsLimit(searchParams, JOBS_PAGE_SIZE);
+  const offset = (page - 1) * limit;
+
   const jobsQuery = useQuery({
-    queryKey: ['augustine', 'jobs', 'list', { limit: JOBS_PAGE_SIZE, offset: jobsOffset }],
-    queryFn: () => listJobs(JOBS_PAGE_SIZE, jobsOffset),
+    queryKey: ['augustine', 'jobs', 'list', { limit, offset }],
+    queryFn: () => listJobs(limit, offset),
     staleTime: 15_000,
-    keepPreviousData: true,
   });
 
   const jobDetailQuery = useQuery({
@@ -240,6 +259,16 @@ export default function MarketingJobsPage() {
     setAutoScrollTimeline(distanceFromBottom < 24);
   }, []);
 
+  const setJobsPage = useCallback(
+    (newPage: number) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('page', String(Math.max(1, newPage)));
+      if (limit !== JOBS_PAGE_SIZE) params.set('limit', String(limit));
+      router.push(`?${params.toString()}`);
+    },
+    [router, searchParams, limit]
+  );
+
   const submitMutation = useMutation({
     mutationFn: (urls: string[]) => submitJob(urls),
     onSuccess: (res) => {
@@ -247,7 +276,7 @@ export default function MarketingJobsPage() {
         title: 'Job submitted',
         description: `Job ${res.job_id} queued with ${res.urls.length} URLs.`,
       });
-      setJobsOffset(0);
+      setJobsPage(1);
       jobsQuery.refetch();
       setSelectedJobId(res.job_id);
       setPolling(true);
@@ -265,7 +294,7 @@ export default function MarketingJobsPage() {
     mutationFn: (jobId: string) => deleteJob(jobId),
     onSuccess: (_, jobId) => {
       toast({ title: 'Job deleted', description: `Job ${jobId} was deleted.` });
-      setJobsOffset(0);
+      setJobsPage(1);
       jobsQuery.refetch();
       if (selectedJobId === jobId) setSelectedJobId(null);
     },
@@ -278,11 +307,14 @@ export default function MarketingJobsPage() {
     },
   });
 
-  const allJobs: JobsListItem[] = jobsQuery.data?.jobs ?? [];
-  const totalJobs = jobsQuery.data?.total_jobs ?? allJobs.length;
-  const jobs = allJobs;
-  const hasPrevJobs = jobsOffset > 0;
-  const hasNextJobs = jobsOffset + jobs.length < totalJobs;
+  const jobsData = jobsQuery.data as JobsListResponse | undefined;
+  const jobs: JobsListItem[] = jobsData?.jobs ?? [];
+  const totalJobs = jobsData?.total_jobs ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalJobs / limit));
+  const hasPrevJobs = page > 1;
+  const hasNextJobs = page < totalPages;
+  const rangeStart = totalJobs === 0 ? 0 : offset + 1;
+  const rangeEnd = Math.min(offset + jobs.length, totalJobs);
 
   const allResults: JobResultItem[] = resultsQuery.data?.results ?? [];
   const results = useMemo(
@@ -321,7 +353,10 @@ export default function MarketingJobsPage() {
     [selectedJob?.token_usage]
   );
   const summary = useMemo(
-    () => resultsQuery.data?.summary ?? selectedJob?.summary ?? null,
+    () =>
+      (resultsQuery.data?.summary ??
+        selectedJob?.summary ??
+        null) as JobSummary | null,
     [resultsQuery.data?.summary, selectedJob?.summary]
   );
 
@@ -486,9 +521,11 @@ export default function MarketingJobsPage() {
               </div>
               <div className="flex items-center justify-between gap-3 mb-3 text-xs text-muted-foreground">
                 <p>
-                  {jobs.length > 0
-                    ? `Showing ${jobsOffset + 1}–${jobsOffset + jobs.length} of ${totalJobs} jobs`
-                    : 'No jobs.'}
+                  {totalJobs > 0
+                    ? `Showing ${rangeStart}–${rangeEnd} of ${totalJobs} jobs`
+                    : jobsQuery.isLoading
+                      ? 'Loading…'
+                      : 'No jobs.'}
                 </p>
                 <div className="flex items-center gap-2">
                   <Button
@@ -497,21 +534,20 @@ export default function MarketingJobsPage() {
                     variant="outline"
                     className="h-7 px-2"
                     disabled={!hasPrevJobs || jobsQuery.isLoading}
-                    onClick={() =>
-                      setJobsOffset((prev) => Math.max(0, prev - JOBS_PAGE_SIZE))
-                    }
+                    onClick={() => setJobsPage(page - 1)}
                   >
                     Previous
                   </Button>
+                  <span className="tabular-nums text-muted-foreground">
+                    Page {page} of {totalPages}
+                  </span>
                   <Button
                     type="button"
                     size="sm"
                     variant="outline"
                     className="h-7 px-2"
                     disabled={!hasNextJobs || jobsQuery.isLoading}
-                    onClick={() =>
-                      setJobsOffset((prev) => prev + JOBS_PAGE_SIZE)
-                    }
+                    onClick={() => setJobsPage(page + 1)}
                   >
                     Next
                   </Button>
