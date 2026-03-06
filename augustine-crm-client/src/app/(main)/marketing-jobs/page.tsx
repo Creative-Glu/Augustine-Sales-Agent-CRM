@@ -37,6 +37,24 @@ const STAGES_ORDER = [
 type StepKey = (typeof STAGES_ORDER)[number];
 type StepState = 'pending' | 'active' | 'completed' | 'failed' | 'skipped';
 
+type TokenUsageByModel = {
+  call_count?: number;
+  total_tokens?: number;
+  input_tokens?: number;
+  output_tokens?: number;
+  cached_tokens?: number;
+  estimated_cost_usd?: number;
+};
+
+type TokenUsage = {
+  total_tokens?: number;
+  total_input_tokens?: number;
+  total_output_tokens?: number;
+  total_cached_tokens?: number;
+  estimated_cost_usd?: number;
+  by_model?: Record<string, TokenUsageByModel>;
+};
+
 function eventStageToStep(stage: string): StepKey | null {
   if (stage.startsWith('job_started') || stage === 'job_started') return 'job_started';
   if (stage.startsWith('url_')) return 'url_processing';
@@ -274,6 +292,15 @@ export default function MarketingJobsPage() {
   const hasMoreResults = allResults.length > RESULTS_DISPLAY_LIMIT;
   const resultsTotal = allResults.length;
 
+  const successfulResults = useMemo(
+    () =>
+      allResults.filter(
+        (r) => String(r.status).toLowerCase() === 'success'
+      ),
+    [allResults]
+  );
+  const numSuccessful = successfulResults.length;
+
   const onSubmit = () => {
     const urls = parseUrls(urlsText);
     if (urls.length === 0) {
@@ -288,10 +315,42 @@ export default function MarketingJobsPage() {
   };
 
   const selectedJob = jobDetailQuery.data;
+  const tokenUsage: TokenUsage | null = useMemo(
+    () =>
+      (selectedJob?.token_usage ?? null) as TokenUsage | null,
+    [selectedJob?.token_usage]
+  );
   const summary = useMemo(
     () => resultsQuery.data?.summary ?? selectedJob?.summary ?? null,
     [resultsQuery.data?.summary, selectedJob?.summary]
   );
+
+  const totalTokens =
+    (tokenUsage?.total_tokens as number | undefined) ?? 0;
+  const totalCostUsd =
+    (tokenUsage?.estimated_cost_usd as number | undefined) ?? 0;
+  const avgCostPerSite =
+    numSuccessful > 0 ? totalCostUsd / numSuccessful : 0;
+
+  const hasTokenUsage =
+    tokenUsage != null &&
+    (typeof tokenUsage.total_tokens === 'number' ||
+      typeof tokenUsage.estimated_cost_usd === 'number' ||
+      (tokenUsage.by_model &&
+        Object.keys(tokenUsage.by_model).length > 0));
+
+  const formatInteger = (value: number) =>
+    new Intl.NumberFormat('en-US', {
+      maximumFractionDigits: 0,
+    }).format(value);
+
+  const formatUsd = (value: number) =>
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 6,
+    }).format(value);
 
   const effectiveStatus =
     progressStatus ?? selectedJob?.status ?? ('pending' as JobStatus);
@@ -866,6 +925,106 @@ export default function MarketingJobsPage() {
                     </p>
                   </div>
                 </div>
+
+                {hasTokenUsage && (
+                  <section className="mb-4 space-y-3">
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      Token usage &amp; cost
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                      <div className="rounded-lg border border-border/60 bg-muted/30 px-3 py-2.5">
+                        <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-1">
+                          Total tokens
+                        </p>
+                        <p className="text-base font-semibold text-foreground tabular-nums">
+                          {totalTokens > 0 ? formatInteger(totalTokens) : '—'}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-border/60 bg-muted/30 px-3 py-2.5">
+                        <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-1">
+                          Total cost (USD)
+                        </p>
+                        <p className="text-base font-semibold text-foreground tabular-nums">
+                          {totalCostUsd > 0 ? formatUsd(totalCostUsd) : '$0.0000'}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-border/60 bg-muted/30 px-3 py-2.5">
+                        <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-1">
+                          Avg cost per website
+                        </p>
+                        <p className="text-base font-semibold text-foreground tabular-nums">
+                          {numSuccessful > 0 && avgCostPerSite > 0
+                            ? formatUsd(avgCostPerSite)
+                            : '—'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {tokenUsage?.by_model &&
+                      Object.keys(tokenUsage.by_model).length > 0 && (
+                        <div className="border border-border/60 rounded-xl overflow-hidden bg-muted/20">
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="border-b border-border/60 bg-muted/40 text-[11px] text-muted-foreground">
+                                <th className="py-2.5 px-3 text-left font-medium">Model</th>
+                                <th className="py-2.5 px-3 text-left font-medium">Provider</th>
+                                <th className="py-2.5 px-3 text-right font-medium">Calls</th>
+                                <th className="py-2.5 px-3 text-right font-medium">Input tokens</th>
+                                <th className="py-2.5 px-3 text-right font-medium">Output tokens</th>
+                                <th className="py-2.5 px-3 text-right font-medium">Cost (USD)</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {Object.entries(tokenUsage.by_model).map(
+                                ([model, stats]) => {
+                                  const provider =
+                                    /llama-3\.1|llama-3\.2|groq/i.test(model)
+                                      ? 'Groq'
+                                      : 'Other';
+                                  const calls = stats.call_count ?? 0;
+                                  const input = stats.input_tokens ?? 0;
+                                  const output = stats.output_tokens ?? 0;
+                                  const cost =
+                                    stats.estimated_cost_usd ?? undefined;
+                                  return (
+                                    <tr
+                                      key={model}
+                                      className="border-b border-border/40 last:border-b-0"
+                                    >
+                                      <td className="py-2.5 px-3 text-foreground">
+                                        <span className="font-medium">
+                                          {model}
+                                        </span>
+                                      </td>
+                                      <td className="py-2.5 px-3 text-muted-foreground">
+                                        {provider}
+                                      </td>
+                                      <td className="py-2.5 px-3 text-right tabular-nums">
+                                        {calls > 0 ? formatInteger(calls) : '—'}
+                                      </td>
+                                      <td className="py-2.5 px-3 text-right tabular-nums">
+                                        {input > 0 ? formatInteger(input) : '—'}
+                                      </td>
+                                      <td className="py-2.5 px-3 text-right tabular-nums">
+                                        {output > 0
+                                          ? formatInteger(output)
+                                          : '—'}
+                                      </td>
+                                      <td className="py-2.5 px-3 text-right tabular-nums">
+                                        {typeof cost === 'number'
+                                          ? formatUsd(cost)
+                                          : '—'}
+                                      </td>
+                                    </tr>
+                                  );
+                                }
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                  </section>
+                )}
 
                 {summary && (
                   <div className="grid grid-cols-3 gap-4 py-3 border-y border-border/60 text-sm mb-4">
