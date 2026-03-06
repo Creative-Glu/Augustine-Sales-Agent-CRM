@@ -4,6 +4,8 @@ import { Header } from '@/components/Header';
 import { useAugustineMetrics } from '@/services/augustine/useAugustineMetrics';
 import DashboardCard from '@/app/(main)/dashboard/_components/DashboardCard';
 import { Bar } from 'react-chartjs-2';
+import { useQuery } from '@tanstack/react-query';
+import { listJobs, getJob } from '@/services/augustine/jobs.service';
 import {
   Chart as ChartJS,
   BarElement,
@@ -18,6 +20,50 @@ ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 export default function MarketingDashboardPage() {
   const { overview, system, roi, campaigns, isLoading, isError } = useAugustineMetrics();
+  const {
+    data: jobCostMetrics,
+  } = useQuery({
+    queryKey: ['augustine', 'jobs', 'token-cost-metrics'],
+    queryFn: async () => {
+      // Fetch a window of recent jobs and aggregate token usage.
+      const list = await listJobs(50, 0);
+      const jobs = list.jobs ?? [];
+      if (!jobs.length) {
+        return { totalCost: 0, avgCostPerSite: 0, totalUrls: 0, jobCount: 0 };
+      }
+      const details = await Promise.all(
+        jobs.map((j) =>
+          getJob(j.job_id).catch(() => null)
+        )
+      );
+      let totalCost = 0;
+      let totalUrls = 0;
+      let jobCount = 0;
+      for (const job of details) {
+        if (!job || !job.token_usage) continue;
+        const tu = job.token_usage as any;
+        const cost = typeof tu.estimated_cost_usd === 'number' ? tu.estimated_cost_usd : 0;
+        const urlsCount = Array.isArray(job.urls) ? job.urls.length : 0;
+        if (cost > 0) {
+          totalCost += cost;
+          jobCount += 1;
+          totalUrls += urlsCount;
+        }
+      }
+      const avgCostPerSite =
+        totalUrls > 0 && totalCost > 0 ? totalCost / totalUrls : 0;
+      return { totalCost, avgCostPerSite, totalUrls, jobCount };
+    },
+    staleTime: 60_000,
+  });
+
+  const formatUsd = (value: number) =>
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 6,
+    }).format(value);
 
   const contactsStats = [
     {
@@ -219,6 +265,22 @@ export default function MarketingDashboardPage() {
               <div className="flex items-center justify-between gap-3">
                 <dt className="text-muted-foreground">Retry queue size</dt>
                 <dd className="font-medium">{overview?.retry_queue_size ?? system?.retry_queue_size ?? 0}</dd>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-muted-foreground">Total LLM cost (recent jobs)</dt>
+                <dd className="font-medium tabular-nums">
+                  {jobCostMetrics && jobCostMetrics.totalCost > 0
+                    ? formatUsd(jobCostMetrics.totalCost)
+                    : '—'}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-muted-foreground">Avg extraction cost per website</dt>
+                <dd className="font-medium tabular-nums">
+                  {jobCostMetrics && jobCostMetrics.avgCostPerSite > 0
+                    ? formatUsd(jobCostMetrics.avgCostPerSite)
+                    : '—'}
+                </dd>
               </div>
             </dl>
           </div>
