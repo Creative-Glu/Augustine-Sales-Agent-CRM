@@ -119,6 +119,14 @@ export interface StaffExportParams {
   enriched_only?: boolean;
   /** When true with enriched_only, require contact_number. When false, phone is optional. */
   enriched_require_phone?: boolean;
+  /** Match staff filters used in execution dashboard (eligible, sync, confidence). */
+  is_eligible?: boolean | null;
+  synced_to_hubspot?: boolean | null;
+  sync_status?: SyncStatus | null;
+  /** Min confidence in percentage 0–100 (UI). Stored in DB as 0–1. */
+  confidence_min?: number | null;
+  /** Max confidence in percentage 0–100 (UI). Stored in DB as 0–1. */
+  confidence_max?: number | null;
 }
 
 export async function getStaffForExport(params: StaffExportParams): Promise<Staff[]> {
@@ -130,9 +138,15 @@ export async function getStaffForExport(params: StaffExportParams): Promise<Staf
     date_to,
     enriched_only,
     enriched_require_phone = true,
+    is_eligible,
+    synced_to_hubspot,
+    sync_status,
+    confidence_min,
+    confidence_max,
   } = params;
 
-  const selectFields = enriched_only ? '*, institutions(name)' : '*';
+  // Always join institution so CSV can include institution details.
+  const selectFields = '*, institutions(name)';
   const allRows: Staff[] = [];
   let offset = 0;
 
@@ -155,6 +169,19 @@ export async function getStaffForExport(params: StaffExportParams): Promise<Staf
       const toEnd = new Date(date_to);
       toEnd.setUTCHours(23, 59, 59, 999);
       query = query.lte('created_at', toEnd.toISOString());
+    }
+
+    if (is_eligible != null) query = query.eq('is_eligible', is_eligible);
+    if (synced_to_hubspot != null) query = query.eq('synced_to_hubspot', synced_to_hubspot);
+    if (sync_status != null) query = query.eq('sync_status', sync_status);
+    // DB stores enrichment_confidence as 0–1; filters are in % (0–100)
+    if (confidence_min != null) {
+      const minDecimal = Math.min(1, Math.max(0, Number(confidence_min) / 100));
+      query = query.gte('enrichment_confidence', minDecimal);
+    }
+    if (confidence_max != null) {
+      const maxDecimal = Math.min(1, Math.max(0, Number(confidence_max) / 100));
+      query = query.lte('enrichment_confidence', maxDecimal);
     }
 
     if (enriched_only) {

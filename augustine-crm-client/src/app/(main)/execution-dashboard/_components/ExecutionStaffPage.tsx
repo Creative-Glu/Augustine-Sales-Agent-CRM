@@ -63,10 +63,21 @@ function staffToCsv(rows: Staff[], enrichedFormat: boolean): string {
     );
     return [ENRICHED_CSV_HEADER, ...body].join('\r\n');
   }
-  const header = 'staff_id,result_id,name,role,email,contact_number,created_at';
+  const header =
+    'staff_id,result_id,institution_id,institution_name,name,role,email,contact_number,created_at';
   const body = rows.map(
     (r) =>
-      [r.staff_id, r.result_id, r.name, r.role, r.email, r.contact_number, r.created_at]
+      [
+        r.staff_id,
+        r.result_id,
+        r.institution_id,
+        r.institutions?.name ?? '',
+        r.name,
+        r.role ?? '',
+        r.email ?? '',
+        r.contact_number ?? '',
+        r.created_at,
+      ]
         .map(escapeCsvCell)
         .join(',')
   );
@@ -294,6 +305,11 @@ export default function ExecutionStaffPage() {
                 onClick={async () => {
                   setExportingStaff(true);
                   try {
+                    const isEligibleParam = searchParams.get('is_eligible');
+                    const syncedParam = searchParams.get('synced_to_hubspot');
+                    const syncStatusParam = searchParams.get('sync_status');
+                    const confMinParam = searchParams.get('confidence_min');
+                    const confMaxParam = searchParams.get('confidence_max');
                     const params = {
                       name_search: searchParams.get('staff_name') || undefined,
                       email_search: searchParams.get('staff_email') || undefined,
@@ -301,6 +317,23 @@ export default function ExecutionStaffPage() {
                       date_to: searchParams.get('staff_date_to') || undefined,
                       enriched_only,
                       enriched_require_phone: require_phone,
+                      is_eligible:
+                        isEligibleParam === '1'
+                          ? true
+                          : isEligibleParam === '0'
+                            ? false
+                            : undefined,
+                      synced_to_hubspot:
+                        syncedParam === '1'
+                          ? true
+                          : syncedParam === '0'
+                            ? false
+                            : undefined,
+                      sync_status: (syncStatusParam || undefined) as
+                        | import('@/types/execution').SyncStatus
+                        | undefined,
+                      confidence_min: confMinParam ? Number(confMinParam) : undefined,
+                      confidence_max: confMaxParam ? Number(confMaxParam) : undefined,
                     };
                     const rows = await getStaffForExport(params);
                     if (rows.length === 0) {
