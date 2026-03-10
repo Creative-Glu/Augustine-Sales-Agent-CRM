@@ -9,11 +9,14 @@ import {
   ClockIcon,
   ArrowPathIcon,
   ExclamationTriangleIcon,
+  CheckCircleIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableHeader } from '@/components/TableHeader';
+import { cn } from '@/lib/utils';
 import type { ExecutionStats } from '@/services/execution/stats.service';
 import type { Job, Result } from '@/types/execution';
 
@@ -75,6 +78,8 @@ interface ExecutionKpiDashboardProps {
   recentJobs: Job[];
   recentFailedResults: Result[];
   isLoading: boolean;
+  isRecentJobsLoading?: boolean;
+  isRecentFailedResultsLoading?: boolean;
   isError: boolean;
   onRetry: () => void;
 }
@@ -84,21 +89,26 @@ function KpiCard({
   value,
   sub,
   icon: Icon,
+  hint,
 }: {
   title: string;
   value: number | string;
   sub?: string;
   icon: React.ComponentType<{ className?: string }>;
+  hint?: string;
 }) {
   return (
-    <Card className="border-border bg-card">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+    <Card className="border-border bg-card hover:border-border/80 transition-colors">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <Icon className="h-5 w-5 text-muted-foreground" />
+        <Icon className="h-4 w-4 text-muted-foreground/80" />
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold tabular-nums text-foreground">{value}</div>
         {sub != null && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
+        {hint != null && (
+          <p className="text-[11px] text-muted-foreground/90 mt-0.5 italic">{hint}</p>
+        )}
       </CardContent>
     </Card>
   );
@@ -109,6 +119,8 @@ export default function ExecutionKpiDashboard({
   recentJobs,
   recentFailedResults,
   isLoading,
+  isRecentJobsLoading = false,
+  isRecentFailedResultsLoading = false,
   isError,
   onRetry,
 }: ExecutionKpiDashboardProps) {
@@ -137,135 +149,225 @@ export default function ExecutionKpiDashboard({
     results.total > 0 ? Math.round((results.success / results.total) * 100) : null;
   const instSync = institutionSync ?? { eligible: 0, synced: 0, failed: 0 };
   const stSync = staffSync ?? { eligible: 0, synced: 0, failed: 0 };
+  const totalSynced = (instSync.synced ?? 0) + (stSync.synced ?? 0);
+  const totalSyncFailed = (instSync.failed ?? 0) + (stSync.failed ?? 0);
+  const totalEligible = (instSync.eligible ?? 0) + (stSync.eligible ?? 0);
+  const syncProgressPct = totalEligible > 0 ? Math.round((totalSynced / totalEligible) * 100) : 0;
+
+  // Pipeline status: healthy | busy | attention
+  const hasFailures = jobs.failed > 0 || websites.failed > 0 || totalSyncFailed > 0 || (results.error ?? 0) > 0;
+  const isBusy = jobs.running > 0;
+  const status = hasFailures ? 'attention' : isBusy ? 'busy' : 'healthy';
+  const statusConfig = {
+    healthy: {
+      label: 'All good',
+      desc: successRate != null && results.total > 0
+        ? `${successRate}% of URLs processed successfully. Pipeline is idle.`
+        : 'Pipeline is idle. Run jobs from the Jobs tab.',
+      className: 'border-emerald-500/50 bg-emerald-500/5 dark:bg-emerald-500/10',
+      icon: CheckCircleIcon,
+      iconClassName: 'text-emerald-600 dark:text-emerald-400',
+    },
+    busy: {
+      label: 'Jobs running',
+      desc: `${jobs.running} job${jobs.running === 1 ? '' : 's'} in progress. Results will appear as they complete.`,
+      className: 'border-blue-500/50 bg-blue-500/5 dark:bg-blue-500/10',
+      icon: ClockIcon,
+      iconClassName: 'text-blue-600 dark:text-blue-400',
+    },
+    attention: {
+      label: 'Needs attention',
+      desc: [
+        jobs.failed > 0 && `${jobs.failed} failed job${jobs.failed === 1 ? '' : 's'}`,
+        (results.error ?? 0) > 0 && `${results.error} failed result${results.error === 1 ? '' : 's'}`,
+        totalSyncFailed > 0 && `${totalSyncFailed} sync failed`,
+      ].filter(Boolean).join(' · ') || 'Some items need review.',
+      className: 'border-amber-500/50 bg-amber-500/5 dark:bg-amber-500/10',
+      icon: ExclamationTriangleIcon,
+      iconClassName: 'text-amber-600 dark:text-amber-400',
+    },
+  } as const;
+  const sc = statusConfig[status];
+  const StatusIcon = sc.icon;
 
   return (
     <div className="space-y-8">
-      {/* Metrics summary – pipeline visibility */}
-      <div>
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-          Pipeline summary
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          <KpiCard title="Total institutions" value={institutions} icon={BuildingOffice2Icon} />
-          <KpiCard title="Total staff" value={staff} icon={UserGroupIcon} />
-          <KpiCard
-            title="Eligible (inst + staff)"
-            value={(instSync.eligible ?? 0) + (stSync.eligible ?? 0)}
-            sub={`${instSync.eligible ?? 0} inst · ${stSync.eligible ?? 0} staff`}
-            icon={UserGroupIcon}
-          />
-          <KpiCard
-            title="Synced to HubSpot"
-            value={(instSync.synced ?? 0) + (stSync.synced ?? 0)}
-            sub={`${instSync.synced ?? 0} inst · ${stSync.synced ?? 0} staff`}
-            icon={DocumentCheckIcon}
-          />
-          <KpiCard
-            title="Failed sync"
-            value={(instSync.failed ?? 0) + (stSync.failed ?? 0)}
-            sub={`${instSync.failed ?? 0} inst · ${stSync.failed ?? 0} staff`}
-            icon={ExclamationTriangleIcon}
-          />
-        </div>
-      </div>
+      {/* Hero status card */}
+      <Card className={cn('overflow-hidden border-l-4', sc.className)}>
+        <CardContent className="flex flex-row items-start gap-4 py-5 pr-5 pl-4">
+          <div className={cn('rounded-full p-2 bg-background/80 shrink-0', sc.iconClassName)}>
+            <StatusIcon className="h-6 w-6" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-semibold text-foreground">{sc.label}</span>
+              <Badge variant={status === 'healthy' ? 'secondary' : status === 'busy' ? 'default' : 'outline'} className="text-xs">
+                {status === 'healthy' ? 'Healthy' : status === 'busy' ? 'Busy' : 'Review'}
+              </Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">{sc.desc}</p>
+          </div>
+          {successRate != null && results.total > 0 && status === 'healthy' && (
+            <div className="hidden sm:block text-right shrink-0">
+              <span className="text-3xl font-bold tabular-nums text-foreground">{successRate}%</span>
+              <p className="text-xs text-muted-foreground">success rate</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-      {/* Top-level KPIs */}
+      {/* Pipeline – extraction health */}
       <div>
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-          Overview
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="flex items-center gap-2 mb-1">
+          <SparklesIcon className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-sm font-semibold text-foreground">Extraction pipeline</h2>
+        </div>
+        <p className="text-xs text-muted-foreground mb-4">
+          {results.total > 0
+            ? `${results.total} URL${results.total === 1 ? '' : 's'} processed from websites and PDFs.`
+            : 'Jobs process URLs and extract data. Run a job from the Jobs tab to get started.'}
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <KpiCard
-            title="Total jobs"
+            title="Jobs"
             value={jobs.total}
-            sub={`${jobs.completed} completed · ${jobs.failed} failed`}
+            sub={`${jobs.completed} done · ${jobs.failed} failed`}
             icon={BriefcaseIcon}
+            hint={jobs.running > 0 ? `${jobs.running} in progress` : undefined}
           />
           <KpiCard
-            title="Websites in pipeline"
+            title="Websites"
             value={websites.total}
-            sub={`${websites.success} Success · ${websites.failed} Failed`}
+            sub={`${websites.success} ok · ${websites.failed} failed`}
             icon={GlobeAltIcon}
           />
           <KpiCard
-            title="Results processed"
+            title="Results"
             value={results.total}
-            sub={successRate != null ? `${successRate}% success rate` : undefined}
+            sub={successRate != null ? `${successRate}% success` : undefined}
             icon={DocumentCheckIcon}
           />
-          <KpiCard title="Institutions" value={institutions} icon={BuildingOffice2Icon} />
-          <KpiCard title="Staff extracted" value={staff} icon={UserGroupIcon} />
         </div>
       </div>
 
-      {/* Jobs & Websites breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-border bg-card">
-          <CardHeader>
-            <CardTitle className="text-base">Jobs by status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-3">
-              <Badge variant="outline" className="text-xs">
-                Pending: {jobs.pending}
-              </Badge>
-              <Badge variant="default" className="text-xs">
-                Running: {jobs.running}
-              </Badge>
-              <Badge variant="secondary" className="text-xs">
-                Completed: {jobs.completed}
-              </Badge>
-              <Badge variant="destructive" className="text-xs">
-                Failed: {jobs.failed}
-              </Badge>
+      {/* Extracted data – story + numbers */}
+      <div>
+        <div className="flex items-center gap-2 mb-1">
+          <BuildingOffice2Icon className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-sm font-semibold text-foreground">What we’ve extracted</h2>
+        </div>
+        <p className="text-xs text-muted-foreground mb-4">
+          Institutions and staff contacts pulled from PDFs and web — ready to enrich and sync.
+        </p>
+        <div className="grid grid-cols-2 gap-4">
+          <Card className="border-border bg-card overflow-hidden">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Institutions</p>
+                  <p className="text-2xl font-bold tabular-nums text-foreground mt-0.5">{institutions}</p>
+                </div>
+                <BuildingOffice2Icon className="h-10 w-10 text-muted-foreground/40" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-border bg-card overflow-hidden">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Staff contacts</p>
+                  <p className="text-2xl font-bold tabular-nums text-foreground mt-0.5">{staff}</p>
+                </div>
+                <UserGroupIcon className="h-10 w-10 text-muted-foreground/40" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* HubSpot sync – progress + cards */}
+      <div>
+        <div className="flex items-center gap-2 mb-1">
+          <DocumentCheckIcon className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-sm font-semibold text-foreground">HubSpot sync</h2>
+        </div>
+        <p className="text-xs text-muted-foreground mb-3">
+          {totalEligible > 0
+            ? `${totalSynced} of ${totalEligible} eligible record${totalEligible === 1 ? '' : 's'} synced to HubSpot.`
+            : 'Mark institutions or staff as eligible in their tabs, then sync to HubSpot.'}
+        </p>
+        {totalEligible > 0 && (
+          <div className="mb-4">
+            <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
+              <span>Sync progress</span>
+              <span className="tabular-nums">{totalSynced} / {totalEligible} · {syncProgressPct}%</span>
             </div>
-          </CardContent>
-        </Card>
-        <Card className="border-border bg-card">
-          <CardHeader>
-            <CardTitle className="text-base">Websites by status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-3">
-              <Badge variant="secondary" className="text-xs">
-                Success: {websites.success}
-              </Badge>
-              <Badge variant="destructive" className="text-xs">
-                Failed: {websites.failed}
-              </Badge>
-              <Badge variant="outline" className="text-xs">
-                Processing: {websites.processing}
-              </Badge>
-              <Badge variant="outline" className="text-xs">
-                Pending: {websites.pending}
-              </Badge>
-              <Badge variant="outline" className="text-xs">
-                Missing URL: {websites.missingUrl}
-              </Badge>
-              {websites.other > 0 && (
-                <Badge variant="outline" className="text-xs">
-                  Other: {websites.other}
-                </Badge>
-              )}
+            <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full rounded-full bg-primary transition-all duration-500"
+                style={{ width: `${syncProgressPct}%` }}
+              />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        )}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <KpiCard
+            title="Eligible institutions"
+            value={instSync.eligible}
+            icon={BuildingOffice2Icon}
+            hint="Ready to sync"
+          />
+          <KpiCard
+            title="Eligible staff"
+            value={stSync.eligible}
+            icon={UserGroupIcon}
+            hint="Ready to sync"
+          />
+          <KpiCard
+            title="Synced"
+            value={totalSynced}
+            sub={`${instSync.synced ?? 0} inst · ${stSync.synced ?? 0} staff`}
+            icon={DocumentCheckIcon}
+            hint="In HubSpot"
+          />
+          <KpiCard
+            title="Sync failed"
+            value={totalSyncFailed}
+            sub={totalSyncFailed > 0 ? 'Needs retry' : undefined}
+            icon={ExclamationTriangleIcon}
+            hint={totalSyncFailed > 0 ? 'Check sync status' : undefined}
+          />
+        </div>
+        {totalSyncFailed > 0 && (
+          <p className="text-xs mt-3 text-amber-700 dark:text-amber-400">
+            Tip: Open the Institution or Staff tab, filter by sync status, and retry failed syncs.
+          </p>
+        )}
       </div>
 
       {/* Recent activity log */}
       <Card className="border-border bg-card">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
             <ClockIcon className="h-5 w-5 text-muted-foreground" />
             <CardTitle className="text-base">Recent job activity</CardTitle>
           </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Latest job runs — status, timing, and errors.
+          </p>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto rounded-b-xl">
             <table className="w-full text-sm">
               <TableHeader columns={LOG_COLUMNS} />
               <tbody>
-                {recentJobs.length === 0 ? (
+                {isRecentJobsLoading ? (
+                  <tr>
+                    <td colSpan={LOG_COLUMNS.length} className="py-6 text-center text-muted-foreground text-sm">
+                      Loading…
+                    </td>
+                  </tr>
+                ) : recentJobs.length === 0 ? (
                   <tr>
                     <td colSpan={LOG_COLUMNS.length} className="py-8 text-center text-muted-foreground">
                       No jobs yet.
@@ -308,18 +410,27 @@ export default function ExecutionKpiDashboard({
 
       {/* Recent failed results */}
       <Card className="border-border bg-card">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
             <ExclamationTriangleIcon className="h-5 w-5 text-destructive" />
             <CardTitle className="text-base">Recent failed results</CardTitle>
           </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            URLs that errored during processing — open the Results tab to filter and retry.
+          </p>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto rounded-b-xl">
             <table className="w-full text-sm">
               <TableHeader columns={FAILED_RESULTS_COLUMNS} />
               <tbody>
-                {recentFailedResults.length === 0 ? (
+                {isRecentFailedResultsLoading ? (
+                  <tr>
+                    <td colSpan={FAILED_RESULTS_COLUMNS.length} className="py-6 text-center text-muted-foreground text-sm">
+                      Loading…
+                    </td>
+                  </tr>
+                ) : recentFailedResults.length === 0 ? (
                   <tr>
                     <td colSpan={FAILED_RESULTS_COLUMNS.length} className="py-8 text-center text-muted-foreground">
                       No failed results.

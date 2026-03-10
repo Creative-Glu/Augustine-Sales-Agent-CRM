@@ -204,8 +204,9 @@ export function useExecutionStats() {
     stats: statsQuery.data,
     recentJobs: recentJobsQuery.data ?? [],
     recentFailedResults: recentFailedResultsQuery.data ?? [],
-    isLoading:
-      statsQuery.isLoading || recentJobsQuery.isLoading || recentFailedResultsQuery.isLoading,
+    isLoading: statsQuery.isLoading,
+    isRecentJobsLoading: recentJobsQuery.isLoading,
+    isRecentFailedResultsLoading: recentFailedResultsQuery.isLoading,
     isError: statsQuery.isError || recentJobsQuery.isError || recentFailedResultsQuery.isError,
     refetch: () => {
       statsQuery.refetch();

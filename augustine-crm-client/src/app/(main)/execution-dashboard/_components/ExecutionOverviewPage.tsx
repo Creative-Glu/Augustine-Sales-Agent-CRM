@@ -14,6 +14,8 @@ export default function ExecutionOverviewPage() {
           recentJobs={statsQuery.recentJobs}
           recentFailedResults={statsQuery.recentFailedResults}
           isLoading={statsQuery.isLoading}
+          isRecentJobsLoading={statsQuery.isRecentJobsLoading}
+          isRecentFailedResultsLoading={statsQuery.isRecentFailedResultsLoading}
           isError={statsQuery.isError}
           onRetry={statsQuery.refetch}
         />

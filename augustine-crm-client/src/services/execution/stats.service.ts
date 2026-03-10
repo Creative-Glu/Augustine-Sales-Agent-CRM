@@ -170,7 +170,7 @@ export async function getExecutionStats(): Promise<ExecutionStats> {
   };
 }
 
-const RECENT_JOBS_LIMIT = 15;
+const RECENT_JOBS_LIMIT = 8;
 
 export async function getRecentJobs(): Promise<Job[]> {
   const { data, error } = await executionSupabase
@@ -182,7 +182,7 @@ export async function getRecentJobs(): Promise<Job[]> {
   return (data ?? []) as Job[];
 }
 
-const RECENT_FAILED_RESULTS_LIMIT = 15;
+const RECENT_FAILED_RESULTS_LIMIT = 8;
 
 export async function getRecentFailedResults(): Promise<Result[]> {
   const { data, error } = await executionSupabase
