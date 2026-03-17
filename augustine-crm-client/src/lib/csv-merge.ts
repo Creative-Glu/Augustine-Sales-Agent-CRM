@@ -212,6 +212,23 @@ function fillBlanks(target: MergedRow, source: MergedRow, matchType: string): Me
   return merged;
 }
 
+/** A single field change in a matched record. */
+export interface FieldChange {
+  column: string;
+  before: string;  // HubSpot value (was blank)
+  after: string;   // CRM value (filled in)
+}
+
+/** A matched record with all its field-level changes. */
+export interface MatchedRecordDiff {
+  matchType: 'email' | 'name+institution';
+  matchKey: string;           // email or "firstName lastName | company"
+  hubspotName: string;        // display name from HubSpot
+  crmName: string;            // display name from CRM
+  company: string;
+  changes: FieldChange[];     // fields that were blank in HS and filled from CRM
+}
+
 export interface MergeStats {
   hubspotTotal: number;
   crmTotal: number;
@@ -226,6 +243,8 @@ export interface MergeStats {
 export interface MergeResult {
   rows: MergedRow[];
   stats: MergeStats;
+  /** Per-record diff for every matched contact showing what changed. */
+  diffs: MatchedRecordDiff[];
 }
 
 /**
@@ -266,6 +285,30 @@ export function mergeCsvs(hubspotRaw: Record<string, string>[], crmRaw: Record<s
   // Track which HubSpot rows were matched
   const matchedHsIndexes = new Set<number>();
   const output: MergedRow[] = [];
+  const diffs: MatchedRecordDiff[] = [];
+
+  /** Build a diff for a matched pair and count filled fields. */
+  function processMatch(hs: MergedRow, crm: MergedRow, matchType: 'email' | 'name+institution', matchKey: string) {
+    const changes: FieldChange[] = [];
+    for (const col of MERGED_CSV_COLUMNS) {
+      if (col === 'Source' || col === 'Match Type') continue;
+      if (!hs[col]?.trim() && crm[col]?.trim()) {
+        changes.push({ column: col, before: '', after: crm[col] });
+      }
+    }
+    stats.fieldsFilledIn += changes.length;
+
+    diffs.push({
+      matchType,
+      matchKey,
+      hubspotName: [hs['First Name'], hs['Last Name']].filter(Boolean).join(' ') || '(no name)',
+      crmName: [crm['First Name'], crm['Last Name']].filter(Boolean).join(' ') || '(no name)',
+      company: hs['Company name'] || crm['Company name'],
+      changes,
+    });
+
+    output.push(fillBlanks(hs, crm, matchType));
+  }
 
   // Process each CRM row
   for (const crm of crmRows) {
@@ -276,17 +319,7 @@ export function mergeCsvs(hubspotRaw: Record<string, string>[], crmRaw: Record<s
     if (email && hsByEmail.has(email)) {
       const hsIdx = hsByEmail.get(email)!;
       matchedHsIndexes.add(hsIdx);
-      const hs = hubspotRows[hsIdx];
-
-      // Count how many blanks we fill
-      let filled = 0;
-      for (const col of MERGED_CSV_COLUMNS) {
-        if (col === 'Source' || col === 'Match Type') continue;
-        if (!hs[col]?.trim() && crm[col]?.trim()) filled++;
-      }
-      stats.fieldsFilledIn += filled;
-
-      output.push(fillBlanks(hs, crm, 'email'));
+      processMatch(hubspotRows[hsIdx], crm, 'email', email);
       stats.matchedByEmail++;
       matched = true;
     }
@@ -298,16 +331,8 @@ export function mergeCsvs(hubspotRaw: Record<string, string>[], crmRaw: Record<s
         const hsIdx = hsByNameInst.get(nameKey)!;
         if (!matchedHsIndexes.has(hsIdx)) {
           matchedHsIndexes.add(hsIdx);
-          const hs = hubspotRows[hsIdx];
-
-          let filled = 0;
-          for (const col of MERGED_CSV_COLUMNS) {
-            if (col === 'Source' || col === 'Match Type') continue;
-            if (!hs[col]?.trim() && crm[col]?.trim()) filled++;
-          }
-          stats.fieldsFilledIn += filled;
-
-          output.push(fillBlanks(hs, crm, 'name+institution'));
+          const displayKey = `${crm['First Name']} ${crm['Last Name']} | ${crm['Company name']}`;
+          processMatch(hubspotRows[hsIdx], crm, 'name+institution', displayKey);
           stats.matchedByName++;
           matched = true;
         }
@@ -334,7 +359,7 @@ export function mergeCsvs(hubspotRaw: Record<string, string>[], crmRaw: Record<s
   }
 
   stats.outputTotal = output.length;
-  return { rows: output, stats };
+  return { rows: output, stats, diffs };
 }
 
 // ─── CSV serialization ─────────────────────────────────────────────────────
