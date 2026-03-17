@@ -369,12 +369,10 @@ const CSV_HEADER = [
   'Last Name',
   'Job Title',
   'PAR - Role',
-  'HubSpot Job Title',
   'Email',
   'Phone Number',
   'Record ID - Company',
   'Company name',
-  'Phone Number (Company)',
   'Street Address',
   'City',
   'State - Dropdown (COMPANY)',
@@ -406,12 +404,10 @@ export async function staffToCsv(
       lastName,                                              // Last Name
       rawTitle,                                              // Job Title (raw scraped)
       parRole,                                               // PAR - Role (mapped)
-      hubspotJobTitle,                                       // HubSpot Job Title (mapped)
       email,                                                 // Email (cleaned)
       r.contact_number ?? '',                                // Phone Number (contact)
       company?.['Record ID'] ?? '',                          // Record ID - Company
       formattedCompanyName,                                  // Company name (Name - ST - ZIP)
-      company?.['Phone Number'] ?? '',                       // Phone Number (Company)
       loc?.streetAddress ?? '',                               // Street Address
       loc?.city ?? '',                                       // City
       loc?.state ?? '',                                      // State
