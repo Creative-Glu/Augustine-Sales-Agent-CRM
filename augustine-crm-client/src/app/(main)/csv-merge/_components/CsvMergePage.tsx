@@ -18,6 +18,8 @@ import {
   type MatchedRecordDiff,
 } from '@/lib/csv-merge';
 
+// ─── Types ─────────────────────────────────────────────────────────────────
+
 type UploadSlot = {
   file: File | null;
   rows: Record<string, string>[];
@@ -26,6 +28,8 @@ type UploadSlot = {
 };
 
 const EMPTY_SLOT: UploadSlot = { file: null, rows: [], columns: [], error: null };
+
+// ─── File Upload ───────────────────────────────────────────────────────────
 
 function FileDropZone({
   label,
@@ -49,15 +53,6 @@ function FileDropZone({
       setDragging(false);
       const file = e.dataTransfer.files?.[0];
       if (file && file.name.endsWith('.csv')) onFile(file);
-    },
-    [onFile]
-  );
-
-  const handleFileInput = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) onFile(file);
-      e.target.value = '';
     },
     [onFile]
   );
@@ -113,10 +108,7 @@ function FileDropZone({
                 ? 'border-primary bg-primary/5'
                 : 'border-border/60 hover:border-primary/50 hover:bg-muted/20'
             }`}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragging(true);
-            }}
+            onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
             onDragLeave={() => setDragging(false)}
             onDrop={handleDrop}
             onClick={() => inputRef.current?.click()}
@@ -125,7 +117,13 @@ function FileDropZone({
             <p className="text-xs text-center text-muted-foreground">
               Drag & drop CSV, or <span className="text-primary font-medium">browse</span>
             </p>
-            <input ref={inputRef} type="file" accept=".csv" className="hidden" onChange={handleFileInput} />
+            <input
+              ref={inputRef}
+              type="file"
+              accept=".csv"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ''; }}
+            />
           </div>
         )}
       </CardContent>
@@ -133,36 +131,266 @@ function FileDropZone({
   );
 }
 
-function StatsCard({ stats }: { stats: MergeResult['stats'] }) {
-  const items = [
-    { label: 'HubSpot contacts', value: stats.hubspotTotal, color: 'text-blue-600' },
-    { label: 'CRM contacts', value: stats.crmTotal, color: 'text-purple-600' },
-    { label: 'Matched by email', value: stats.matchedByEmail, color: 'text-green-600' },
-    { label: 'Matched by name + institution', value: stats.matchedByName, color: 'text-green-500' },
-    { label: 'New from CRM (net-new)', value: stats.newFromCrm, color: 'text-amber-600' },
-    { label: 'HubSpot only (no CRM match)', value: stats.hubspotOnly, color: 'text-slate-500' },
-    { label: 'Blank fields filled in', value: stats.fieldsFilledIn, color: 'text-teal-600' },
-    { label: 'Total output rows', value: stats.outputTotal, color: 'text-foreground font-bold' },
-  ];
+// ─── Summary Dashboard ─────────────────────────────────────────────────────
+
+function ResultsDashboard({ result }: { result: MergeResult }) {
+  const { stats, diffs } = result;
+  const totalMatched = stats.matchedByEmail + stats.matchedByName;
+  const withChanges = diffs.filter((d) => d.changes.length > 0).length;
+  const noChanges = diffs.filter((d) => d.changes.length === 0).length;
 
   return (
-    <Card className="border-border bg-card">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">Merge Results</CardTitle>
+    <Card className="border-border bg-card overflow-hidden">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base font-semibold text-foreground">Dry Run Summary</CardTitle>
+        <p className="text-xs text-muted-foreground">Here&apos;s what will happen when you import the merged CSV into HubSpot.</p>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {items.map((item) => (
-            <div key={item.label} className="space-y-1">
-              <p className={`text-2xl tabular-nums ${item.color}`}>{item.value.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground">{item.label}</p>
-            </div>
-          ))}
+      <CardContent className="space-y-5">
+        {/* Input counts */}
+        <div className="flex gap-6 pb-4 border-b border-border/60">
+          <div>
+            <p className="text-2xl font-bold tabular-nums text-blue-600">{stats.hubspotTotal.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">contacts in HubSpot</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold tabular-nums text-purple-600">{stats.crmTotal.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">contacts in CRM</p>
+          </div>
+        </div>
+
+        {/* What will happen — 3 action blocks */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* New contacts */}
+          <div className="rounded-lg border border-amber-200 dark:border-amber-800/50 bg-amber-50/50 dark:bg-amber-900/10 p-4">
+            <p className="text-2xl font-bold tabular-nums text-amber-600">{stats.newFromCrm.toLocaleString()}</p>
+            <p className="text-sm font-medium text-amber-700 dark:text-amber-400">New contacts to create</p>
+            <p className="text-xs text-muted-foreground mt-1">These people are in our CRM but not in HubSpot. They will be added as new contacts.</p>
+          </div>
+
+          {/* Matched & updated */}
+          <div className="rounded-lg border border-green-200 dark:border-green-800/50 bg-green-50/50 dark:bg-green-900/10 p-4">
+            <p className="text-2xl font-bold tabular-nums text-green-600">{withChanges.toLocaleString()}</p>
+            <p className="text-sm font-medium text-green-700 dark:text-green-400">Existing contacts to update</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Matched by email ({stats.matchedByEmail}) or name ({stats.matchedByName}).
+              <strong className="text-foreground"> {stats.fieldsFilledIn}</strong> blank fields will be filled in.
+              No existing data is overwritten.
+            </p>
+          </div>
+
+          {/* Unchanged */}
+          <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
+            <p className="text-2xl font-bold tabular-nums text-muted-foreground">{(noChanges + stats.hubspotOnly).toLocaleString()}</p>
+            <p className="text-sm font-medium text-muted-foreground">No changes</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {noChanges > 0 && <>{noChanges} matched contacts already have complete data. </>}
+              {stats.hubspotOnly > 0 && <>{stats.hubspotOnly} HubSpot-only contacts have no CRM match.</>}
+            </p>
+          </div>
+        </div>
+
+        {/* Output total */}
+        <div className="flex items-center gap-3 pt-3 border-t border-border/60">
+          <p className="text-sm text-muted-foreground">
+            Total rows in merged CSV:
+            <strong className="text-foreground text-lg ml-2 tabular-nums">{stats.outputTotal.toLocaleString()}</strong>
+          </p>
         </div>
       </CardContent>
     </Card>
   );
 }
+
+// ─── Section: Contacts that will be UPDATED ────────────────────────────────
+
+function UpdatedContactsSection({ diffs }: { diffs: MatchedRecordDiff[] }) {
+  const [expanded, setExpanded] = useState<Set<number>>(new Set());
+  const [showAll, setShowAll] = useState(false);
+  const LIMIT = 25;
+  const visible = showAll ? diffs : diffs.slice(0, LIMIT);
+
+  if (diffs.length === 0) return null;
+
+  const toggleExpand = (idx: number) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx); else next.add(idx);
+      return next;
+    });
+  };
+
+  return (
+    <Card className="border-green-200 dark:border-green-800/50 bg-card">
+      <CardHeader className="pb-2">
+        <div className="flex items-center gap-2">
+          <span className="inline-block w-3 h-3 rounded-full bg-green-500" />
+          <CardTitle className="text-sm font-semibold text-foreground">
+            Contacts Being Updated ({diffs.length})
+          </CardTitle>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          These contacts already exist in HubSpot. Only their <strong>empty fields</strong> will be filled with data from our CRM.
+          Existing HubSpot data is never overwritten. Click a row to see exactly what changes.
+        </p>
+      </CardHeader>
+      <CardContent>
+        <div className="rounded-lg border border-border/60 overflow-hidden">
+          {/* Table header */}
+          <div className="grid grid-cols-[80px_1fr_1fr_1fr_60px] gap-0 text-xs font-medium text-muted-foreground bg-muted/40 border-b border-border/60">
+            <div className="px-3 py-2">Match</div>
+            <div className="px-3 py-2">Contact</div>
+            <div className="px-3 py-2">Company</div>
+            <div className="px-3 py-2">Matched On</div>
+            <div className="px-3 py-2 text-right">Fields</div>
+          </div>
+
+          {/* Table rows */}
+          {visible.map((diff, idx) => {
+            const isOpen = expanded.has(idx);
+            return (
+              <div key={idx}>
+                <div
+                  className={`grid grid-cols-[80px_1fr_1fr_1fr_60px] gap-0 text-xs cursor-pointer transition-colors ${
+                    isOpen ? 'bg-green-50/50 dark:bg-green-900/10' : 'hover:bg-muted/20'
+                  } ${idx > 0 ? 'border-t border-border/40' : ''}`}
+                  onClick={() => toggleExpand(idx)}
+                >
+                  <div className="px-3 py-2.5">
+                    <MatchBadge type={diff.matchType} />
+                  </div>
+                  <div className="px-3 py-2.5 font-medium text-foreground truncate">{diff.hubspotName}</div>
+                  <div className="px-3 py-2.5 text-muted-foreground truncate">{diff.company}</div>
+                  <div className="px-3 py-2.5 text-muted-foreground truncate">{diff.matchKey}</div>
+                  <div className="px-3 py-2.5 text-right">
+                    <span className="inline-block px-1.5 py-0.5 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 font-medium text-[10px]">
+                      +{diff.changes.length}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Expanded detail: before → after */}
+                {isOpen && (
+                  <div className="bg-green-50/30 dark:bg-green-900/5 border-t border-green-200/50 dark:border-green-800/30">
+                    <div className="px-4 py-2">
+                      <p className="text-[10px] uppercase font-semibold tracking-wide text-muted-foreground mb-2">
+                        What will change for this contact
+                      </p>
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr>
+                            <th className="text-left font-medium text-muted-foreground pb-1 w-[150px]">Field</th>
+                            <th className="text-left font-medium text-red-400 pb-1">Currently in HubSpot</th>
+                            <th className="text-left pb-1 w-8"></th>
+                            <th className="text-left font-medium text-green-600 pb-1">Will become</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {diff.changes.map((change, ci) => (
+                            <tr key={ci}>
+                              <td className="py-1 font-medium text-muted-foreground">{change.column}</td>
+                              <td className="py-1">
+                                <span className="inline-block px-2 py-0.5 rounded bg-red-50 dark:bg-red-900/20 text-red-400 italic border border-red-100 dark:border-red-800/30">
+                                  {change.before || 'empty'}
+                                </span>
+                              </td>
+                              <td className="py-1 text-center text-muted-foreground">&rarr;</td>
+                              <td className="py-1">
+                                <span className="inline-block px-2 py-0.5 rounded bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 font-medium border border-green-100 dark:border-green-800/30">
+                                  {change.after}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {diffs.length > LIMIT && (
+          <Button variant="outline" size="sm" onClick={() => setShowAll(!showAll)} className="w-full mt-3">
+            {showAll ? 'Show less' : `Show all ${diffs.length} updated contacts`}
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── Section: Matched contacts with NO changes ────────────────────────────
+
+function MatchedNoChangesSection({ diffs }: { diffs: MatchedRecordDiff[] }) {
+  const [showAll, setShowAll] = useState(false);
+  const LIMIT = 30;
+  const visible = showAll ? diffs : diffs.slice(0, LIMIT);
+
+  if (diffs.length === 0) return null;
+
+  return (
+    <Card className="border-border bg-card">
+      <CardHeader className="pb-2">
+        <div className="flex items-center gap-2">
+          <CheckCircleIcon className="w-4 h-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-semibold text-foreground">
+            Matched — Already Complete ({diffs.length})
+          </CardTitle>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          These contacts were found in both HubSpot and CRM, but HubSpot already has all the data.
+          Nothing will change for these contacts.
+        </p>
+      </CardHeader>
+      <CardContent>
+        <div className="rounded-lg border border-border/60 overflow-hidden">
+          <div className="grid grid-cols-[80px_1fr_1fr_1fr] gap-0 text-xs font-medium text-muted-foreground bg-muted/40 border-b border-border/60">
+            <div className="px-3 py-2">Match</div>
+            <div className="px-3 py-2">Contact</div>
+            <div className="px-3 py-2">Company</div>
+            <div className="px-3 py-2">Matched On</div>
+          </div>
+          {visible.map((diff, idx) => (
+            <div
+              key={idx}
+              className={`grid grid-cols-[80px_1fr_1fr_1fr] gap-0 text-xs ${idx > 0 ? 'border-t border-border/40' : ''}`}
+            >
+              <div className="px-3 py-2"><MatchBadge type={diff.matchType} /></div>
+              <div className="px-3 py-2 text-foreground truncate">{diff.hubspotName}</div>
+              <div className="px-3 py-2 text-muted-foreground truncate">{diff.company}</div>
+              <div className="px-3 py-2 text-muted-foreground truncate">{diff.matchKey}</div>
+            </div>
+          ))}
+        </div>
+        {diffs.length > LIMIT && (
+          <Button variant="outline" size="sm" onClick={() => setShowAll(!showAll)} className="w-full mt-3">
+            {showAll ? 'Show less' : `Show all ${diffs.length} matched contacts`}
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── Shared badge ──────────────────────────────────────────────────────────
+
+function MatchBadge({ type }: { type: string }) {
+  return (
+    <span
+      className={`shrink-0 inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${
+        type === 'email'
+          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+          : 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
+      }`}
+    >
+      {type}
+    </span>
+  );
+}
+
+// ─── Main Page ─────────────────────────────────────────────────────────────
 
 export default function CsvMergePage() {
   const [hubspot, setHubspot] = useState<UploadSlot>(EMPTY_SLOT);
@@ -189,7 +417,6 @@ export default function CsvMergePage() {
   const handleMerge = useCallback(() => {
     if (hubspot.rows.length === 0 || crm.rows.length === 0) return;
     setMerging(true);
-    // Use setTimeout to let React render the loading state
     setTimeout(() => {
       try {
         const result = mergeCsvs(hubspot.rows, crm.rows);
@@ -224,11 +451,13 @@ export default function CsvMergePage() {
 
   return (
     <div className="space-y-6 w-full">
+      {/* Header */}
       <div>
-        <h1 className="text-xl font-semibold text-foreground whitespace-nowrap">Dry Run Tool</h1>
-        <p className="text-sm text-muted-foreground mt-1">Upload your HubSpot export and CRM export to produce a merged CSV ready for HubSpot import. Existing HubSpot data is preserved — only blank fields get filled from CRM data.</p>
+        <h1 className="text-xl font-semibold text-foreground">Dry Run Tool</h1>
+        <p className="text-sm text-muted-foreground mt-1">Compare HubSpot and CRM data side-by-side. See exactly what will change before importing.</p>
       </div>
 
+      {/* Upload area */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <FileDropZone
           label="1. HubSpot Export"
@@ -246,14 +475,11 @@ export default function CsvMergePage() {
         />
       </div>
 
+      {/* Action buttons */}
       <div className="flex items-center gap-3 flex-wrap">
-        <Button
-          onClick={handleMerge}
-          disabled={!canMerge || merging}
-          className="gap-2"
-        >
+        <Button onClick={handleMerge} disabled={!canMerge || merging} className="gap-2">
           <ArrowPathIcon className={`w-4 h-4 ${merging ? 'animate-spin' : ''}`} />
-          {merging ? 'Merging...' : 'Merge CSVs'}
+          {merging ? 'Analyzing...' : 'Run Dry Run'}
         </Button>
         {mergeResult && (
           <Button onClick={handleDownload} variant="outline" className="gap-2">
@@ -261,176 +487,27 @@ export default function CsvMergePage() {
             Download Merged CSV ({mergeResult.stats.outputTotal.toLocaleString()} rows)
           </Button>
         )}
-        <Button onClick={handleReset} variant="ghost" size="sm" className="ml-auto">
-          Reset
-        </Button>
+        {(hubspot.file || crm.file) && (
+          <Button onClick={handleReset} variant="ghost" size="sm" className="ml-auto">
+            Reset
+          </Button>
+        )}
       </div>
 
-      {mergeResult && <StatsCard stats={mergeResult.stats} />}
-
+      {/* Results */}
       {mergeResult && (
-        <Card className="border-border bg-card">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Merge Breakdown</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div className="space-y-1.5">
-              <div className="flex items-start gap-2">
-                <span className="inline-block w-2 h-2 mt-1.5 rounded-full bg-green-500 shrink-0" />
-                <span>
-                  <strong>{mergeResult.stats.matchedByEmail}</strong> matched by email +{' '}
-                  <strong>{mergeResult.stats.matchedByName}</strong> matched by name+institution ={' '}
-                  <strong>{mergeResult.stats.matchedByEmail + mergeResult.stats.matchedByName}</strong> total
-                  overlapping contacts. HubSpot data preserved, <strong>{mergeResult.stats.fieldsFilledIn}</strong> blank
-                  fields filled from CRM.
-                </span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="inline-block w-2 h-2 mt-1.5 rounded-full bg-amber-500 shrink-0" />
-                <span>
-                  <strong>{mergeResult.stats.newFromCrm}</strong> net-new contacts from CRM (not in HubSpot).
-                  These will be created as new contacts on import.
-                </span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="inline-block w-2 h-2 mt-1.5 rounded-full bg-slate-400 shrink-0" />
-                <span>
-                  <strong>{mergeResult.stats.hubspotOnly}</strong> contacts only in HubSpot (no CRM match).
-                  Included unchanged in output.
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {mergeResult && mergeResult.diffs.length > 0 && (
         <>
-          <MatchedWithChanges diffs={mergeResult.diffs.filter((d) => d.changes.length > 0)} />
-          <MatchedNoChanges diffs={mergeResult.diffs.filter((d) => d.changes.length === 0)} />
+          <ResultsDashboard result={mergeResult} />
+
+          <UpdatedContactsSection
+            diffs={mergeResult.diffs.filter((d) => d.changes.length > 0)}
+          />
+
+          <MatchedNoChangesSection
+            diffs={mergeResult.diffs.filter((d) => d.changes.length === 0)}
+          />
         </>
       )}
     </div>
-  );
-}
-
-// ─── Changes Preview ───────────────────────────────────────────────────────
-
-// ─── Records with field changes (before → after) ──────────────────────────
-
-function MatchedWithChanges({ diffs }: { diffs: MatchedRecordDiff[] }) {
-  const [showAll, setShowAll] = useState(false);
-  const LIMIT = 20;
-  const visible = showAll ? diffs : diffs.slice(0, LIMIT);
-
-  if (diffs.length === 0) return null;
-
-  return (
-    <Card className="border-border bg-card">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-green-600">
-          Fields Filled — {diffs.length} record{diffs.length !== 1 ? 's' : ''} updated
-        </CardTitle>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          These matched contacts had blank fields in HubSpot that will be filled from CRM data.
-        </p>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {visible.map((diff, idx) => (
-            <div key={idx} className="rounded-lg border border-border/60 overflow-hidden">
-              <div className="flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-900/10 border-b border-border/60">
-                <MatchBadge type={diff.matchType} />
-                <span className="text-xs font-medium text-foreground truncate">{diff.hubspotName}</span>
-                <span className="text-xs text-muted-foreground truncate">{diff.company}</span>
-                <span className="ml-auto shrink-0 text-[10px] text-muted-foreground">{diff.matchKey}</span>
-                <span className="shrink-0 text-[10px] font-medium text-green-600">
-                  {diff.changes.length} filled
-                </span>
-              </div>
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="bg-muted/20">
-                    <th className="px-3 py-1.5 text-left font-medium text-muted-foreground w-[140px]">Field</th>
-                    <th className="px-3 py-1.5 text-left font-medium text-red-500">Before (HubSpot)</th>
-                    <th className="px-3 py-1.5 text-left font-medium text-green-600">After (Merged)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {diff.changes.map((change, ci) => (
-                    <tr key={ci} className="border-t border-border/40">
-                      <td className="px-3 py-1.5 font-medium text-muted-foreground">{change.column}</td>
-                      <td className="px-3 py-1.5 text-red-400 italic">{change.before || '(empty)'}</td>
-                      <td className="px-3 py-1.5 text-green-600 font-medium">{change.after}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ))}
-          {diffs.length > LIMIT && (
-            <Button variant="outline" size="sm" onClick={() => setShowAll(!showAll)} className="w-full">
-              {showAll ? 'Show less' : `Show all ${diffs.length} records with changes`}
-            </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// ─── Matched records with no changes ───────────────────────────────────────
-
-function MatchedNoChanges({ diffs }: { diffs: MatchedRecordDiff[] }) {
-  const [showAll, setShowAll] = useState(false);
-  const LIMIT = 30;
-  const visible = showAll ? diffs : diffs.slice(0, LIMIT);
-
-  if (diffs.length === 0) return null;
-
-  return (
-    <Card className="border-border bg-card">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          Matched — No Changes Needed ({diffs.length})
-        </CardTitle>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          These contacts exist in both datasets. HubSpot already had all fields populated — nothing to fill.
-        </p>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-1">
-          {visible.map((diff, idx) => (
-            <div key={idx} className="flex items-center gap-2 px-3 py-1.5 rounded hover:bg-muted/30 text-xs">
-              <MatchBadge type={diff.matchType} />
-              <span className="font-medium text-foreground truncate">{diff.hubspotName}</span>
-              <span className="text-muted-foreground truncate">{diff.company}</span>
-              <span className="ml-auto shrink-0 text-[10px] text-muted-foreground">{diff.matchKey}</span>
-            </div>
-          ))}
-          {diffs.length > LIMIT && (
-            <Button variant="outline" size="sm" onClick={() => setShowAll(!showAll)} className="w-full mt-2">
-              {showAll ? 'Show less' : `Show all ${diffs.length} matched records`}
-            </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// ─── Shared badge ──────────────────────────────────────────────────────────
-
-function MatchBadge({ type }: { type: string }) {
-  return (
-    <span
-      className={`shrink-0 inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${
-        type === 'email'
-          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
-          : 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
-      }`}
-    >
-      {type}
-    </span>
   );
 }
