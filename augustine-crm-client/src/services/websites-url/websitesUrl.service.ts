@@ -21,6 +21,65 @@ export async function getWebsitesUrl(): Promise<WebsitesUrl[]> {
   return (data ?? []) as WebsitesUrl[];
 }
 
+/** Fetch distinct non-null state values from websites_url for the state filter dropdown. */
+export async function getDistinctStates(): Promise<string[]> {
+  // Use select('*') because PostgREST can't select columns with spaces/parens
+  const { data, error } = await executionSupabase.from('websites_url').select('*');
+
+  if (error) throw new Error(`Error fetching distinct states: ${error.message}`);
+
+  const states = new Set<string>();
+  for (const row of (data ?? []) as WebsitesUrl[]) {
+    const val = row['State - Dropdown (COMPANY)'];
+    if (typeof val === 'string' && val.trim()) states.add(val.trim());
+  }
+  return Array.from(states).sort();
+}
+
+/** Normalize a URL to its bare domain. e.g. "https://saintliz.org/staff" → "saintliz.org" */
+function normalizeUrlToDomain(url: string | null | undefined): string {
+  if (!url) return '';
+  try {
+    const u = new URL(url.startsWith('http') ? url : `https://${url}`);
+    return u.hostname.replace(/^www\./, '').toLowerCase();
+  } catch {
+    return url.toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+  }
+}
+
+/** Build a multi-key lookup map from websites_url rows. Keys by Company name, Website URL, and domain. */
+function buildWebsitesUrlMap(rows: WebsitesUrl[]): Map<string, WebsitesUrl> {
+  const map = new Map<string, WebsitesUrl>();
+  for (const row of rows) {
+    if (row['Company name']) map.set(row['Company name'], row);
+    if (row['Website URL']) map.set(row['Website URL'], row);
+    const domain = normalizeUrlToDomain(row['Website URL']);
+    if (domain) map.set(domain, row);
+  }
+  return map;
+}
+
+/** Fetch websites_url records filtered by state. Returns a multi-key Map for flexible lookup. */
+export async function getWebsitesUrlByState(state: string): Promise<Map<string, WebsitesUrl>> {
+  // Fetch all and filter client-side because PostgREST can't filter on columns with spaces/parens
+  const { data, error } = await executionSupabase.from('websites_url').select('*');
+
+  if (error) throw new Error(`Error fetching websites URL by state: ${error.message}`);
+
+  const filtered = ((data ?? []) as WebsitesUrl[]).filter(
+    (r) => r['State - Dropdown (COMPANY)']?.toLowerCase() === state.toLowerCase()
+  );
+  return buildWebsitesUrlMap(filtered);
+}
+
+/** Fetch all websites_url records as a multi-key Map for flexible lookup. */
+export async function getWebsitesUrlMap(): Promise<Map<string, WebsitesUrl>> {
+  const { data, error } = await executionSupabase.from('websites_url').select('*');
+
+  if (error) throw new Error(`Error fetching websites URL map: ${error.message}`);
+  return buildWebsitesUrlMap((data ?? []) as WebsitesUrl[]);
+}
+
 export async function getWebsitesUrlPaginated({
   offset,
   limit,

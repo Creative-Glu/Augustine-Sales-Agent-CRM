@@ -27,72 +27,15 @@ import Pagination from '@/components/Pagination';
 import { useStaffPaginated, useStaffCounts } from '@/services/execution/useExecutionData';
 import { getStaffForExport } from '@/services/execution/staff.service';
 import { getInstitutionById } from '@/services/execution/institution.service';
+import { getWebsitesUrlMap, getWebsitesUrlByState } from '@/services/websites-url/websitesUrl.service';
 import type { Institution } from '@/types/execution';
 import InstitutionStaffModal from './InstitutionStaffModal';
 import { useToastHelpers } from '@/lib/toast';
-import type { Staff } from '@/types/execution';
 import { StaffFilters } from './ExecutionFilters';
 import StaffTable from './StaffTable';
+import { staffToCsv, downloadCsv } from '@/lib/csv-export';
 
 const DEFAULT_LIMIT = 10;
-
-function escapeCsvCell(value: string | null): string {
-  if (value == null) return '';
-  const s = String(value);
-  if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) {
-    return `"${s.replace(/"/g, '""')}"`;
-  }
-  return s;
-}
-
-/** Enrichment criteria columns only (no DB fields). */
-const ENRICHED_CSV_HEADER = 'Name,Role,Email,Contact Number,Institution';
-
-function staffToCsv(rows: Staff[], enrichedFormat: boolean): string {
-  if (enrichedFormat) {
-    const body = rows.map((r) =>
-      [
-        r.name,
-        r.role,
-        r.email,
-        r.contact_number ?? '',
-        r.institutions?.name ?? String(r.institution_id ?? ''),
-      ]
-        .map(escapeCsvCell)
-        .join(',')
-    );
-    return [ENRICHED_CSV_HEADER, ...body].join('\r\n');
-  }
-  const header =
-    'staff_id,result_id,institution_id,institution_name,name,role,email,contact_number,created_at';
-  const body = rows.map(
-    (r) =>
-      [
-        r.staff_id,
-        r.result_id,
-        r.institution_id,
-        r.institutions?.name ?? '',
-        r.name,
-        r.role ?? '',
-        r.email ?? '',
-        r.contact_number ?? '',
-        r.created_at,
-      ]
-        .map(escapeCsvCell)
-        .join(',')
-  );
-  return [header, ...body].join('\r\n');
-}
-
-function downloadCsv(csv: string, filename: string) {
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 function getLimit(searchParams: URLSearchParams): number {
   const v = searchParams.get('limit');
@@ -310,6 +253,7 @@ export default function ExecutionStaffPage() {
                     const syncStatusParam = searchParams.get('sync_status');
                     const confMinParam = searchParams.get('confidence_min');
                     const confMaxParam = searchParams.get('confidence_max');
+                    const stateParam = searchParams.get('state') || undefined;
                     const params = {
                       name_search: searchParams.get('staff_name') || undefined,
                       email_search: searchParams.get('staff_email') || undefined,
@@ -334,14 +278,21 @@ export default function ExecutionStaffPage() {
                         | undefined,
                       confidence_min: confMinParam ? Number(confMinParam) : undefined,
                       confidence_max: confMaxParam ? Number(confMaxParam) : undefined,
+                      state: stateParam,
                     };
-                    const rows = await getStaffForExport(params);
+                    const [rows, websitesUrlMap] = await Promise.all([
+                      getStaffForExport(params),
+                      stateParam
+                        ? getWebsitesUrlByState(stateParam)
+                        : getWebsitesUrlMap(),
+                    ]);
                     if (rows.length === 0) {
                       errorToast('No staff records to export with current filters.');
                       return;
                     }
-                    const csv = staffToCsv(rows, enriched_only);
-                    downloadCsv(csv, `staff_export_${new Date().toISOString().slice(0, 10)}.csv`);
+                    const csv = await staffToCsv(rows, websitesUrlMap);
+                    const stateSuffix = stateParam ? `_${stateParam.replace(/\s+/g, '_')}` : '';
+                    downloadCsv(csv, `staff_export${stateSuffix}_${new Date().toISOString().slice(0, 10)}.csv`);
                     successToast(`Exported ${rows.length} staff record(s).`);
                   } catch (e) {
                     errorToast(e instanceof Error ? e.message : 'Export failed');

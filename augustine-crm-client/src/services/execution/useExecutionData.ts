@@ -17,6 +17,7 @@ import type { SyncStatus } from '@/types/execution';
 import {
   getWebsitesUrlPaginated,
   type WebsitesUrlPaginatedParams,
+  getDistinctStates,
 } from '@/services/websites-url/websitesUrl.service';
 import { getExecutionStats, getRecentJobs, getRecentFailedResults } from './stats.service';
 import type { SyncQueueResponse } from '@/types/execution';
@@ -232,6 +233,7 @@ export function useStaffPaginated() {
   const sync_status = (searchParams.get('sync_status') as SyncStatus | null) || undefined;
   const confidence_min = parseNumParam(searchParams, 'confidence_min');
   const confidence_max = parseNumParam(searchParams, 'confidence_max');
+  const state = searchParams.get('state') ?? undefined;
 
   return useQuery({
     queryKey: [
@@ -251,6 +253,7 @@ export function useStaffPaginated() {
       sync_status,
       confidence_min,
       confidence_max,
+      state,
     ],
     queryFn: () =>
       getStaffPaginated({
@@ -267,6 +270,7 @@ export function useStaffPaginated() {
         sync_status: sync_status ?? undefined,
         confidence_min: confidence_min ?? undefined,
         confidence_max: confidence_max ?? undefined,
+        state: state || undefined,
       }),
     enabled: view === 'staff',
     staleTime: 20 * 1000,
@@ -291,6 +295,15 @@ export function useStaffCounts(last24h: boolean, enriched_only = false, enriched
     queryFn: () => getStaffCounts(last24h, enriched_only, enriched_require_phone),
     enabled: view === 'staff',
     staleTime: 60 * 1000,
+  });
+}
+
+/** Fetch distinct US state values for the state filter dropdown. */
+export function useDistinctStates() {
+  return useQuery({
+    queryKey: ['execution', 'distinct-states'],
+    queryFn: getDistinctStates,
+    staleTime: 5 * 60 * 1000,
   });
 }
 

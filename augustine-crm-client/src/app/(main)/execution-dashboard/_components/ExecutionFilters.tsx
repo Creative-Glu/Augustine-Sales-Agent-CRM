@@ -16,6 +16,7 @@ import {
 import type { JobStatusFilter } from '@/services/execution/job.service';
 import type { ResultStatusFilter, ResultSourceFilter } from '@/services/execution/result.service';
 import type { SyncStatus } from '@/types/execution';
+import { useDistinctStates } from '@/services/execution/useExecutionData';
 
 function useExecutionParams() {
   const router = useRouter();
@@ -310,9 +311,30 @@ export function StaffFilters() {
   const sync_status = searchParams.get('sync_status') ?? '';
   const confidence_min = searchParams.get('confidence_min') ?? '';
   const confidence_max = searchParams.get('confidence_max') ?? '';
+  const state = searchParams.get('state') ?? '';
+  const statesQuery = useDistinctStates();
 
   return (
     <div className={filterBarClass}>
+      <div className="space-y-1">
+        <Label className="text-xs">State</Label>
+        <Select
+          value={state || 'all'}
+          onValueChange={(v) => setParams({ state: v === 'all' ? null : v, offset: null })}
+        >
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="All States" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All States</SelectItem>
+            {(statesQuery.data ?? []).map((s) => (
+              <SelectItem key={s} value={s}>
+                {s}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       <div className="space-y-1">
         <Label className="text-xs">Name</Label>
         <Input
@@ -434,6 +456,7 @@ export function StaffFilters() {
         size="sm"
         onClick={() =>
           setParams({
+            state: null,
             staff_name: null,
             staff_email: null,
             staff_date_from: null,

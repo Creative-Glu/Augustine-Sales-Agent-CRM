@@ -1,25 +1,65 @@
 import { executionSupabase } from '@/lib/executionSupabaseClient';
 import { Staff } from '@/types/execution';
 import type { SyncStatus } from '@/types/execution';
+import { getWebsitesUrlByState } from '@/services/websites-url/websitesUrl.service';
+
+/** Normalize a URL to its bare domain for matching. */
+function extractDomain(url: string | null | undefined): string {
+  if (!url) return '';
+  try {
+    const u = new URL(url.startsWith('http') ? url : `https://${url}`);
+    return u.hostname.replace(/^www\./, '').toLowerCase();
+  } catch {
+    return url.toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+  }
+}
+
+/**
+ * Resolve institution IDs for a given state via domain matching.
+ * websites_url (has state + Website URL) → institutions (has website_url + id)
+ */
+async function getInstitutionIdsForState(state: string): Promise<number[]> {
+  const websitesUrlMap = await getWebsitesUrlByState(state);
+
+  // Collect domains from websites_url for this state
+  const stateDomains = new Set<string>();
+  for (const [key] of websitesUrlMap) {
+    if (key.includes('.') && !key.includes(' ') && !key.startsWith('http')) {
+      stateDomains.add(key);
+    }
+  }
+  if (stateDomains.size === 0) return [];
+
+  // Fetch all institutions and match by domain
+  const { data, error } = await executionSupabase
+    .from('institutions')
+    .select('id, website_url');
+  if (error) throw new Error(`Error fetching institutions for state match: ${error.message}`);
+
+  const matchedIds: number[] = [];
+  for (const row of (data ?? []) as { id: number; website_url: string | null }[]) {
+    const domain = extractDomain(row.website_url);
+    if (domain && stateDomains.has(domain)) matchedIds.push(row.id);
+  }
+  return matchedIds;
+}
 
 export interface StaffPaginatedParams {
   offset: number;
   limit: number;
   name_search?: string;
   email_search?: string;
-  date_from?: string; // ISO date YYYY-MM-DD
-  date_to?: string;   // ISO date YYYY-MM-DD
-  /** When true, only return staff that meet enrichment target (name, role, email, institution; phone optional per enriched_require_phone) */
+  date_from?: string;
+  date_to?: string;
   enriched_only?: boolean;
-  /** When true with enriched_only, require contact_number. When false, phone is optional. */
   enriched_require_phone?: boolean;
   is_eligible?: boolean | null;
   synced_to_hubspot?: boolean | null;
   sync_status?: SyncStatus | null;
-  /** Min confidence in percentage 0–100 (UI). Stored in DB as 0–1, so we map before query. */
   confidence_min?: number | null;
-  /** Max confidence in percentage 0–100 (UI). Stored in DB as 0–1, so we map before query. */
   confidence_max?: number | null;
+  /** Filter by US state (resolved via domain matching: websites_url → institutions → staff). */
+  state?: string;
 }
 
 export interface StaffPaginatedResponse {
@@ -45,10 +85,24 @@ export async function getStaffPaginated({
   sync_status,
   confidence_min,
   confidence_max,
+  state,
 }: StaffPaginatedParams): Promise<StaffPaginatedResponse> {
+  // If state filter is active, resolve matching institution IDs via domain matching
+  let stateInstitutionIds: number[] | undefined;
+  if (state?.trim()) {
+    stateInstitutionIds = await getInstitutionIdsForState(state.trim());
+    if (stateInstitutionIds.length === 0) {
+      return { data: [], total: 0, hasMore: false };
+    }
+  }
+
   let query = executionSupabase
     .from('staff')
-    .select('*, institutions(name)', { count: 'exact', head: false });
+    .select('*, institutions(name, website_url, address, email, contact)', { count: 'exact', head: false });
+
+  if (stateInstitutionIds) {
+    query = query.in('institution_id', stateInstitutionIds);
+  }
 
   if (name_search?.trim()) query = query.ilike('name', `%${name_search.trim()}%`);
   if (email_search?.trim()) query = query.ilike('email', `%${email_search.trim()}%`);
@@ -115,18 +169,15 @@ export interface StaffExportParams {
   email_search?: string;
   date_from?: string;
   date_to?: string;
-  /** When true, only return staff that meet enrichment target; phone required per enriched_require_phone */
   enriched_only?: boolean;
-  /** When true with enriched_only, require contact_number. When false, phone is optional. */
   enriched_require_phone?: boolean;
-  /** Match staff filters used in execution dashboard (eligible, sync, confidence). */
   is_eligible?: boolean | null;
   synced_to_hubspot?: boolean | null;
   sync_status?: SyncStatus | null;
-  /** Min confidence in percentage 0–100 (UI). Stored in DB as 0–1. */
   confidence_min?: number | null;
-  /** Max confidence in percentage 0–100 (UI). Stored in DB as 0–1. */
   confidence_max?: number | null;
+  /** Filter by US state (resolved via domain matching). */
+  state?: string;
 }
 
 export async function getStaffForExport(params: StaffExportParams): Promise<Staff[]> {
@@ -143,10 +194,17 @@ export async function getStaffForExport(params: StaffExportParams): Promise<Staf
     sync_status,
     confidence_min,
     confidence_max,
+    state,
   } = params;
 
-  // Always join institution so CSV can include institution details.
-  const selectFields = '*, institutions(name)';
+  // If state filter is active, resolve matching institution IDs via domain matching
+  let stateInstitutionIds: number[] | undefined;
+  if (state?.trim()) {
+    stateInstitutionIds = await getInstitutionIdsForState(state.trim());
+    if (stateInstitutionIds.length === 0) return [];
+  }
+
+  const selectFields = '*, institutions(name, website_url, address, email, contact)';
   const allRows: Staff[] = [];
   let offset = 0;
 
@@ -156,6 +214,10 @@ export async function getStaffForExport(params: StaffExportParams): Promise<Staf
       .select(selectFields)
       .order('created_at', { ascending: false })
       .range(offset, offset + EXPORT_BATCH_SIZE - 1);
+
+    if (stateInstitutionIds) {
+      query = query.in('institution_id', stateInstitutionIds);
+    }
 
     if (result_id) query = query.eq('result_id', result_id);
     if (name_search?.trim()) query = query.ilike('name', `%${name_search.trim()}%`);

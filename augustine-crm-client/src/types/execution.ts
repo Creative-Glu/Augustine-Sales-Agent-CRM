@@ -83,7 +83,13 @@ export interface Staff {
   contact_number: string | null;
   created_at: string;
   /** Set when staff is fetched with institution join (e.g. list view). */
-  institutions?: { name: string } | null;
+  institutions?: {
+    name: string;
+    website_url?: string | null;
+    address?: string | null;
+    email?: string | null;
+    contact?: string | null;
+  } | null;
   /** Pipeline / HubSpot sync fields (optional until DB columns exist). */
   is_eligible?: boolean | null;
   synced_to_hubspot?: boolean | null;
