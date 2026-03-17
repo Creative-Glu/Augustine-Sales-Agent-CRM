@@ -8,5 +8,7 @@ export interface WebsitesUrl {
   'Phone Number': string | null;
   City: string | null;
   'State - Dropdown (COMPANY)': string | null;
+  /** Some environments use "State" instead of "State - Dropdown (COMPANY)" */
+  State?: string | null;
   Status: string | null;
 }

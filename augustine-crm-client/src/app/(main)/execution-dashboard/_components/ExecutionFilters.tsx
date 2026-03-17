@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useCallback } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +40,36 @@ function useExecutionParams() {
   return { searchParams, setParams };
 }
 
+const DEBOUNCE_MS = 500;
+
+/** Input that types locally and debounces the param update. */
+function DebouncedInput({
+  value: urlValue,
+  onDebouncedChange,
+  ...props
+}: Omit<React.ComponentProps<typeof Input>, 'onChange' | 'value'> & {
+  value: string;
+  onDebouncedChange: (val: string) => void;
+}) {
+  const [local, setLocal] = useState(urlValue);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sync local state when URL value changes externally (e.g. Reset button)
+  useEffect(() => { setLocal(urlValue); }, [urlValue]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setLocal(val);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => onDebouncedChange(val), DEBOUNCE_MS);
+  };
+
+  // Cleanup timer on unmount
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
+
+  return <Input {...props} value={local} onChange={handleChange} />;
+}
+
 const filterBarClass =
   'flex flex-wrap items-end gap-4 p-4 rounded-lg bg-muted/40 dark:bg-muted/20 border border-border/60 mb-4';
 
@@ -71,11 +101,11 @@ export function WebsitesUrlFilters() {
       </div>
       <div className="space-y-1">
         <Label className="text-xs">Company name</Label>
-        <Input
+        <DebouncedInput
           placeholder="Search company..."
           className="w-[200px]"
           value={company_search}
-          onChange={(e) => setParams({ company_search: e.target.value || null, offset: null })}
+          onDebouncedChange={(v) => setParams({ company_search: v || null, offset: null })}
         />
       </div>
       <Button
@@ -337,20 +367,20 @@ export function StaffFilters() {
       </div>
       <div className="space-y-1">
         <Label className="text-xs">Name</Label>
-        <Input
+        <DebouncedInput
           placeholder="Search name"
           className="w-[180px]"
           value={staff_name}
-          onChange={(e) => setParams({ staff_name: e.target.value || null, offset: null })}
+          onDebouncedChange={(v) => setParams({ staff_name: v || null, offset: null })}
         />
       </div>
       <div className="space-y-1">
         <Label className="text-xs">Email</Label>
-        <Input
+        <DebouncedInput
           placeholder="Search email"
           className="w-[200px]"
           value={staff_email}
-          onChange={(e) => setParams({ staff_email: e.target.value || null, offset: null })}
+          onDebouncedChange={(v) => setParams({ staff_email: v || null, offset: null })}
         />
       </div>
       <div className="space-y-1">
@@ -423,27 +453,27 @@ export function StaffFilters() {
       <div className="space-y-1">
         <Label className="text-xs">Confidence (%)</Label>
         <div className="flex items-center gap-1">
-          <Input
+          <DebouncedInput
             type="text"
             inputMode="numeric"
             placeholder="0"
             className="w-[64px] text-right tabular-nums"
             value={confidence_min}
-            onChange={(e) => {
-              const digits = e.target.value.replace(/\D/g, '').slice(0, 3);
+            onDebouncedChange={(v) => {
+              const digits = v.replace(/\D/g, '').slice(0, 3);
               setParams({ confidence_min: digits || null, offset: null });
             }}
           />
           <span className="text-xs text-muted-foreground">%</span>
           <span className="text-muted-foreground">–</span>
-          <Input
+          <DebouncedInput
             type="text"
             inputMode="numeric"
             placeholder="100"
             className="w-[64px] text-right tabular-nums"
             value={confidence_max}
-            onChange={(e) => {
-              const digits = e.target.value.replace(/\D/g, '').slice(0, 3);
+            onDebouncedChange={(v) => {
+              const digits = v.replace(/\D/g, '').slice(0, 3);
               setParams({ confidence_max: digits || null, offset: null });
             }}
           />

@@ -14,6 +14,11 @@ export interface WebsitesUrlPaginatedResponse {
   hasMore: boolean;
 }
 
+/** Get state value from a websites_url row. Handles both column names: "State - Dropdown (COMPANY)" and "state". */
+export function getStateValue(row: WebsitesUrl): string {
+  return (row['State - Dropdown (COMPANY)'] || row.State || '').trim();
+}
+
 export async function getWebsitesUrl(): Promise<WebsitesUrl[]> {
   const { data, error } = await executionSupabase.from('websites_url').select('*');
 
@@ -23,7 +28,6 @@ export async function getWebsitesUrl(): Promise<WebsitesUrl[]> {
 
 /** Fetch distinct non-null state values from websites_url for the state filter dropdown. */
 export async function getDistinctStates(): Promise<string[]> {
-  // Paginate through all rows (Supabase default limit is 1000)
   const states = new Set<string>();
   const PAGE = 1000;
   let offset = 0;
@@ -38,8 +42,8 @@ export async function getDistinctStates(): Promise<string[]> {
     const rows = (data ?? []) as WebsitesUrl[];
 
     for (const row of rows) {
-      const val = row['State - Dropdown (COMPANY)'];
-      if (typeof val === 'string' && val.trim()) states.add(val.trim());
+      const val = getStateValue(row);
+      if (val) states.add(val);
     }
 
     if (rows.length < PAGE) break;
@@ -98,7 +102,7 @@ export async function getWebsitesUrlByState(state: string): Promise<Map<string, 
   // Fetch all and filter client-side because PostgREST can't filter on columns with spaces/parens
   const allRows = await fetchAllWebsitesUrl();
   const filtered = allRows.filter(
-    (r) => r['State - Dropdown (COMPANY)']?.toLowerCase() === state.toLowerCase()
+    (r) => getStateValue(r).toLowerCase() === state.toLowerCase()
   );
   return buildWebsitesUrlMap(filtered);
 }

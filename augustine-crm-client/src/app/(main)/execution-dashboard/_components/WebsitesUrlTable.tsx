@@ -2,6 +2,7 @@
 
 import { TableHeader } from '@/components/TableHeader';
 import { WebsitesUrl } from '@/types/websitesUrl';
+import { getStateValue } from '@/services/websites-url/websitesUrl.service';
 import { Badge } from '@/components/ui/badge';
 
 const EXECUTION_DASHBOARD_COLUMNS = [
@@ -113,7 +114,7 @@ export default function WebsitesUrlTable({
                     {cell(row['City'])}
                   </td>
                   <td className="py-3 px-4 text-sm text-muted-foreground">
-                    {cell(row['State - Dropdown (COMPANY)'])}
+                    {cell(getStateValue(row))}
                   </td>
                   <td className="py-3 px-4">
                     {row['Status'] ? (

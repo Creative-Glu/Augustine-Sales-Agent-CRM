@@ -1,5 +1,6 @@
 import type { Staff } from '@/types/execution';
 import type { WebsitesUrl } from '@/types/websitesUrl';
+import { getStateValue } from '@/services/websites-url/websitesUrl.service';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
@@ -307,7 +308,7 @@ export async function resolveLocationData(
 
     let streetAddress = company?.['Street Address'] ?? '';
     let city = company?.City ?? '';
-    let state = company?.['State - Dropdown (COMPANY)'] ?? '';
+    let state = company ? getStateValue(company) : '';
     let postalCode = '';
 
     // Fallback: parse institution address for missing components
