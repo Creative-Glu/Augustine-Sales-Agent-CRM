@@ -305,7 +305,10 @@ export default function CsvMergePage() {
       )}
 
       {mergeResult && mergeResult.diffs.length > 0 && (
-        <ChangesPreview diffs={mergeResult.diffs} />
+        <>
+          <MatchedWithChanges diffs={mergeResult.diffs.filter((d) => d.changes.length > 0)} />
+          <MatchedNoChanges diffs={mergeResult.diffs.filter((d) => d.changes.length === 0)} />
+        </>
       )}
     </div>
   );
@@ -313,97 +316,121 @@ export default function CsvMergePage() {
 
 // ─── Changes Preview ───────────────────────────────────────────────────────
 
-function ChangesPreview({ diffs }: { diffs: MatchedRecordDiff[] }) {
+// ─── Records with field changes (before → after) ──────────────────────────
+
+function MatchedWithChanges({ diffs }: { diffs: MatchedRecordDiff[] }) {
   const [showAll, setShowAll] = useState(false);
-  const withChanges = diffs.filter((d) => d.changes.length > 0);
-  const noChanges = diffs.filter((d) => d.changes.length === 0);
-  const visible = showAll ? withChanges : withChanges.slice(0, 20);
+  const LIMIT = 20;
+  const visible = showAll ? diffs : diffs.slice(0, LIMIT);
+
+  if (diffs.length === 0) return null;
 
   return (
     <Card className="border-border bg-card">
-      <CardHeader className="pb-2 flex flex-row items-center justify-between gap-3">
-        <div>
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            Matched Records — Field Changes Preview
-          </CardTitle>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {withChanges.length} record{withChanges.length !== 1 ? 's' : ''} with blank fields filled
-            {noChanges.length > 0 && (
-              <> &middot; {noChanges.length} matched with no changes needed</>
-            )}
-          </p>
-        </div>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium text-green-600">
+          Fields Filled — {diffs.length} record{diffs.length !== 1 ? 's' : ''} updated
+        </CardTitle>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          These matched contacts had blank fields in HubSpot that will be filled from CRM data.
+        </p>
       </CardHeader>
       <CardContent>
-        {withChanges.length === 0 ? (
-          <p className="text-sm text-muted-foreground">All matched records already had complete data — nothing to fill.</p>
-        ) : (
-          <div className="space-y-3">
-            {visible.map((diff, idx) => (
-              <div
-                key={idx}
-                className="rounded-lg border border-border/60 overflow-hidden"
-              >
-                <div className="flex items-center gap-2 px-3 py-2 bg-muted/30 border-b border-border/60">
-                  <span
-                    className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                      diff.matchType === 'email'
-                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
-                        : 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
-                    }`}
-                  >
-                    {diff.matchType}
-                  </span>
-                  <span className="text-xs font-medium text-foreground truncate">
-                    {diff.hubspotName}
-                  </span>
-                  <span className="text-xs text-muted-foreground truncate">
-                    {diff.company}
-                  </span>
-                  <span className="ml-auto text-[10px] text-muted-foreground whitespace-nowrap">
-                    {diff.changes.length} field{diff.changes.length !== 1 ? 's' : ''} filled
-                  </span>
-                </div>
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="bg-muted/20">
-                      <th className="px-3 py-1.5 text-left font-medium text-muted-foreground w-[140px]">Field</th>
-                      <th className="px-3 py-1.5 text-left font-medium text-red-500">Before (HubSpot)</th>
-                      <th className="px-3 py-1.5 text-left font-medium text-green-600">After (Merged)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {diff.changes.map((change, ci) => (
-                      <tr key={ci} className="border-t border-border/40">
-                        <td className="px-3 py-1.5 font-medium text-muted-foreground">{change.column}</td>
-                        <td className="px-3 py-1.5 text-red-400 italic">
-                          {change.before || '(empty)'}
-                        </td>
-                        <td className="px-3 py-1.5 text-green-600 font-medium">
-                          {change.after}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+        <div className="space-y-3">
+          {visible.map((diff, idx) => (
+            <div key={idx} className="rounded-lg border border-border/60 overflow-hidden">
+              <div className="flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-900/10 border-b border-border/60">
+                <MatchBadge type={diff.matchType} />
+                <span className="text-xs font-medium text-foreground truncate">{diff.hubspotName}</span>
+                <span className="text-xs text-muted-foreground truncate">{diff.company}</span>
+                <span className="ml-auto shrink-0 text-[10px] text-muted-foreground">{diff.matchKey}</span>
+                <span className="shrink-0 text-[10px] font-medium text-green-600">
+                  {diff.changes.length} filled
+                </span>
               </div>
-            ))}
-
-            {withChanges.length > 20 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAll(!showAll)}
-                className="w-full"
-              >
-                {showAll
-                  ? 'Show less'
-                  : `Show all ${withChanges.length} records with changes`}
-              </Button>
-            )}
-          </div>
-        )}
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="bg-muted/20">
+                    <th className="px-3 py-1.5 text-left font-medium text-muted-foreground w-[140px]">Field</th>
+                    <th className="px-3 py-1.5 text-left font-medium text-red-500">Before (HubSpot)</th>
+                    <th className="px-3 py-1.5 text-left font-medium text-green-600">After (Merged)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {diff.changes.map((change, ci) => (
+                    <tr key={ci} className="border-t border-border/40">
+                      <td className="px-3 py-1.5 font-medium text-muted-foreground">{change.column}</td>
+                      <td className="px-3 py-1.5 text-red-400 italic">{change.before || '(empty)'}</td>
+                      <td className="px-3 py-1.5 text-green-600 font-medium">{change.after}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+          {diffs.length > LIMIT && (
+            <Button variant="outline" size="sm" onClick={() => setShowAll(!showAll)} className="w-full">
+              {showAll ? 'Show less' : `Show all ${diffs.length} records with changes`}
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
+  );
+}
+
+// ─── Matched records with no changes ───────────────────────────────────────
+
+function MatchedNoChanges({ diffs }: { diffs: MatchedRecordDiff[] }) {
+  const [showAll, setShowAll] = useState(false);
+  const LIMIT = 30;
+  const visible = showAll ? diffs : diffs.slice(0, LIMIT);
+
+  if (diffs.length === 0) return null;
+
+  return (
+    <Card className="border-border bg-card">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">
+          Matched — No Changes Needed ({diffs.length})
+        </CardTitle>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          These contacts exist in both datasets. HubSpot already had all fields populated — nothing to fill.
+        </p>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-1">
+          {visible.map((diff, idx) => (
+            <div key={idx} className="flex items-center gap-2 px-3 py-1.5 rounded hover:bg-muted/30 text-xs">
+              <MatchBadge type={diff.matchType} />
+              <span className="font-medium text-foreground truncate">{diff.hubspotName}</span>
+              <span className="text-muted-foreground truncate">{diff.company}</span>
+              <span className="ml-auto shrink-0 text-[10px] text-muted-foreground">{diff.matchKey}</span>
+            </div>
+          ))}
+          {diffs.length > LIMIT && (
+            <Button variant="outline" size="sm" onClick={() => setShowAll(!showAll)} className="w-full mt-2">
+              {showAll ? 'Show less' : `Show all ${diffs.length} matched records`}
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── Shared badge ──────────────────────────────────────────────────────────
+
+function MatchBadge({ type }: { type: string }) {
+  return (
+    <span
+      className={`shrink-0 inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${
+        type === 'email'
+          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+          : 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
+      }`}
+    >
+      {type}
+    </span>
   );
 }
