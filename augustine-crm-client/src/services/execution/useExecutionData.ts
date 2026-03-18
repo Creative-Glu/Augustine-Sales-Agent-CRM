@@ -108,8 +108,9 @@ export function useInstitutionPaginated() {
         confidence_max: confidence_max ?? null,
       }),
     enabled: view === 'institution',
-    staleTime: 20 * 1000,
-    refetchOnWindowFocus: true,
+    staleTime: 60 * 1000,
+    placeholderData: (prev: unknown) => prev,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -132,7 +133,8 @@ export function useWebsitesUrlPaginated() {
     queryKey: ['execution', 'websites-url', view, offset, limit, status, company_search],
     queryFn: () => getWebsitesUrlPaginated(params),
     enabled: view === 'websites',
-    staleTime: 30 * 1000,
+    staleTime: 60 * 1000,
+    placeholderData: (prev: unknown) => prev,
   });
 }
 
@@ -151,7 +153,8 @@ export function useJobsPaginated() {
     queryKey: ['execution', 'jobs', view, offset, limit, status],
     queryFn: () => getJobsPaginated({ offset, limit, status }),
     enabled: view === 'jobs',
-    staleTime: 30 * 1000,
+    staleTime: 60 * 1000,
+    placeholderData: (prev: unknown) => prev,
   });
 }
 
@@ -173,7 +176,8 @@ export function useResultsPaginated() {
         source: source || 'all',
       }),
     enabled: view === 'results',
-    staleTime: 30 * 1000,
+    staleTime: 60 * 1000,
+    placeholderData: (prev: unknown) => prev,
   });
 }
 
@@ -273,8 +277,9 @@ export function useStaffPaginated() {
         state: state || undefined,
       }),
     enabled: view === 'staff',
-    staleTime: 20 * 1000,
-    refetchOnWindowFocus: true,
+    staleTime: 60 * 1000,
+    placeholderData: (prev: unknown) => prev,
+    refetchOnWindowFocus: false,
   });
 }
 

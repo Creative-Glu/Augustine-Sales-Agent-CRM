@@ -67,8 +67,18 @@ function buildWebsitesUrlMap(rows: WebsitesUrl[]): Map<string, WebsitesUrl> {
   return map;
 }
 
-/** Fetch all websites_url rows with pagination (Supabase caps at 1000 per request). */
+// ─── In-memory cache for the full websites_url table ───────────────────
+// This table (30K rows) is fetched repeatedly for state filtering and CSV export.
+// Cache it for 5 minutes so pagination / repeated filters don't re-fetch.
+let allWebsitesUrlCache: { rows: WebsitesUrl[]; ts: number } | null = null;
+const ALL_WEBSITES_URL_TTL = 5 * 60 * 1000;
+
+/** Fetch all websites_url rows with pagination (Supabase caps at 1000 per request). Cached for 5 min. */
 async function fetchAllWebsitesUrl(): Promise<WebsitesUrl[]> {
+  if (allWebsitesUrlCache && Date.now() - allWebsitesUrlCache.ts < ALL_WEBSITES_URL_TTL) {
+    return allWebsitesUrlCache.rows;
+  }
+
   const PAGE = 1000;
   const allRows: WebsitesUrl[] = [];
   let offset = 0;
@@ -85,6 +95,8 @@ async function fetchAllWebsitesUrl(): Promise<WebsitesUrl[]> {
     if (rows.length < PAGE) break;
     offset += PAGE;
   }
+
+  allWebsitesUrlCache = { rows: allRows, ts: Date.now() };
   return allRows;
 }
 

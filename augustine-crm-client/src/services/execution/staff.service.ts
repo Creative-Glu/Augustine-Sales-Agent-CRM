@@ -14,33 +14,77 @@ function extractDomain(url: string | null | undefined): string {
   }
 }
 
+// ─── In-memory cache for state → institution ID resolution ──────────────
+// Avoids re-fetching 30K+ websites_url rows on every pagination click.
+const stateIdCache = new Map<string, { ids: number[]; ts: number }>();
+const STATE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Cache the domain→institutionId mapping (shared across all state lookups)
+let domainMapCache: { map: Map<string, number>; ts: number } | null = null;
+const DOMAIN_MAP_TTL = 5 * 60 * 1000;
+
+/** Build or return cached domain→institutionId map from the institutions table. */
+async function getDomainToInstitutionMap(): Promise<Map<string, number>> {
+  if (domainMapCache && Date.now() - domainMapCache.ts < DOMAIN_MAP_TTL) {
+    return domainMapCache.map;
+  }
+
+  const map = new Map<string, number>();
+  const PAGE = 1000;
+  let offset = 0;
+
+  while (true) {
+    const { data, error } = await executionSupabase
+      .from('institutions')
+      .select('id, website_url')
+      .range(offset, offset + PAGE - 1);
+    if (error) throw new Error(`Error fetching institutions: ${error.message}`);
+    const rows = (data ?? []) as { id: number; website_url: string | null }[];
+    for (const row of rows) {
+      const domain = extractDomain(row.website_url);
+      if (domain) map.set(domain, row.id);
+    }
+    if (rows.length < PAGE) break;
+    offset += PAGE;
+  }
+
+  domainMapCache = { map, ts: Date.now() };
+  return map;
+}
+
 /**
  * Resolve institution IDs for a given state via domain matching.
- * websites_url (has state + Website URL) → institutions (has website_url + id)
+ * Results are cached for 5 minutes so pagination doesn't re-trigger the heavy query.
  */
 async function getInstitutionIdsForState(state: string): Promise<number[]> {
+  const key = state.trim().toLowerCase();
+  const cached = stateIdCache.get(key);
+  if (cached && Date.now() - cached.ts < STATE_CACHE_TTL) {
+    return cached.ids;
+  }
+
   const websitesUrlMap = await getWebsitesUrlByState(state);
 
   // Collect domains from websites_url for this state
   const stateDomains = new Set<string>();
-  for (const [key] of websitesUrlMap) {
-    if (key.includes('.') && !key.includes(' ') && !key.startsWith('http')) {
-      stateDomains.add(key);
+  for (const [mapKey] of websitesUrlMap) {
+    if (mapKey.includes('.') && !mapKey.includes(' ') && !mapKey.startsWith('http')) {
+      stateDomains.add(mapKey);
     }
   }
-  if (stateDomains.size === 0) return [];
-
-  // Fetch all institutions and match by domain
-  const { data, error } = await executionSupabase
-    .from('institutions')
-    .select('id, website_url');
-  if (error) throw new Error(`Error fetching institutions for state match: ${error.message}`);
-
-  const matchedIds: number[] = [];
-  for (const row of (data ?? []) as { id: number; website_url: string | null }[]) {
-    const domain = extractDomain(row.website_url);
-    if (domain && stateDomains.has(domain)) matchedIds.push(row.id);
+  if (stateDomains.size === 0) {
+    stateIdCache.set(key, { ids: [], ts: Date.now() });
+    return [];
   }
+
+  const domainMap = await getDomainToInstitutionMap();
+  const matchedIds: number[] = [];
+  for (const domain of stateDomains) {
+    const id = domainMap.get(domain);
+    if (id != null) matchedIds.push(id);
+  }
+
+  stateIdCache.set(key, { ids: matchedIds, ts: Date.now() });
   return matchedIds;
 }
 
