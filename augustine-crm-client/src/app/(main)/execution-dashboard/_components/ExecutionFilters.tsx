@@ -32,7 +32,7 @@ function useExecutionParams() {
         else params.set(k, v);
       }
       if (updates.offset === undefined) params.delete('offset');
-      router.push(`${basePath}?${params.toString()}`);
+      router.replace(`${basePath}?${params.toString()}`, { scroll: false });
     },
     [router, searchParams, basePath]
   );

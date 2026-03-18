@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { usePathname, useSearchParams } from 'next/navigation';
 import {
   getJobsPaginated,
@@ -11,7 +11,7 @@ import {
   type ResultStatusFilter,
   type ResultSourceFilter,
 } from './result.service';
-import { getStaffPaginated, getStaffCounts, getSyncLogs } from './staff.service';
+import { getStaffPaginated, getStaffCounts, getSyncLogs, resolveInstitutionIdsForState } from './staff.service';
 import { getInstitutionPaginated, getInstitutionCounts } from './institution.service';
 import type { SyncStatus } from '@/types/execution';
 import {
@@ -109,7 +109,7 @@ export function useInstitutionPaginated() {
       }),
     enabled: view === 'institution',
     staleTime: 60 * 1000,
-    placeholderData: (prev: unknown) => prev,
+    placeholderData: keepPreviousData,
     refetchOnWindowFocus: false,
   });
 }
@@ -134,7 +134,7 @@ export function useWebsitesUrlPaginated() {
     queryFn: () => getWebsitesUrlPaginated(params),
     enabled: view === 'websites',
     staleTime: 60 * 1000,
-    placeholderData: (prev: unknown) => prev,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -154,7 +154,7 @@ export function useJobsPaginated() {
     queryFn: () => getJobsPaginated({ offset, limit, status }),
     enabled: view === 'jobs',
     staleTime: 60 * 1000,
-    placeholderData: (prev: unknown) => prev,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -177,7 +177,7 @@ export function useResultsPaginated() {
       }),
     enabled: view === 'results',
     staleTime: 60 * 1000,
-    placeholderData: (prev: unknown) => prev,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -239,6 +239,19 @@ export function useStaffPaginated() {
   const confidence_max = parseNumParam(searchParams, 'confidence_max');
   const state = searchParams.get('state') ?? undefined;
 
+  // Pre-resolve institution IDs for the selected state (cached separately).
+  // This way the heavy resolution only runs once per state change and is
+  // shared across pagination clicks.
+  const stateIdsQuery = useQuery({
+    queryKey: ['execution', 'state-institution-ids', state],
+    queryFn: () => resolveInstitutionIdsForState(state!),
+    enabled: view === 'staff' && !!state,
+    staleTime: 5 * 60 * 1000, // 5 min — state mapping doesn't change often
+  });
+
+  // The staff query only runs once state IDs are resolved (or no state filter).
+  const stateIdsReady = !state || stateIdsQuery.isSuccess;
+
   return useQuery({
     queryKey: [
       'execution',
@@ -275,10 +288,13 @@ export function useStaffPaginated() {
         confidence_min: confidence_min ?? undefined,
         confidence_max: confidence_max ?? undefined,
         state: state || undefined,
+        // Pass pre-resolved IDs so getStaffPaginated skips the heavy resolution
+        _preResolvedStateIds: stateIdsQuery.data ?? undefined,
       }),
-    enabled: view === 'staff',
+    enabled: view === 'staff' && stateIdsReady,
     staleTime: 60 * 1000,
-    placeholderData: (prev: unknown) => prev,
+    // Only keep previous data for pagination changes (same filters), not filter changes
+    placeholderData: keepPreviousData,
     refetchOnWindowFocus: false,
   });
 }
@@ -299,7 +315,8 @@ export function useStaffCounts(last24h: boolean, enriched_only = false, enriched
     queryKey: ['execution', 'staff-counts', last24h, enriched_only, enriched_require_phone],
     queryFn: () => getStaffCounts(last24h, enriched_only, enriched_require_phone),
     enabled: view === 'staff',
-    staleTime: 60 * 1000,
+    staleTime: 5 * 60 * 1000, // Counts don't change often — cache for 5 min
+    refetchOnWindowFocus: false,
   });
 }
 

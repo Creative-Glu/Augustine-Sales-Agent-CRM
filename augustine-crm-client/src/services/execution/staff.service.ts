@@ -88,6 +88,9 @@ async function getInstitutionIdsForState(state: string): Promise<number[]> {
   return matchedIds;
 }
 
+/** Public wrapper so the hook can pre-resolve IDs in a separate cached query. */
+export const resolveInstitutionIdsForState = getInstitutionIdsForState;
+
 export interface StaffPaginatedParams {
   offset: number;
   limit: number;
@@ -104,6 +107,8 @@ export interface StaffPaginatedParams {
   confidence_max?: number | null;
   /** Filter by US state (resolved via domain matching: websites_url → institutions → staff). */
   state?: string;
+  /** Pre-resolved institution IDs for the state filter. Skips the heavy resolution if provided. */
+  _preResolvedStateIds?: number[];
 }
 
 export interface StaffPaginatedResponse {
@@ -130,10 +135,16 @@ export async function getStaffPaginated({
   confidence_min,
   confidence_max,
   state,
+  _preResolvedStateIds,
 }: StaffPaginatedParams): Promise<StaffPaginatedResponse> {
-  // If state filter is active, resolve matching institution IDs via domain matching
+  // Use pre-resolved IDs if available (from the hook's cached query), otherwise resolve
   let stateInstitutionIds: number[] | undefined;
-  if (state?.trim()) {
+  if (_preResolvedStateIds) {
+    stateInstitutionIds = _preResolvedStateIds;
+    if (stateInstitutionIds.length === 0) {
+      return { data: [], total: 0, hasMore: false };
+    }
+  } else if (state?.trim()) {
     stateInstitutionIds = await getInstitutionIdsForState(state.trim());
     if (stateInstitutionIds.length === 0) {
       return { data: [], total: 0, hasMore: false };

@@ -32,7 +32,7 @@ export default function Pagination({
     } else {
       params.set(queryParamName, newOffset.toString());
     }
-    router.push(`${basePath}?${params.toString()}`);
+    router.replace(`${basePath}?${params.toString()}`, { scroll: false });
   };
 
   const goToPage = (page: number) => {

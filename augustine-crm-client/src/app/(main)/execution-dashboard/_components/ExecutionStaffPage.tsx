@@ -92,7 +92,7 @@ export default function ExecutionStaffPage() {
     if (value === 'enriched') params.set('enriched', '1');
     else params.delete('enriched');
     params.delete('offset');
-    router.push(`${basePath}?${params.toString()}`);
+    router.replace(`${basePath}?${params.toString()}`, { scroll: false });
   };
 
   const setRequirePhone = (required: boolean) => {
@@ -100,7 +100,7 @@ export default function ExecutionStaffPage() {
     if (required) params.delete('phone');
     else params.set('phone', '0');
     params.delete('offset');
-    router.push(`${basePath}?${params.toString()}`);
+    router.replace(`${basePath}?${params.toString()}`, { scroll: false });
   };
 
   const total = staffQuery.data?.total ?? 0;
@@ -313,7 +313,7 @@ export default function ExecutionStaffPage() {
                     const params = new URLSearchParams(searchParams.toString());
                     params.set('limit', v);
                     params.delete('offset');
-                    router.push(`${basePath}?${params.toString()}`);
+                    router.replace(`${basePath}?${params.toString()}`, { scroll: false });
                   }}
                 >
                   <SelectTrigger className="w-[72px] h-9 border-border/80">
