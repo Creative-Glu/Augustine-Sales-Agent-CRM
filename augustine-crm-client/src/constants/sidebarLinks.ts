@@ -5,6 +5,7 @@ import {
   UserGroupIcon,
   Squares2X2Icon,
   ChartBarSquareIcon,
+  DocumentDuplicateIcon,
 } from '@heroicons/react/24/outline';
 import { TreePine, ActivityIcon, MailSearchIcon } from 'lucide-react';
 
@@ -25,6 +26,7 @@ export const SIDEBAR_LINKS = [
   { href: '/journey', label: 'Journey', icon: TreePine },
   // { href: '/upload-catholic-pdf', label: 'Upload Catholic PDF', icon: DocumentArrowUpIcon },
   { href: '/execution-dashboard', label: 'Execution Dashboard', icon: ChartBarSquareIcon },
+  { href: '/csv-merge', label: 'Dry Run Tool', icon: DocumentDuplicateIcon },
   { href: '/marketing-dashboard', label: 'Marketing Dashboard', icon: ChartBarIcon },
   { href: '/marketing-jobs', label: 'Scrape Jobs', icon: ActivityIcon },
   { href: '/outreach', label: 'Outreach Approval', icon: ChartBarIcon },

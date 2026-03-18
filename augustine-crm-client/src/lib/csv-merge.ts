@@ -12,18 +12,24 @@ import { splitName, cleanEmail, mapRole, toStateAbbrev, extractZipFromString, fo
 
 // ─── CSV Parsing ───────────────────────────────────────────────────────────
 
-/** Parse a CSV string into an array of objects keyed by header names. */
+/**
+ * RFC 4180-compliant CSV parser. Handles:
+ *   - Quoted fields containing commas, newlines, and escaped quotes ("")
+ *   - Multi-line quoted fields (field value spans multiple lines)
+ *   - Mixed line endings (\r\n, \n, \r)
+ */
 export function parseCsv(raw: string): Record<string, string>[] {
-  const lines = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
-  if (lines.length < 2) return [];
+  const text = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const records = parseCsvRecords(text);
+  if (records.length < 2) return [];
 
-  const headers = parseCsvLine(lines[0]);
+  const headers = records[0];
   const rows: Record<string, string>[] = [];
 
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
-    const values = parseCsvLine(line);
+  for (let i = 1; i < records.length; i++) {
+    const values = records[i];
+    // Skip blank rows (single empty cell)
+    if (values.length === 1 && !values[0].trim()) continue;
     const row: Record<string, string> = {};
     for (let j = 0; j < headers.length; j++) {
       row[headers[j].trim()] = (values[j] ?? '').trim();
@@ -33,38 +39,58 @@ export function parseCsv(raw: string): Record<string, string>[] {
   return rows;
 }
 
-/** Parse a single CSV line respecting quoted fields with commas and newlines. */
-function parseCsvLine(line: string): string[] {
-  const result: string[] = [];
+/** Parse full CSV text into an array of records (each record is an array of field values). */
+function parseCsvRecords(text: string): string[][] {
+  const records: string[][] = [];
+  let fields: string[] = [];
   let current = '';
   let inQuotes = false;
+  let i = 0;
 
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
+  while (i < text.length) {
+    const ch = text[i];
+
     if (inQuotes) {
       if (ch === '"') {
-        if (i + 1 < line.length && line[i + 1] === '"') {
+        if (i + 1 < text.length && text[i + 1] === '"') {
           current += '"';
-          i++;
+          i += 2;
         } else {
           inQuotes = false;
+          i++;
         }
       } else {
         current += ch;
+        i++;
       }
     } else {
       if (ch === '"') {
         inQuotes = true;
+        i++;
       } else if (ch === ',') {
-        result.push(current);
+        fields.push(current);
         current = '';
+        i++;
+      } else if (ch === '\n') {
+        fields.push(current);
+        records.push(fields);
+        fields = [];
+        current = '';
+        i++;
       } else {
         current += ch;
+        i++;
       }
     }
   }
-  result.push(current);
-  return result;
+
+  // Push final record if there's content
+  if (current || fields.length > 0) {
+    fields.push(current);
+    records.push(fields);
+  }
+
+  return records;
 }
 
 // ─── Normalization ─────────────────────────────────────────────────────────
@@ -90,8 +116,20 @@ function sanitizeField(raw: string): string {
     .trim();
 }
 
+/** Normalize a company name for fuzzy matching — strip state/zip suffix, common suffixes, punctuation. */
+function normalizeCompanyName(name: string): string {
+  let n = name.trim().toLowerCase();
+  // Strip "Name - ST - 12345" suffix pattern
+  n = n.replace(/\s*-\s*[a-z]{2}\s*-\s*\d{5}.*$/, '');
+  // Strip common suffixes
+  n = n.replace(/\b(parish|school|church|catholic|roman catholic|academy|diocese|archdiocese)\b/g, '');
+  // Strip punctuation and collapse whitespace
+  n = n.replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
+  return n;
+}
+
 function normalizeNameKey(firstName: string, lastName: string, company: string): string {
-  return `${firstName.trim().toLowerCase()}|${lastName.trim().toLowerCase()}|${company.trim().toLowerCase()}`;
+  return `${firstName.trim().toLowerCase()}|${lastName.trim().toLowerCase()}|${normalizeCompanyName(company)}`;
 }
 
 // ─── Output column spec ────────────────────────────────────────────────────
@@ -142,10 +180,20 @@ function normalizeCrmRow(row: Record<string, string>): MergedRow {
   // Institution / Company
   const companyName = row['Company name'] ?? row['institution_name'] ?? '';
   const recordIdCompany = row['Record ID - Company'] ?? '';
-  const streetAddress = row['Street Address'] ?? '';
-  const city = row['City'] ?? '';
-  const stateRaw = row['State - Dropdown (COMPANY)'] ?? row['State'] ?? '';
-  const postalCode = row['Postal Code'] ?? '';
+  let streetAddress = row['Street Address'] ?? '';
+  let city = row['City'] ?? '';
+  let stateRaw = row['State - Dropdown (COMPANY)'] ?? row['State'] ?? '';
+  let postalCode = row['Postal Code'] ?? '';
+
+  // Fallback: parse institution address if individual fields are empty
+  const rawAddress = row['address'] ?? row['Address'] ?? '';
+  if (rawAddress && (!streetAddress || !city || !stateRaw || !postalCode)) {
+    const parsed = parseAddress(rawAddress);
+    if (!streetAddress && parsed.streetAddress) streetAddress = parsed.streetAddress;
+    if (!city && parsed.city) city = parsed.city;
+    if (!stateRaw && parsed.state) stateRaw = parsed.state;
+    if (!postalCode && parsed.postalCode) postalCode = parsed.postalCode;
+  }
 
   // Try to build institution name in "Name - ST - ZIP" format
   const stateAbbr = toStateAbbrev(stateRaw);

@@ -26,31 +26,22 @@ export async function getWebsitesUrl(): Promise<WebsitesUrl[]> {
   return (data ?? []) as WebsitesUrl[];
 }
 
-/** Fetch distinct non-null state values from websites_url for the state filter dropdown. */
+/** Known US states + DC + Canada present in the websites_url table. Hardcoded for instant dropdown load. */
+const KNOWN_STATES = [
+  'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Canada',
+  'Colorado', 'Connecticut', 'Delaware', 'District of Columbia', 'Florida',
+  'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas',
+  'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan',
+  'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada',
+  'New Hampshire', 'New Jersey', 'New Mexico', 'New York', 'North Carolina',
+  'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island',
+  'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont',
+  'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming',
+];
+
+/** Return known state list instantly (no DB round-trip needed). */
 export async function getDistinctStates(): Promise<string[]> {
-  const states = new Set<string>();
-  const PAGE = 1000;
-  let offset = 0;
-
-  while (true) {
-    const { data, error } = await executionSupabase
-      .from('websites_url')
-      .select('*')
-      .range(offset, offset + PAGE - 1);
-
-    if (error) throw new Error(`Error fetching distinct states: ${error.message}`);
-    const rows = (data ?? []) as WebsitesUrl[];
-
-    for (const row of rows) {
-      const val = getStateValue(row);
-      if (val) states.add(val);
-    }
-
-    if (rows.length < PAGE) break;
-    offset += PAGE;
-  }
-
-  return Array.from(states).sort();
+  return KNOWN_STATES;
 }
 
 /** Normalize a URL to its bare domain. e.g. "https://saintliz.org/staff" → "saintliz.org" */
