@@ -129,6 +129,38 @@ export function mapRole(rawRole: string | null): [string, string, string] {
   return [raw, raw, raw];
 }
 
+const MAX_JOB_TITLE_LEN = 80;
+
+/**
+ * Clean a raw scraped role string for the "Job Title" CSV column.
+ * Strips emails, phone numbers, URLs, "Meet …" bios, and excess whitespace.
+ * Caps at MAX_JOB_TITLE_LEN chars so it doesn't break the CSV structure.
+ */
+export function cleanJobTitle(raw: string | null | undefined): string {
+  if (!raw?.trim()) return '';
+  let t = raw.trim();
+  // Remove emails
+  t = t.replace(/\S+@\S+\.\S+/g, '');
+  // Remove phone numbers (with optional ext/x)
+  t = t.replace(/[\(]?\d{3}[\).\-\s]?\s*\d{3}[\-.\s]?\d{4}(\s*(x|ext\.?)\s*\d+)?/gi, '');
+  // Remove URLs
+  t = t.replace(/https?:\/\/\S+/gi, '');
+  t = t.replace(/www\.\S+/gi, '');
+  // Remove "Meet <Name>" / "About <Name>" trailing bio phrases
+  t = t.replace(/\b(meet|about|contact)\s+[A-Z][a-z].*$/i, '');
+  // Collapse whitespace and trim punctuation remnants
+  t = t.replace(/\s+/g, ' ').trim();
+  t = t.replace(/^[\s,.\-–—|:;]+|[\s,.\-–—|:;]+$/g, '');
+  // If still too long, take the first meaningful sentence/phrase
+  if (t.length > MAX_JOB_TITLE_LEN) {
+    // Try to cut at a natural break
+    const cut = t.slice(0, MAX_JOB_TITLE_LEN);
+    const lastSpace = cut.lastIndexOf(' ');
+    t = lastSpace > 20 ? cut.slice(0, lastSpace) : cut;
+  }
+  return t;
+}
+
 // ─── State abbreviation ────────────────────────────────────────────────────
 
 const STATE_ABBREV: Record<string, string> = {
@@ -389,7 +421,8 @@ export async function staffToCsv(
     const company = lookupCompany(r.institutions, websitesUrlMap);
     const loc = locationData.get(r.staff_id);
     const [firstName, lastName] = splitName(r.name);
-    const [rawTitle, parRole, hubspotJobTitle] = mapRole(r.role);
+    const [, parRole] = mapRole(r.role);
+    const jobTitle = cleanJobTitle(r.role);
     const email = cleanEmail(r.email);
     const institutionName = r.institutions?.name ?? '';
     const formattedCompanyName = formatInstitutionName(
@@ -402,7 +435,7 @@ export async function staffToCsv(
       r.staff_id,                                            // Record ID - Contact
       firstName,                                             // First Name
       lastName,                                              // Last Name
-      rawTitle,                                              // Job Title (raw scraped)
+      jobTitle,                                              // Job Title (cleaned)
       parRole,                                               // PAR - Role (mapped)
       email,                                                 // Email (cleaned)
       r.contact_number ?? '',                                // Phone Number (contact)

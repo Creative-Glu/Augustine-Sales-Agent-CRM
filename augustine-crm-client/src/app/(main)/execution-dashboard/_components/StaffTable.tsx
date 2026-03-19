@@ -192,11 +192,11 @@ export default function StaffTable({
                 <Fragment key={row.staff_id}>
                 <tr className="border-b border-border/50 hover:bg-muted/30 transition-colors align-top">
                   {/* Staff info */}
-                  <td className="py-3 px-4 align-top">
-                    <div className="flex flex-col gap-1.5">
+                  <td className="py-3 px-4 align-top max-w-[220px]">
+                    <div className="flex flex-col gap-1.5 min-w-0">
                       <div className="text-base font-semibold text-foreground truncate">{cell(row.name)}</div>
                       {row.role && (
-                        <div className="text-xs text-muted-foreground truncate">
+                        <div className="text-xs text-muted-foreground truncate" title={row.role}>
                           {cell(row.role)}
                         </div>
                       )}
