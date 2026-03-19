@@ -251,8 +251,9 @@ export function useStaffPaginated() {
 
   // The staff query only runs once state IDs are resolved (or no state filter).
   const stateIdsReady = !state || stateIdsQuery.isSuccess;
+  const isStateResolving = !!state && (stateIdsQuery.isLoading || stateIdsQuery.isFetching);
 
-  return useQuery({
+  const staffQuery = useQuery({
     queryKey: [
       'execution',
       'staff',
@@ -293,10 +294,17 @@ export function useStaffPaginated() {
       }),
     enabled: view === 'staff' && stateIdsReady,
     staleTime: 60 * 1000,
-    // Only keep previous data for pagination changes (same filters), not filter changes
     placeholderData: keepPreviousData,
     refetchOnWindowFocus: false,
   });
+
+  return {
+    ...staffQuery,
+    /** True when resolving state institution IDs or fetching staff data */
+    isFilterLoading: isStateResolving || staffQuery.isFetching,
+    /** True when state → institution ID resolution is in progress */
+    isStateResolving,
+  };
 }
 
 export function useInstitutionCounts(last24h: boolean) {

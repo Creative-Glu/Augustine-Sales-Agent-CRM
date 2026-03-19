@@ -232,12 +232,20 @@ export default function ExecutionStaffPage() {
         <div className="p-6">
           <StaffFilters />
           <div className="flex items-center justify-between gap-4 flex-wrap py-4 border-b border-border/60">
-            <p className="text-sm text-muted-foreground font-medium">
-              Showing{' '}
-              <span className="text-foreground">{staffQuery.data?.data?.length ?? 0}</span>
-              {' of '}
-              <span className="text-foreground">{total}</span>
-              {enriched_only ? ' enriched staff' : ' staff'}
+            <p className="text-sm text-muted-foreground font-medium flex items-center gap-2">
+              {staffQuery.isFilterLoading && (
+                <svg className="h-3.5 w-3.5 animate-spin text-primary shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
+              )}
+              {staffQuery.isStateResolving
+                ? `Loading ${searchParams.get('state') ?? ''} data…`
+                : <>
+                    Showing{' '}
+                    <span className="text-foreground">{staffQuery.data?.data?.length ?? 0}</span>
+                    {' of '}
+                    <span className="text-foreground">{total}</span>
+                    {enriched_only ? ' enriched staff' : ' staff'}
+                  </>
+              }
             </p>
             <div className="flex items-center gap-3 flex-wrap">
               <Button
@@ -342,6 +350,7 @@ export default function ExecutionStaffPage() {
           <StaffTable
             rows={staffQuery.data?.data ?? []}
             isLoading={staffQuery.isLoading}
+            isFetching={staffQuery.isFilterLoading}
             isError={staffQuery.isError}
             onRetry={() => staffQuery.refetch()}
             onInstitutionClick={handleInstitutionClick}
