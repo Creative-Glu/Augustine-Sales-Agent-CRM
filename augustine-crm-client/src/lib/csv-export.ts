@@ -401,6 +401,10 @@ const ROLE_MAP: [RegExp, string, string][] = [
   // "Technology", "Library" etc. map to their correct PAR roles, not Teacher
   [/^(art|spanish|french|latin|german|p\.?e\.?|gym|math|science|english|social\s*studies|reading|stem|choir)\s*$/i, 'Teacher/Catechist', 'Teacher'],
   [/^physical\s*education$/i, 'Teacher/Catechist', 'Teacher'],
+  // Grade-range + subject combos: "5-8 MATH", "6-8 ELA", "MS ELA", "K-8 Science", etc.
+  [/^\d+[\s-]+\d+\s+(math|ela|elar|science|social\s*studies|history|reading|english|religion|art|spanish|latin|french|german|music|p\.?e\.?)\b/i, 'Teacher/Catechist', 'Teacher'],
+  [/^(ms|hs|jh|jr|sr)\s+(math|ela|elar|science|social\s*studies|history|reading|english|religion|art|spanish|latin|french|german|music|p\.?e\.?)\b/i, 'Teacher/Catechist', 'Teacher'],
+  [/^(k|pk|pre-?k)[\s-]*\d*\s+(math|ela|elar|science|social\s*studies|history|reading|english|religion|art|spanish|latin|french|german|music|p\.?e\.?)\b/i, 'Teacher/Catechist', 'Teacher'],
 ];
 
 // ─── Garbage detection ──────────────────────────────────────────────────────
