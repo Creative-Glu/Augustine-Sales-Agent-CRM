@@ -91,26 +91,41 @@ const VALID_PAR_ROLES = new Set([
 ]);
 
 const ROLE_MAP: [RegExp, string, string][] = [
+  // ── Administrator (specific patterns MUST come before "pastor") ──────────
+  [/\bparish\s*administrator/i, 'Administrator', 'Parish Administrator'],
+  [/\bpastoral\s*administrator/i, 'Administrator', 'Pastoral Administrator'],
+  [/\bdean\s*of\s*students/i, 'Administrator', 'Dean of Students'],
+
+  // ── Pastoral Associate (MUST come before "pastor" to avoid false match) ──
+  [/\bpastoral\s*(associate|assoc|assistant|coordinator)/i, 'Pastoral Associate', 'Pastoral Associate'],
+  [/\bpastoral\s*(minister|care|life|outreach)/i, 'Pastoral Associate', 'Pastoral Associate'],
+  [/\bpastoral\s*admin/i, 'Pastoral Associate', 'Pastoral Associate'],
+  [/\bparish\s*life\s*(coordinator|director)/i, 'Pastoral Associate', 'Parish Life Coordinator'],
+  [/\blay\s*pastoral/i, 'Pastoral Associate', 'Lay Pastoral Associate'],
+  [/\bpastoral\s*leader/i, 'Pastoral Associate', 'Pastoral Associate'],
+  [/\bsacramental\s*(minister|coordinator|prep)/i, 'Pastoral Associate', 'Sacramental Minister'],
+  [/\bhispanic\s*ministry/i, 'Pastoral Associate', 'Hispanic Ministry'],
+  [/\bministry\s*coordinator/i, 'Pastoral Associate', 'Ministry Coordinator'],
+
+  // ── Associate Pastor (MUST come before generic "pastor") ────────────────
+  [/\bassociate\s*pastor/i, 'Associate Pastor', 'Associate Pastor'],
+  [/\bparochial\s*vicar/i, 'Associate Pastor', 'Parochial Vicar'],
+  [/\bvicario\b/i, 'Associate Pastor', 'Vicar'],
+  [/\bassistant\s*(pastor|priest)/i, 'Associate Pastor', 'Assistant Pastor'],
+  [/\bsenior\s*(associate|parochial)\s*(pastor|vicar)/i, 'Associate Pastor', 'Senior Associate Pastor'],
+
   // ── Pastor / Priest ─────────────────────────────────────────────────────
+  [/\bpastor\s*emeritus/i, 'Pastor', 'Pastor Emeritus'],
   [/\bpastor\b/i, 'Pastor', 'Pastor'],
   [/\bparish\s*priest\b/i, 'Pastor', 'Pastor'],
   [/\bparochial\s*(administrator|admin)\b/i, 'Pastor', 'Parochial Administrator'],
-  [/\bpastor\s*emeritus/i, 'Pastor', 'Pastor Emeritus'],
   [/\bpriest\s*(in\s*)?(residence|solidum|moderator)/i, 'Pastor', 'Priest'],
   [/\bpriest\b/i, 'Pastor', 'Priest'],
   [/\brector\b/i, 'Pastor', 'Rector'],
   [/\bcanonical\s*(administrator|pastor)/i, 'Pastor', 'Canonical Administrator'],
-  [/\bsacramental\s*(minister|priest)/i, 'Pastor', 'Sacramental Minister'],
   [/\bpárroco\b/i, 'Pastor', 'Pastor'],
   [/\bcuré\b/i, 'Pastor', 'Pastor'],
-  [/\bcura\b/i, 'Pastor', 'Pastor'],
-
-  // ── Associate Pastor ────────────────────────────────────────────────────
-  [/\bassociate\s*pastor/i, 'Associate Pastor', 'Associate Pastor'],
-  [/\bparochial\s*vicar/i, 'Associate Pastor', 'Parochial Vicar'],
-  [/\bvicario?\b/i, 'Associate Pastor', 'Vicar'],
-  [/\bassistant\s*(pastor|priest)/i, 'Associate Pastor', 'Assistant Pastor'],
-  [/\bsenior\s*(associate|parochial)/i, 'Associate Pastor', 'Senior Associate Pastor'],
+  [/\bmonsignor\b/i, 'Pastor', 'Monsignor'],
 
   // ── Bishop ──────────────────────────────────────────────────────────────
   [/\bbishop\b/i, 'Bishop', 'Bishop'],
@@ -132,17 +147,22 @@ const ROLE_MAP: [RegExp, string, string][] = [
 
   // ── Director of Religious Education ──────────────────────────────────────
   [/\b(dre|director of religious ed)/i, 'Director of Religious Education', 'Director of Religious Education'],
-  [/\breligious\s*ed(ucation)?\s*(director|coordinator)/i, 'Director of Religious Education', 'Director of Religious Education'],
-  [/\bdirector\s*(of\s*)?(faith\s*formation|religious\s*formation)/i, 'Director of Religious Education', 'Director of Faith Formation'],
-  [/\bfaith\s*formation\s*(director|coordinator|lead)/i, 'Director of Religious Education', 'Faith Formation Director'],
-  [/\bfaith\s*formation$/i, 'Director of Religious Education', 'Faith Formation'],
-  [/\bcatechetical\s*(director|leader|coordinator)/i, 'Director of Religious Education', 'Catechetical Director'],
-  [/\bcoordinator\s*of\s*(religious\s*ed|faith\s*formation|catechesis)/i, 'Director of Religious Education', 'Coordinator of Religious Education'],
+  [/\breligious\s*ed(ucation)?\s*(director|coordinator|program)/i, 'Director of Religious Education', 'Director of Religious Education'],
+  [/\bdirector\s*(of\s*)?(faith\s*formation|religious\s*formation|religious\s*ed)/i, 'Director of Religious Education', 'Director of Faith Formation'],
+  [/\bfaith\s*formation\s*(director|coordinator|lead|assistant)/i, 'Director of Religious Education', 'Faith Formation Director'],
+  [/\bcatechetical\s*(director|leader|coordinator|ministry)/i, 'Director of Religious Education', 'Catechetical Director'],
+  [/\bcoordinator\s*of\s*(religious\s*ed|faith\s*formation|catechesis|catechetical)/i, 'Director of Religious Education', 'Coordinator of Religious Education'],
   [/\bparish\s*catechetical\s*leader/i, 'Director of Religious Education', 'Parish Catechetical Leader'],
   [/\bdirector\s*of\s*catechesis/i, 'Director of Religious Education', 'Director of Catechesis'],
   [/\bdirector\s*of\s*catechetical/i, 'Director of Religious Education', 'Director of Catechetical Ministry'],
+  [/\bdirector\s*of\s*formation/i, 'Director of Religious Education', 'Director of Formation'],
   [/\bc\.?r\.?e\.?\b/i, 'Director of Religious Education', 'CRE'],
   [/\bdirectora?\s*de\s*educaci[oó]n\s*religiosa/i, 'Director of Religious Education', 'Director of Religious Education'],
+  [/^religious\s*education$/i, 'Director of Religious Education', 'Religious Education'],
+  [/\breligious\s*education\s*(coordinator|office|secretary)/i, 'Director of Religious Education', 'Religious Education'],
+  [/\bfaith\s*formation\s*(office|assistant|admin)/i, 'Director of Religious Education', 'Faith Formation'],
+  [/^faith\s*formation$/i, 'Director of Religious Education', 'Faith Formation'],
+  [/\bcatechesis\s*of\s*the\s*good\s*shepherd/i, 'Director of Religious Education', 'Catechesis of the Good Shepherd'],
 
   // ── Adult Faith Formation / RCIA ────────────────────────────────────────
   [/\badult\s*faith/i, 'Adult Faith Formation/RCIA', 'Adult Faith Formation'],
@@ -153,12 +173,13 @@ const ROLE_MAP: [RegExp, string, string][] = [
   [/\bbecoming\s*catholic/i, 'Adult Faith Formation/RCIA', 'RCIA'],
 
   // ── Youth Ministry ──────────────────────────────────────────────────────
-  [/\byouth\s*(minister|ministry|coordinator|director|pastor|leader)/i, 'Youth Ministry', 'Youth Ministry'],
+  [/\byouth\s*(minister|ministry|coordinator|director|pastor|leader|group)/i, 'Youth Ministry', 'Youth Ministry'],
   [/\bdirector\s*of\s*youth/i, 'Youth Ministry', 'Director of Youth Ministry'],
   [/\byoung\s*adult\s*(minister|ministry|coordinator|director)/i, 'Youth Ministry', 'Young Adult Ministry'],
   [/\blife\s*teen/i, 'Youth Ministry', 'Youth Ministry'],
   [/\bedge\s*(coordinator|director|minister)/i, 'Youth Ministry', 'Youth Ministry'],
   [/\bteen\s*(ministry|minister|coordinator|director)/i, 'Youth Ministry', 'Youth Ministry'],
+  [/^youth\s*ministry$/i, 'Youth Ministry', 'Youth Ministry'],
 
   // ── Campus Minister ─────────────────────────────────────────────────────
   [/\bcampus\s*minister/i, 'Campus Minister', 'Campus Minister'],
@@ -166,21 +187,48 @@ const ROLE_MAP: [RegExp, string, string][] = [
   [/\bdirector\s*of\s*campus\s*ministry/i, 'Campus Minister', 'Campus Minister'],
 
   // ── Confirmation Leader ─────────────────────────────────────────────────
-  [/\bconfirmation\s*(leader|coordinator|director|prep)/i, 'Confirmation Leader', 'Confirmation Leader'],
+  [/\bconfirmation\s*(leader|coordinator|director|prep|staff)/i, 'Confirmation Leader', 'Confirmation Leader'],
 
   // ── Principal ───────────────────────────────────────────────────────────
   [/\bprincipal\b/i, 'Principal', 'Principal'],
   [/\bhead\s*(of\s*school|master)/i, 'Principal', 'Head of School'],
   [/\bassistant\s*principal/i, 'Principal', 'Assistant Principal'],
-  [/\bvice\s*principal/i, 'Principal', 'Vice Principal'],
+  [/\bvice[\s-]*principal/i, 'Principal', 'Vice Principal'],
   [/\bheadmaster\b/i, 'Principal', 'Headmaster'],
   [/\bhead\s*of\s*(lower|upper|middle)\s*school/i, 'Principal', 'Head of School'],
+  [/^president$/i, 'Administrator', 'President'],
+  [/\bpresident\s*(of|,)/i, 'Administrator', 'President'],
 
   // ── Teacher / Catechist ─────────────────────────────────────────────────
   [/\bteacher\b/i, 'Teacher/Catechist', 'Teacher'],
   [/\bcatechist\b/i, 'Teacher/Catechist', 'Catechist'],
   [/\binstructor\b/i, 'Teacher/Catechist', 'Instructor'],
   [/\bcatechism\b/i, 'Teacher/Catechist', 'Catechist'],
+  [/\bparaprofessional\b/i, 'Teacher/Catechist', 'Paraprofessional'],
+  [/\bteaching\s*assistant/i, 'Teacher/Catechist', 'Teaching Assistant'],
+  [/\bfaculty\b/i, 'Teacher/Catechist', 'Faculty'],
+  [/\bpreschool\s*(director|teacher|aide|assistant|lead)/i, 'Teacher/Catechist', 'Preschool'],
+  [/^preschool$/i, 'Teacher/Catechist', 'Preschool'],
+  [/\bpre[\s-]*k(indergarten)?\s*(director|teacher|aide|assistant|lead|\d)/i, 'Teacher/Catechist', 'Pre-K Teacher'],
+  [/^pre[\s-]*k(indergarten)?$/i, 'Teacher/Catechist', 'Pre-K'],
+  [/\bkindergarten\b/i, 'Teacher/Catechist', 'Kindergarten Teacher'],
+  // Grade levels → Teacher/Catechist
+  [/^(1st|2nd|3rd|4th|5th|6th|7th|8th|first|second|third|fourth|fifth|sixth|seventh|eighth)\s*grade/i, 'Teacher/Catechist', 'Teacher'],
+  [/\bgrade\s*[1-8k]\b/i, 'Teacher/Catechist', 'Teacher'],
+  [/\bhomeroom\b/i, 'Teacher/Catechist', 'Teacher'],
+  [/\bmiddle\s*school\s*(teacher|math|science|ela|english|social|history|reading|literature)/i, 'Teacher/Catechist', 'Teacher'],
+  [/\bjr\.?\s*(high|h)\s*(teacher|math|science|ela|english|social|history)/i, 'Teacher/Catechist', 'Teacher'],
+  [/\belementary\s*(teacher|aide)/i, 'Teacher/Catechist', 'Teacher'],
+  // Subject + "teacher" compound → Teacher/Catechist
+  [/\b(art|spanish|music|p\.?e\.?|gym|library|band)\s*teacher\b/i, 'Teacher/Catechist', 'Teacher'],
+  [/\bphysical\s*education\s*teacher/i, 'Teacher/Catechist', 'Teacher'],
+  [/\bintervention(ist)?\s*(specialist|teacher)?/i, 'Teacher/Catechist', 'Teacher'],
+  [/\bresource\s*(teacher|specialist|room|coordinator)/i, 'Teacher/Catechist', 'Teacher'],
+  [/\blearning\s*(specialist|support|coordinator|consultant)/i, 'Teacher/Catechist', 'Teacher'],
+  [/\bspecial\s*education/i, 'Teacher/Catechist', 'Teacher'],
+  [/\btitle\s*(i|1|one)\b/i, 'Teacher/Catechist', 'Teacher'],
+  [/\bsubstitute\s*(teacher)?$/i, 'Teacher/Catechist', 'Substitute Teacher'],
+  [/\baide\b/i, 'Teacher/Catechist', 'Teacher Aide'],
 
   // ── Administrative Assistant / Secretary ─────────────────────────────────
   [/\badmin(istrative)?\s*(assistant|asst|coordinator|support)/i, 'Administrative Assistant/Secretary', 'Administrative Assistant'],
@@ -189,14 +237,16 @@ const ROLE_MAP: [RegExp, string, string][] = [
   [/\bparish\s*secretary/i, 'Administrative Assistant/Secretary', 'Parish Secretary'],
   [/\breceptionist\b/i, 'Administrative Assistant/Secretary', 'Receptionist'],
   [/\bfront\s*(desk|office)\s*(staff|assistant|coordinator|manager)?/i, 'Administrative Assistant/Secretary', 'Front Office'],
-  [/\boffice\s*(assistant|aide|support|staff|coordinator)\b/i, 'Administrative Assistant/Secretary', 'Office Assistant'],
+  [/\boffice\s*(assistant|aide|support|coordinator)\b/i, 'Administrative Assistant/Secretary', 'Office Assistant'],
+  [/\boffice\s*staff\b/i, 'Administrative Assistant/Secretary', 'Office Staff'],
+  [/\boffice\s*administrator/i, 'Administrative Assistant/Secretary', 'Office Administrator'],
   [/\bexecutive\s*assistant/i, 'Administrative Assistant/Secretary', 'Executive Assistant'],
   [/\bparish\s*office\b/i, 'Administrative Assistant/Secretary', 'Parish Office'],
-  [/\bclerical\b/i, 'Administrative Assistant/Secretary', 'Clerical'],
   [/\bregistrar\b/i, 'Administrative Assistant/Secretary', 'Registrar'],
+  [/\bsafe\s*environment/i, 'Administrative Assistant/Secretary', 'Safe Environment Coordinator'],
 
   // ── Office / Business Manager ───────────────────────────────────────────
-  [/\bbusiness\s*(manager|administrator|administrator)/i, 'Office/Business Manager', 'Business Manager'],
+  [/\bbusiness\s*(manager|administrator)/i, 'Office/Business Manager', 'Business Manager'],
   [/\boffice\s*manager/i, 'Office/Business Manager', 'Office Manager'],
   [/\bparish\s*(business\s*)?(administrator|manager)/i, 'Office/Business Manager', 'Parish Business Manager'],
   [/\bfinance\s*(director|manager|officer|coordinator|secretary)/i, 'Office/Business Manager', 'Finance Director'],
@@ -208,9 +258,16 @@ const ROLE_MAP: [RegExp, string, string][] = [
   [/\bcomptroller\b/i, 'Office/Business Manager', 'Comptroller'],
   [/\bpayroll\b/i, 'Office/Business Manager', 'Payroll'],
   [/\bdirector\s*of\s*(operations|administration|finance|parish\s*operations)/i, 'Office/Business Manager', 'Director of Operations'],
-  [/\boperations\s*(director|manager)/i, 'Office/Business Manager', 'Operations Director'],
-  [/\bchief\s*(financial|operating)\s*officer/i, 'Office/Business Manager', 'CFO'],
+  [/\boperations\s*(director|manager|coordinator)/i, 'Office/Business Manager', 'Operations Director'],
+  [/\bchief\s*(financial|operating|administrative)\s*officer/i, 'Office/Business Manager', 'CFO'],
   [/\bcfo\b/i, 'Office/Business Manager', 'CFO'],
+  [/\bcoo\b/i, 'Office/Business Manager', 'COO'],
+  [/\bfacilit(y|ies)\s*(manager|director|coordinator|supervisor)/i, 'Office/Business Manager', 'Facilities Manager'],
+  [/\bdirector\s*of\s*(facilities|maintenance|buildings)/i, 'Office/Business Manager', 'Director of Facilities'],
+  [/\bmaintenance\s*(director|manager|supervisor|coordinator)/i, 'Office/Business Manager', 'Maintenance Director'],
+  [/\bplant\s*manager/i, 'Office/Business Manager', 'Plant Manager'],
+  [/\bproperty\s*manager/i, 'Office/Business Manager', 'Property Manager'],
+  [/\bhuman\s*resources/i, 'Office/Business Manager', 'Human Resources'],
 
   // ── Communications ──────────────────────────────────────────────────────
   [/\bcommunications?\s*(director|coordinator|manager|specialist)/i, 'Communications', 'Communications Director'],
@@ -219,6 +276,22 @@ const ROLE_MAP: [RegExp, string, string][] = [
   [/\bsocial\s*media/i, 'Communications', 'Social Media Coordinator'],
   [/\bmarketing\s*(director|coordinator|manager|specialist)/i, 'Communications', 'Marketing Coordinator'],
   [/\bcommunications\s*(and|&)\s*(marketing|media)/i, 'Communications', 'Communications'],
+  [/\bmusic\s*\/\s*liturgy/i, 'Communications', 'Music/Liturgy'],
+  [/\bmusic\s*(director|minister|coordinator|ministry|leader)/i, 'Communications', 'Music Director'],
+  [/\bdirector\s*of\s*(music|liturgical\s*music|sacred\s*music)/i, 'Communications', 'Director of Music'],
+  [/\bchoir\s*(director|leader|coordinator)/i, 'Communications', 'Choir Director'],
+  [/\borganist\b/i, 'Communications', 'Organist'],
+  [/\bcantor\b/i, 'Communications', 'Cantor'],
+  [/\bdirector\s*of\s*liturgy/i, 'Communications', 'Director of Liturgy'],
+  [/\bliturg(y|ical)\s*(director|coordinator|minister|planner)/i, 'Communications', 'Liturgy Director'],
+  [/\bdirector\s*of\s*worship/i, 'Communications', 'Director of Worship'],
+  [/\bdirector\s*of\s*stewardship/i, 'Communications', 'Director of Stewardship'],
+  [/\bdirector\s*of\s*(development|advancement|admissions)/i, 'Communications', 'Director of Development'],
+  [/^music$/i, 'Communications', 'Music'],
+  [/^music\s*ministry$/i, 'Communications', 'Music Ministry'],
+  [/^musician$/i, 'Communications', 'Musician'],
+  [/^band$/i, 'Communications', 'Band'],
+  [/\bmusic\s*&\b/i, 'Communications', 'Music'],
 
   // ── Bulletin Editor ─────────────────────────────────────────────────────
   [/\bbulletin\s*(editor|coordinator)/i, 'Bulletin Editor', 'Bulletin Editor'],
@@ -229,18 +302,16 @@ const ROLE_MAP: [RegExp, string, string][] = [
   [/\bit\s*(director|manager|coordinator|specialist|support|admin)/i, 'IT/Data/Technology/Webmaster', 'IT Director'],
   [/\bdirector\s*of\s*(technology|information\s*technology)/i, 'IT/Data/Technology/Webmaster', 'Director of Technology'],
   [/\binformation\s*technology/i, 'IT/Data/Technology/Webmaster', 'IT'],
-
-  // ── Pastoral Associate ──────────────────────────────────────────────────
-  [/\bpastoral\s*(associate|assoc|assistant|coordinator)/i, 'Pastoral Associate', 'Pastoral Associate'],
-  [/\bpastoral\s*(minister|care|life|outreach|director)/i, 'Pastoral Associate', 'Pastoral Associate'],
-  [/\bpastoral\s*admin/i, 'Pastoral Associate', 'Pastoral Associate'],
-  [/\bparish\s*life\s*(coordinator|director)/i, 'Pastoral Associate', 'Parish Life Coordinator'],
-  [/\blay\s*pastoral/i, 'Pastoral Associate', 'Lay Pastoral Associate'],
-  [/\bpastoral\s*leader/i, 'Pastoral Associate', 'Pastoral Associate'],
+  [/^technology$/i, 'IT/Data/Technology/Webmaster', 'Technology'],
+  [/\btechnology\s*(coordinator|teacher|specialist)/i, 'IT/Data/Technology/Webmaster', 'Technology'],
 
   // ── Volunteer ───────────────────────────────────────────────────────────
-  [/\bvolunteer\s*(coordinator|director|manager)?$/i, 'Volunteer', 'Volunteer'],
   [/^volunteer$/i, 'Volunteer', 'Volunteer'],
+  [/\bvolunteer\s*(coordinator|director|manager)/i, 'Volunteer', 'Volunteer Coordinator'],
+  [/\bsacristan\b/i, 'Volunteer', 'Sacristan'],
+  [/\bushers?\b/i, 'Volunteer', 'Usher'],
+  [/\blector(s)?\s*(ministry|coordinator)?$/i, 'Volunteer', 'Lector'],
+  [/\baltar\s*(server|&\s*rosary|society|guild)/i, 'Volunteer', 'Altar Server'],
 
   // ── Director of Evangelization ──────────────────────────────────────────
   [/\bdirector\s*of\s*evangelization/i, 'Director of Evangelization', 'Director of Evangelization'],
@@ -252,15 +323,17 @@ const ROLE_MAP: [RegExp, string, string][] = [
 
   // ── Diocese Staff ───────────────────────────────────────────────────────
   [/\bdiocese\s*staff/i, 'Diocese Staff', 'Diocese Staff'],
-  [/\bdioces(e|an)\s*(director|coordinator|secretary|staff)/i, 'Diocese Staff', 'Diocese Staff'],
+  [/\bdioces(e|an)\s*(director|coordinator|secretary|staff|administrator)/i, 'Diocese Staff', 'Diocese Staff'],
   [/\bvicar\s*general/i, 'Diocese Staff', 'Vicar General'],
   [/\bchancellor\b/i, 'Diocese Staff', 'Chancellor'],
   [/\bjudicial\s*vicar/i, 'Diocese Staff', 'Judicial Vicar'],
   [/\bvicar\s*for\s*(clergy|priests)/i, 'Diocese Staff', 'Vicar for Clergy'],
   [/\bepiscopal\s*vicar/i, 'Diocese Staff', 'Episcopal Vicar'],
   [/\bvocation(s)?\s*(director|coordinator)/i, 'Diocese Staff', 'Vocations Director'],
+  [/\bvicar\s*forane/i, 'Diocese Staff', 'Vicar Forane'],
+  [/\bvice[\s-]*chancellor/i, 'Diocese Staff', 'Vice Chancellor'],
 
-  // ── Administrator ───────────────────────────────────────────────────────
+  // ── Administrator (generic — after all specific "administrator" patterns) ──
   [/\badministrator\b/i, 'Administrator', 'Administrator'],
 
   // ── Bible Study / Small Group Leader ────────────────────────────────────
@@ -270,6 +343,7 @@ const ROLE_MAP: [RegExp, string, string][] = [
 
   // ── Parishioner ─────────────────────────────────────────────────────────
   [/\bparishioner\b/i, 'Parishioner', 'Parishioner'],
+  [/^member$/i, 'Parishioner', 'Member'],
 
   // ── Parent ──────────────────────────────────────────────────────────────
   [/^parent$/i, 'Parent', 'Parent'],
@@ -278,65 +352,176 @@ const ROLE_MAP: [RegExp, string, string][] = [
   [/\breligious\b.*\bsister\b/i, 'Religious/Sister', 'Religious/Sister'],
   [/^sister$/i, 'Religious/Sister', 'Sister'],
   [/\bsister\b.*\b(of|servant|dominican|franciscan|mercy|notre|immaculate)/i, 'Religious/Sister', 'Religious Sister'],
-  [/\bbrother\b/i, 'Religious/Sister', 'Religious Brother'],
+  [/^brother$/i, 'Religious/Sister', 'Religious Brother'],
   [/\bmonk\b/i, 'Religious/Sister', 'Religious'],
   [/\bfriar\b/i, 'Religious/Sister', 'Religious'],
   [/\bnun\b/i, 'Religious/Sister', 'Religious/Sister'],
+  [/^religious$/i, 'Religious/Sister', 'Religious'],
 
   // ── Parish/Finance Council ──────────────────────────────────────────────
-  [/\bfinance\s*(council|committee)\s*(chair|member|president|secretary|liaison)?/i, 'Parish/Finance Council', 'Finance Council'],
-  [/\bpastoral\s*council\s*(chair|member|president|secretary|vice)?/i, 'Parish/Finance Council', 'Pastoral Council'],
-  [/\bparish\s*council\s*(chair|member|president|secretary|vice)?/i, 'Parish/Finance Council', 'Parish Council'],
+  [/\bfinance\s*(council|committee)/i, 'Parish/Finance Council', 'Finance Council'],
+  [/\bpastoral\s*council/i, 'Parish/Finance Council', 'Pastoral Council'],
+  [/\bparish\s*council/i, 'Parish/Finance Council', 'Parish Council'],
   [/\btrustee\b/i, 'Parish/Finance Council', 'Trustee'],
+  [/\bparish\s*pastoral\s*council/i, 'Parish/Finance Council', 'Pastoral Council'],
 
-  // ── Music-related → Communications (closest valid PAR role for music ministry) ──
-  [/\bmusic\s*(director|minister|coordinator|ministry|leader)/i, 'Communications', 'Music Director'],
-  [/\bdirector\s*of\s*(music|liturgical\s*music|sacred\s*music)/i, 'Communications', 'Director of Music'],
-  [/\bchoir\s*(director|leader|coordinator)/i, 'Communications', 'Choir Director'],
-  [/\borganist\b/i, 'Communications', 'Organist'],
-  [/\bcantor\b/i, 'Communications', 'Cantor'],
-  [/\bdirector\s*of\s*liturgy/i, 'Communications', 'Director of Liturgy'],
-  [/\bliturg(y|ical)\s*(director|coordinator|minister|planner)/i, 'Communications', 'Liturgy Director'],
-  [/\bdirector\s*of\s*worship/i, 'Communications', 'Director of Worship'],
-
-  // ── Maintenance/Facilities → Office/Business Manager ────────────────────
-  [/\bfacilit(y|ies)\s*(manager|director|coordinator|supervisor)/i, 'Office/Business Manager', 'Facilities Manager'],
-  [/\bdirector\s*of\s*(facilities|maintenance|buildings)/i, 'Office/Business Manager', 'Director of Facilities'],
-  [/\bmaintenance\s*(director|manager|supervisor|coordinator)/i, 'Office/Business Manager', 'Maintenance Director'],
-  [/\bplant\s*manager/i, 'Office/Business Manager', 'Plant Manager'],
-  [/\bproperty\s*manager/i, 'Office/Business Manager', 'Property Manager'],
-
-  // ── Other common parish roles → closest PAR match ───────────────────────
-  [/\bdirector\s*of\s*stewardship/i, 'Communications', 'Director of Stewardship'],
-  [/\bdirector\s*of\s*(development|advancement)/i, 'Communications', 'Director of Development'],
-  [/\bsafe\s*environment/i, 'Administrative Assistant/Secretary', 'Safe Environment Coordinator'],
-  [/\bsacristan\b/i, 'Volunteer', 'Sacristan'],
+  // ── Other ───────────────────────────────────────────────────────────────
   [/\bcustodian\b/i, 'Other', 'Custodian'],
   [/\bhousekeeper\b/i, 'Other', 'Housekeeper'],
   [/\bcook\b/i, 'Other', 'Cook'],
   [/\bnurse\b/i, 'Other', 'Nurse'],
+  [/\bschool\s*counselor/i, 'Other', 'School Counselor'],
   [/\bcounselor\b/i, 'Other', 'Counselor'],
   [/\blibrarian\b/i, 'Other', 'Librarian'],
+  [/^library$/i, 'Other', 'Library'],
   [/\bathlet(ic|ics)\s*(director|coordinator)/i, 'Other', 'Athletic Director'],
-  [/\bdean\s*of\s*students/i, 'Other', 'Dean of Students'],
-  [/\bschool\s*counselor/i, 'Other', 'School Counselor'],
+  [/\bcafeteria\s*(staff|manager|director|assistant|aide|coordinator)/i, 'Other', 'Cafeteria Staff'],
+  [/^cafeteria$/i, 'Other', 'Cafeteria'],
+  [/\bmaintenance\b/i, 'Other', 'Maintenance'],
+  [/^maintenance$/i, 'Other', 'Maintenance'],
+  [/\bgroundskeeper\b/i, 'Other', 'Groundskeeper'],
+  [/\bjanitor\b/i, 'Other', 'Janitor'],
+  [/\bgrand\s*knight/i, 'Other', 'Grand Knight'],
+  [/\bknights\s*of\s*columbus/i, 'Other', 'Knights of Columbus'],
+  [/\bstudent\b/i, 'Other', 'Student'],
+  [/\bseminarian\b/i, 'Other', 'Seminarian'],
+  [/\bcoach\b/i, 'Other', 'Coach'],
+  [/\bhead\s*cook/i, 'Other', 'Head Cook'],
+  [/\bchildcare\b/i, 'Other', 'Childcare'],
+  [/\bsexton\b/i, 'Other', 'Sexton'],
+  [/\bdaycare\b/i, 'Other', 'Daycare'],
+  [/\bextended\s*(care|day)/i, 'Other', 'Extended Care'],
+  [/\bfood\s*(service|pantry|bank)/i, 'Other', 'Food Service'],
+  [/\bsecurity\b/i, 'Other', 'Security'],
+  [/\baccounting\b/i, 'Office/Business Manager', 'Accounting'],
+  [/\bbible\b/i, 'Bible Study/Small Group Leader', 'Bible Study'],
+
+  // ── Standalone school subjects (LAST — only match if nothing above did) ──
+  // These must come after Communications, IT, Other patterns so "Music", "Band",
+  // "Technology", "Library" etc. map to their correct PAR roles, not Teacher
+  [/^(art|spanish|french|latin|german|p\.?e\.?|gym|math|science|english|social\s*studies|reading|stem|choir)\s*$/i, 'Teacher/Catechist', 'Teacher'],
+  [/^physical\s*education$/i, 'Teacher/Catechist', 'Teacher'],
 ];
+
+// ─── Garbage detection ──────────────────────────────────────────────────────
+
+/** Detect if a value looks like a phone number or phone fragment. */
+function looksLikePhone(s: string): boolean {
+  // Pure digits 3-10 chars, or starts with ( and has digits
+  if (/^\d{3,10}$/.test(s.trim())) return true;
+  if (/^\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4}/.test(s.trim())) return true;
+  // Common pattern: "ext. 123" or just "ext 5"
+  if (/^ext\.?\s*\d/i.test(s.trim())) return true;
+  return false;
+}
+
+/** Detect if a value looks like a person name (not a role). */
+function looksLikePersonName(s: string): boolean {
+  const trimmed = s.trim();
+  // Skip short strings
+  if (trimmed.length < 4) return false;
+  // Only check strings that match the "two or three capitalized words" pattern
+  // "Mike Hite", "Donna Vincent", "Jessica Samaila"
+  const namePattern = /^[A-Z][a-z]+\s+[A-Z][a-z]+(\s+[A-Z][a-z]+)?$/;
+  if (!namePattern.test(trimmed)) return false;
+  // If it matches the name pattern, check if it contains any role-ish keyword
+  // If it does, it's probably a role like "Grand Knight" or "Pastoral Associate"
+  const lower = trimmed.toLowerCase();
+  const roleKeywords = [
+    'pastor','pastoral','priest','deacon','director','coordinator','minister',
+    'secretary','assistant','manager','teacher','principal','bishop','chaplain',
+    'volunteer','superintendent','music','youth','admin','administrator',
+    'bookkeeper','custodian','maintenance','office','parish','school','church',
+    'liturgy','formation','education','catechist','receptionist','staff',
+    'counselor','nurse','librarian','sacristan','seminarian','trustee',
+    'finance','council','choir','cantor','organist','communications','bulletin',
+    'campus','sexton','cook','housekeeper','coach','student','cafeteria','aide',
+    'athletic','president','vice','head','dean','rcia','ocia','vicar',
+    'chancellor','rector','friar','monk','sister','brother','nun','religious',
+    'cardinal','monsignor','parishioner','parent','member','usher','lector',
+    'altar','confirmation','curriculum','evangelization','webmaster','technology',
+    'groundskeeper','janitor','daycare','childcare','security','facilities',
+    'accountant','accounting','payroll','comptroller','controller','registrar',
+    'band','spanish','library','gym','physical','science','math','english',
+    'social','reading','kindergarten','preschool','grade','homeroom',
+    'intervention','resource','learning','special','substitute','faculty',
+    'paraprofessional','food','extended','marketing','media','human',
+    'advancement','development','admissions','stewardship','outreach',
+    'hispanic','ministry','liturgical','sacramental','catechetical','knight',
+    'bible','study','business','associate','assoc','clerk','resources',
+    'moderator','missionary','formation',
+  ];
+  for (const kw of roleKeywords) {
+    if (lower.includes(kw)) return false;
+  }
+  // No role keywords found — this is likely a person name
+  return true;
+}
+
+/** Detect if a value is known junk. */
+function isJunkValue(s: string): boolean {
+  const trimmed = s.trim().toLowerCase();
+  if (!trimmed) return true;
+  if (trimmed === 'null' || trimmed === 'n/a' || trimmed === '???' || trimmed === 'tba') return true;
+  // Contains email
+  if (/\S+@\S+\.\S+/.test(trimmed)) return true;
+  // Contains URL
+  if (/https?:\/\//.test(trimmed) || /www\./.test(trimmed)) return true;
+  // Very long strings are likely scraped paragraphs
+  if (trimmed.length > 200) return true;
+  // Contains HTML-like content
+  if (/<[a-z][\s\S]*>/i.test(trimmed)) return true;
+  return false;
+}
+
+/** Detect if First Name looks like an institution name (corrupt record). */
+export function looksLikeInstitutionName(firstName: string): boolean {
+  if (!firstName) return false;
+  const t = firstName.trim().toLowerCase();
+  // Common institution prefixes
+  if (/^(st\.?\s|saint\s|our\s*lady|holy\s|sacred\s|immaculate|blessed\s)/i.test(t)) {
+    // But only if it also contains school/parish/church keywords
+    if (/\b(school|parish|church|academy|cathedral|diocese|archdiocese|center|centre)\b/i.test(t)) {
+      return true;
+    }
+  }
+  // Contains "school" or "parish" in first name
+  if (/\b(primary school|catholic school|regional school|elementary)\b/i.test(t)) return true;
+  // Very long first names are likely institution names or scraped paragraphs
+  if (t.length > 60) return true;
+  // Starts with "Requirements:" or other non-name patterns
+  if (/^(requirements|staff|contact|region|location|address|phone|email|fax|click|send|download|visit)\b/i.test(t)) return true;
+  return false;
+}
 
 /**
  * Map raw title → [rawTitle, parRole, hubspotJobTitle].
- * PAR role is ONLY populated if it matches a valid canonical role.
- * Unmapped or invalid titles get an empty PAR role — never raw scraped data.
+ * PAR role is ONLY populated if it matches one of the 30 valid canonical values.
+ *
+ * Validation pipeline:
+ *   1. Reject junk (null, ???, phone numbers, emails, URLs, person names)
+ *   2. Try regex mapping against ROLE_MAP
+ *   3. Validate mapped role is in VALID_PAR_ROLES
+ *   4. If no match → leave PAR blank (never pass raw scraped data)
  */
 export function mapRole(rawRole: string | null): [string, string, string] {
   const raw = rawRole?.trim() ?? '';
   if (!raw) return ['', '', ''];
+
+  // Step 1: Reject obvious junk before even trying to map
+  if (isJunkValue(raw)) return [raw, '', raw];
+  if (looksLikePhone(raw)) return [raw, '', raw];
+  if (looksLikePersonName(raw)) return [raw, '', raw];
+
+  // Step 2: Try regex mapping
   for (const [pattern, parRole, jobTitle] of ROLE_MAP) {
     if (pattern.test(raw)) {
-      // Only emit PAR role if it's in the valid set
+      // Step 3: Only emit PAR role if it's in the valid set
       return [raw, VALID_PAR_ROLES.has(parRole) ? parRole : '', jobTitle];
     }
   }
-  // No regex match — leave PAR role blank, never pass through raw scraped data
+
+  // Step 4: No regex match — leave PAR role blank
   return [raw, '', raw];
 }
 
@@ -628,10 +813,16 @@ export async function staffToCsv(
 ): Promise<string> {
   const locationData = await resolveLocationData(rows, websitesUrlMap);
 
-  const body = rows.map((r) => {
+  const body: string[] = [];
+
+  for (const r of rows) {
     const company = lookupCompany(r.institutions, websitesUrlMap);
     const loc = locationData.get(r.staff_id);
     const [firstName, lastName] = splitName(r.name);
+
+    // Skip corrupt records where First Name is an institution name
+    if (looksLikeInstitutionName(firstName)) continue;
+
     const [, parRole] = mapRole(r.role);
     const jobTitle = cleanJobTitle(r.role);
     const email = cleanEmail(r.email);
@@ -642,24 +833,26 @@ export async function staffToCsv(
       loc?.postalCode ?? ''
     );
 
-    return [
-      r.staff_id,                                            // Record ID - Contact
-      firstName,                                             // First Name
-      lastName,                                              // Last Name
-      jobTitle,                                              // Job Title (cleaned)
-      parRole,                                               // PAR - Role (mapped)
-      email,                                                 // Email (cleaned)
-      r.contact_number ?? '',                                // Phone Number (contact)
-      company?.['Record ID'] ?? '',                          // Record ID - Company
-      formattedCompanyName,                                  // Company name (Name - ST - ZIP)
-      loc?.streetAddress ?? '',                               // Street Address
-      loc?.city ?? '',                                       // City
-      loc?.state ?? '',                                      // State
-      loc?.postalCode ?? '',                                 // Postal Code
-    ]
-      .map(escapeCsvCell)
-      .join(',');
-  });
+    body.push(
+      [
+        r.staff_id,                                            // Record ID - Contact
+        firstName,                                             // First Name
+        lastName,                                              // Last Name
+        jobTitle,                                              // Job Title (cleaned)
+        parRole,                                               // PAR - Role (mapped)
+        email,                                                 // Email (cleaned)
+        r.contact_number ?? '',                                // Phone Number (contact)
+        company?.['Record ID'] ?? '',                          // Record ID - Company
+        formattedCompanyName,                                  // Company name (Name - ST - ZIP)
+        loc?.streetAddress ?? '',                               // Street Address
+        loc?.city ?? '',                                       // City
+        loc?.state ?? '',                                      // State
+        loc?.postalCode ?? '',                                 // Postal Code
+      ]
+        .map(escapeCsvCell)
+        .join(',')
+    );
+  }
 
   return [CSV_HEADER, ...body].join('\r\n');
 }

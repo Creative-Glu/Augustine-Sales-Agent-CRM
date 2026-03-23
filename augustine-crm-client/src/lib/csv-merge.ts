@@ -8,7 +8,7 @@
  *   4. Dedup primarily by email; if no email, match on name + institution
  */
 
-import { splitName, cleanEmail, mapRole, toStateAbbrev, extractZipFromString, formatInstitutionName, parseAddress } from './csv-export';
+import { splitName, cleanEmail, mapRole, toStateAbbrev, extractZipFromString, formatInstitutionName, parseAddress, looksLikeInstitutionName } from './csv-export';
 
 // ─── CSV Parsing ───────────────────────────────────────────────────────────
 
@@ -314,9 +314,13 @@ export function mergeCsvs(hubspotRaw: Record<string, string>[], crmRaw: Record<s
     outputTotal: 0,
   };
 
-  // Normalize all rows
+  // Normalize all rows, filtering out corrupt CRM records
   const hubspotRows = hubspotRaw.map(normalizeHubSpotRow);
-  const crmRows = crmRaw.map(normalizeCrmRow);
+  const crmRows = crmRaw.map(normalizeCrmRow).filter((row) => {
+    // Skip corrupt records where First Name is an institution name
+    if (looksLikeInstitutionName(row['First Name'])) return false;
+    return true;
+  });
 
   // Build HubSpot lookup indexes
   const hsByEmail = new Map<string, number>(); // email → index in hubspotRows
