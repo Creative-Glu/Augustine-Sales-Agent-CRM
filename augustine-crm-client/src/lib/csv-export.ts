@@ -91,68 +91,235 @@ const VALID_PAR_ROLES = new Set([
 ]);
 
 const ROLE_MAP: [RegExp, string, string][] = [
+  // ── Pastor / Priest ─────────────────────────────────────────────────────
   [/\bpastor\b/i, 'Pastor', 'Pastor'],
-  [/\bparish priest\b/i, 'Pastor', 'Pastor'],
-  [/\bparochial vicar\b/i, 'Associate Pastor', 'Parochial Vicar'],
-  [/\bpastor emeritus\b/i, 'Pastor', 'Pastor Emeritus'],
+  [/\bparish\s*priest\b/i, 'Pastor', 'Pastor'],
+  [/\bparochial\s*(administrator|admin)\b/i, 'Pastor', 'Parochial Administrator'],
+  [/\bpastor\s*emeritus/i, 'Pastor', 'Pastor Emeritus'],
+  [/\bpriest\s*(in\s*)?(residence|solidum|moderator)/i, 'Pastor', 'Priest'],
   [/\bpriest\b/i, 'Pastor', 'Priest'],
   [/\brector\b/i, 'Pastor', 'Rector'],
-  [/\bchaplain\b/i, 'Chaplain', 'Chaplain'],
+  [/\bcanonical\s*(administrator|pastor)/i, 'Pastor', 'Canonical Administrator'],
+  [/\bsacramental\s*(minister|priest)/i, 'Pastor', 'Sacramental Minister'],
+  [/\bpárroco\b/i, 'Pastor', 'Pastor'],
+  [/\bcuré\b/i, 'Pastor', 'Pastor'],
+  [/\bcura\b/i, 'Pastor', 'Pastor'],
+
+  // ── Associate Pastor ────────────────────────────────────────────────────
+  [/\bassociate\s*pastor/i, 'Associate Pastor', 'Associate Pastor'],
+  [/\bparochial\s*vicar/i, 'Associate Pastor', 'Parochial Vicar'],
+  [/\bvicario?\b/i, 'Associate Pastor', 'Vicar'],
+  [/\bassistant\s*(pastor|priest)/i, 'Associate Pastor', 'Assistant Pastor'],
+  [/\bsenior\s*(associate|parochial)/i, 'Associate Pastor', 'Senior Associate Pastor'],
+
+  // ── Bishop ──────────────────────────────────────────────────────────────
   [/\bbishop\b/i, 'Bishop', 'Bishop'],
   [/\barchbishop\b/i, 'Bishop', 'Archbishop'],
+  [/\bcardinal\b/i, 'Bishop', 'Cardinal'],
+  [/\bobispo\b/i, 'Bishop', 'Bishop'],
+
+  // ── Chaplain ────────────────────────────────────────────────────────────
+  [/\bchaplain\b/i, 'Chaplain', 'Chaplain'],
+
+  // ── Deacon ──────────────────────────────────────────────────────────────
+  [/\bdeacon\b/i, 'Deacon', 'Deacon'],
+  [/\bdcn\b/i, 'Deacon', 'Deacon'],
+  [/\bdiácono\b/i, 'Deacon', 'Deacon'],
+  [/\bpermanent\s*deacon/i, 'Deacon', 'Permanent Deacon'],
+
+  // ── Superintendent ──────────────────────────────────────────────────────
   [/\bsuperintendent\b/i, 'Superintendent', 'Superintendent'],
+
+  // ── Director of Religious Education ──────────────────────────────────────
   [/\b(dre|director of religious ed)/i, 'Director of Religious Education', 'Director of Religious Education'],
-  [/\breligious ed(ucation)?\s*(director|coordinator)/i, 'Director of Religious Education', 'Director of Religious Education'],
-  [/\bfaith formation\s*(director|coordinator)/i, 'Director of Religious Education', 'Faith Formation Director'],
-  [/\bcatechetical\s*(director|leader)/i, 'Director of Religious Education', 'Catechetical Director'],
-  [/\badult faith/i, 'Adult Faith Formation/RCIA', 'Adult Faith Formation'],
-  [/\brcia\s*(director|coordinator)?/i, 'Adult Faith Formation/RCIA', 'RCIA Director'],
-  [/\byouth\s*(minister|ministry|coordinator|director|pastor)/i, 'Youth Ministry', 'Youth Ministry Coordinator'],
+  [/\breligious\s*ed(ucation)?\s*(director|coordinator)/i, 'Director of Religious Education', 'Director of Religious Education'],
+  [/\bdirector\s*(of\s*)?(faith\s*formation|religious\s*formation)/i, 'Director of Religious Education', 'Director of Faith Formation'],
+  [/\bfaith\s*formation\s*(director|coordinator|lead)/i, 'Director of Religious Education', 'Faith Formation Director'],
+  [/\bfaith\s*formation$/i, 'Director of Religious Education', 'Faith Formation'],
+  [/\bcatechetical\s*(director|leader|coordinator)/i, 'Director of Religious Education', 'Catechetical Director'],
+  [/\bcoordinator\s*of\s*(religious\s*ed|faith\s*formation|catechesis)/i, 'Director of Religious Education', 'Coordinator of Religious Education'],
+  [/\bparish\s*catechetical\s*leader/i, 'Director of Religious Education', 'Parish Catechetical Leader'],
+  [/\bdirector\s*of\s*catechesis/i, 'Director of Religious Education', 'Director of Catechesis'],
+  [/\bdirector\s*of\s*catechetical/i, 'Director of Religious Education', 'Director of Catechetical Ministry'],
+  [/\bc\.?r\.?e\.?\b/i, 'Director of Religious Education', 'CRE'],
+  [/\bdirectora?\s*de\s*educaci[oó]n\s*religiosa/i, 'Director of Religious Education', 'Director of Religious Education'],
+
+  // ── Adult Faith Formation / RCIA ────────────────────────────────────────
+  [/\badult\s*faith/i, 'Adult Faith Formation/RCIA', 'Adult Faith Formation'],
+  [/\brcia\b/i, 'Adult Faith Formation/RCIA', 'RCIA'],
+  [/\bocia\b/i, 'Adult Faith Formation/RCIA', 'OCIA'],
+  [/\brite\s*of\s*christian\s*initiation/i, 'Adult Faith Formation/RCIA', 'RCIA'],
+  [/\border\s*of\s*christian\s*initiation/i, 'Adult Faith Formation/RCIA', 'OCIA'],
+  [/\bbecoming\s*catholic/i, 'Adult Faith Formation/RCIA', 'RCIA'],
+
+  // ── Youth Ministry ──────────────────────────────────────────────────────
+  [/\byouth\s*(minister|ministry|coordinator|director|pastor|leader)/i, 'Youth Ministry', 'Youth Ministry'],
+  [/\bdirector\s*of\s*youth/i, 'Youth Ministry', 'Director of Youth Ministry'],
+  [/\byoung\s*adult\s*(minister|ministry|coordinator|director)/i, 'Youth Ministry', 'Young Adult Ministry'],
+  [/\blife\s*teen/i, 'Youth Ministry', 'Youth Ministry'],
+  [/\bedge\s*(coordinator|director|minister)/i, 'Youth Ministry', 'Youth Ministry'],
+  [/\bteen\s*(ministry|minister|coordinator|director)/i, 'Youth Ministry', 'Youth Ministry'],
+
+  // ── Campus Minister ─────────────────────────────────────────────────────
   [/\bcampus\s*minister/i, 'Campus Minister', 'Campus Minister'],
-  [/\byoung\s*adult/i, 'Youth Ministry', 'Young Adult Ministry'],
-  [/\bconfirmation\s*(leader|coordinator|director)/i, 'Confirmation Leader', 'Confirmation Leader'],
+  [/\bcampus\s*ministry\s*(director|coordinator)/i, 'Campus Minister', 'Campus Minister'],
+  [/\bdirector\s*of\s*campus\s*ministry/i, 'Campus Minister', 'Campus Minister'],
+
+  // ── Confirmation Leader ─────────────────────────────────────────────────
+  [/\bconfirmation\s*(leader|coordinator|director|prep)/i, 'Confirmation Leader', 'Confirmation Leader'],
+
+  // ── Principal ───────────────────────────────────────────────────────────
   [/\bprincipal\b/i, 'Principal', 'Principal'],
-  [/\bhead\s*of\s*school/i, 'Principal', 'Head of School'],
+  [/\bhead\s*(of\s*school|master)/i, 'Principal', 'Head of School'],
   [/\bassistant\s*principal/i, 'Principal', 'Assistant Principal'],
   [/\bvice\s*principal/i, 'Principal', 'Vice Principal'],
+  [/\bheadmaster\b/i, 'Principal', 'Headmaster'],
+  [/\bhead\s*of\s*(lower|upper|middle)\s*school/i, 'Principal', 'Head of School'],
+
+  // ── Teacher / Catechist ─────────────────────────────────────────────────
   [/\bteacher\b/i, 'Teacher/Catechist', 'Teacher'],
   [/\bcatechist\b/i, 'Teacher/Catechist', 'Catechist'],
   [/\binstructor\b/i, 'Teacher/Catechist', 'Instructor'],
-  [/\btheology\b/i, 'Teacher/Catechist', 'Theology Teacher'],
-  [/\breligion\s*teacher/i, 'Teacher/Catechist', 'Religion Teacher'],
-  [/\bdeacon\b/i, 'Deacon', 'Deacon'],
-  [/\badmin(istrative)?\s*(assistant|asst|coordinator)/i, 'Administrative Assistant/Secretary', 'Administrative Assistant'],
+  [/\bcatechism\b/i, 'Teacher/Catechist', 'Catechist'],
+
+  // ── Administrative Assistant / Secretary ─────────────────────────────────
+  [/\badmin(istrative)?\s*(assistant|asst|coordinator|support)/i, 'Administrative Assistant/Secretary', 'Administrative Assistant'],
   [/\bsecretary\b/i, 'Administrative Assistant/Secretary', 'Secretary'],
+  [/\bsecretaria\b/i, 'Administrative Assistant/Secretary', 'Secretary'],
   [/\bparish\s*secretary/i, 'Administrative Assistant/Secretary', 'Parish Secretary'],
   [/\breceptionist\b/i, 'Administrative Assistant/Secretary', 'Receptionist'],
-  [/\bfront\s*(desk|office)/i, 'Administrative Assistant/Secretary', 'Front Office'],
-  [/\bbusiness\s*manager/i, 'Office/Business Manager', 'Business Manager'],
+  [/\bfront\s*(desk|office)\s*(staff|assistant|coordinator|manager)?/i, 'Administrative Assistant/Secretary', 'Front Office'],
+  [/\boffice\s*(assistant|aide|support|staff|coordinator)\b/i, 'Administrative Assistant/Secretary', 'Office Assistant'],
+  [/\bexecutive\s*assistant/i, 'Administrative Assistant/Secretary', 'Executive Assistant'],
+  [/\bparish\s*office\b/i, 'Administrative Assistant/Secretary', 'Parish Office'],
+  [/\bclerical\b/i, 'Administrative Assistant/Secretary', 'Clerical'],
+  [/\bregistrar\b/i, 'Administrative Assistant/Secretary', 'Registrar'],
+
+  // ── Office / Business Manager ───────────────────────────────────────────
+  [/\bbusiness\s*(manager|administrator|administrator)/i, 'Office/Business Manager', 'Business Manager'],
   [/\boffice\s*manager/i, 'Office/Business Manager', 'Office Manager'],
-  [/\bfinance\s*(director|manager|officer)/i, 'Office/Business Manager', 'Finance Director'],
+  [/\bparish\s*(business\s*)?(administrator|manager)/i, 'Office/Business Manager', 'Parish Business Manager'],
+  [/\bfinance\s*(director|manager|officer|coordinator|secretary)/i, 'Office/Business Manager', 'Finance Director'],
+  [/\bfinancial\s*(secretary|manager|administrator|coordinator)/i, 'Office/Business Manager', 'Financial Secretary'],
   [/\bbookkeeper\b/i, 'Office/Business Manager', 'Bookkeeper'],
   [/\baccountant\b/i, 'Office/Business Manager', 'Accountant'],
-  [/\bcommunications?\s*(director|coordinator|manager)/i, 'Communications', 'Communications Director'],
+  [/\baccounting\s*(clerk|manager|coordinator|specialist)/i, 'Office/Business Manager', 'Accounting Clerk'],
+  [/\bcontroller\b/i, 'Office/Business Manager', 'Controller'],
+  [/\bcomptroller\b/i, 'Office/Business Manager', 'Comptroller'],
+  [/\bpayroll\b/i, 'Office/Business Manager', 'Payroll'],
+  [/\bdirector\s*of\s*(operations|administration|finance|parish\s*operations)/i, 'Office/Business Manager', 'Director of Operations'],
+  [/\boperations\s*(director|manager)/i, 'Office/Business Manager', 'Operations Director'],
+  [/\bchief\s*(financial|operating)\s*officer/i, 'Office/Business Manager', 'CFO'],
+  [/\bcfo\b/i, 'Office/Business Manager', 'CFO'],
+
+  // ── Communications ──────────────────────────────────────────────────────
+  [/\bcommunications?\s*(director|coordinator|manager|specialist)/i, 'Communications', 'Communications Director'],
+  [/\bdirector\s*of\s*communications/i, 'Communications', 'Director of Communications'],
   [/\bmedia\s*(director|coordinator|manager)/i, 'Communications', 'Media Coordinator'],
   [/\bsocial\s*media/i, 'Communications', 'Social Media Coordinator'],
-  [/\bmarketing/i, 'Communications', 'Marketing Coordinator'],
+  [/\bmarketing\s*(director|coordinator|manager|specialist)/i, 'Communications', 'Marketing Coordinator'],
+  [/\bcommunications\s*(and|&)\s*(marketing|media)/i, 'Communications', 'Communications'],
+
+  // ── Bulletin Editor ─────────────────────────────────────────────────────
   [/\bbulletin\s*(editor|coordinator)/i, 'Bulletin Editor', 'Bulletin Editor'],
+
+  // ── IT / Data / Technology / Webmaster ──────────────────────────────────
   [/\bwebmaster\b/i, 'IT/Data/Technology/Webmaster', 'Webmaster'],
-  [/\bpastoral\s*(associate|assistant|coordinator)/i, 'Pastoral Associate', 'Pastoral Associate'],
-  [/\bpastoral\s*minister/i, 'Pastoral Associate', 'Pastoral Minister'],
-  [/\bparish\s*(life|coordinator)/i, 'Pastoral Associate', 'Parish Life Coordinator'],
-  [/\bvolunteer\s*(coordinator|director|manager)?/i, 'Volunteer', 'Volunteer'],
+  [/\btechnolog(y|ist)\s*(director|coordinator|manager|specialist|support)/i, 'IT/Data/Technology/Webmaster', 'Technology Director'],
+  [/\bit\s*(director|manager|coordinator|specialist|support|admin)/i, 'IT/Data/Technology/Webmaster', 'IT Director'],
+  [/\bdirector\s*of\s*(technology|information\s*technology)/i, 'IT/Data/Technology/Webmaster', 'Director of Technology'],
+  [/\binformation\s*technology/i, 'IT/Data/Technology/Webmaster', 'IT'],
+
+  // ── Pastoral Associate ──────────────────────────────────────────────────
+  [/\bpastoral\s*(associate|assoc|assistant|coordinator)/i, 'Pastoral Associate', 'Pastoral Associate'],
+  [/\bpastoral\s*(minister|care|life|outreach|director)/i, 'Pastoral Associate', 'Pastoral Associate'],
+  [/\bpastoral\s*admin/i, 'Pastoral Associate', 'Pastoral Associate'],
+  [/\bparish\s*life\s*(coordinator|director)/i, 'Pastoral Associate', 'Parish Life Coordinator'],
+  [/\blay\s*pastoral/i, 'Pastoral Associate', 'Lay Pastoral Associate'],
+  [/\bpastoral\s*leader/i, 'Pastoral Associate', 'Pastoral Associate'],
+
+  // ── Volunteer ───────────────────────────────────────────────────────────
+  [/\bvolunteer\s*(coordinator|director|manager)?$/i, 'Volunteer', 'Volunteer'],
+  [/^volunteer$/i, 'Volunteer', 'Volunteer'],
+
+  // ── Director of Evangelization ──────────────────────────────────────────
   [/\bdirector\s*of\s*evangelization/i, 'Director of Evangelization', 'Director of Evangelization'],
+  [/\bevangelization\s*(director|coordinator)/i, 'Director of Evangelization', 'Director of Evangelization'],
+  [/\bdirector\s*of\s*(missionary\s*)?discipleship/i, 'Director of Evangelization', 'Director of Evangelization'],
+
+  // ── Curriculum Coordinator ──────────────────────────────────────────────
   [/\bcurriculum\s*(coordinator|director)/i, 'Curriculum Coordinator', 'Curriculum Coordinator'],
+
+  // ── Diocese Staff ───────────────────────────────────────────────────────
   [/\bdiocese\s*staff/i, 'Diocese Staff', 'Diocese Staff'],
-  [/\bassociate\s*pastor/i, 'Associate Pastor', 'Associate Pastor'],
+  [/\bdioces(e|an)\s*(director|coordinator|secretary|staff)/i, 'Diocese Staff', 'Diocese Staff'],
+  [/\bvicar\s*general/i, 'Diocese Staff', 'Vicar General'],
+  [/\bchancellor\b/i, 'Diocese Staff', 'Chancellor'],
+  [/\bjudicial\s*vicar/i, 'Diocese Staff', 'Judicial Vicar'],
+  [/\bvicar\s*for\s*(clergy|priests)/i, 'Diocese Staff', 'Vicar for Clergy'],
+  [/\bepiscopal\s*vicar/i, 'Diocese Staff', 'Episcopal Vicar'],
+  [/\bvocation(s)?\s*(director|coordinator)/i, 'Diocese Staff', 'Vocations Director'],
+
+  // ── Administrator ───────────────────────────────────────────────────────
   [/\badministrator\b/i, 'Administrator', 'Administrator'],
+
+  // ── Bible Study / Small Group Leader ────────────────────────────────────
   [/\bbible\s*study/i, 'Bible Study/Small Group Leader', 'Bible Study Leader'],
-  [/\bsmall\s*group\s*leader/i, 'Bible Study/Small Group Leader', 'Small Group Leader'],
+  [/\bsmall\s*group\s*(leader|coordinator)/i, 'Bible Study/Small Group Leader', 'Small Group Leader'],
+  [/\bscripture\s*(study|sharing)/i, 'Bible Study/Small Group Leader', 'Scripture Study'],
+
+  // ── Parishioner ─────────────────────────────────────────────────────────
   [/\bparishioner\b/i, 'Parishioner', 'Parishioner'],
+
+  // ── Parent ──────────────────────────────────────────────────────────────
+  [/^parent$/i, 'Parent', 'Parent'],
+
+  // ── Religious / Sister ──────────────────────────────────────────────────
   [/\breligious\b.*\bsister\b/i, 'Religious/Sister', 'Religious/Sister'],
-  [/\bsister\b/i, 'Religious/Sister', 'Sister'],
-  [/\btechnolog(y|ist)/i, 'IT/Data/Technology/Webmaster', 'Technology Director'],
-  [/\bit\s*(director|manager|coordinator)/i, 'IT/Data/Technology/Webmaster', 'IT Director'],
+  [/^sister$/i, 'Religious/Sister', 'Sister'],
+  [/\bsister\b.*\b(of|servant|dominican|franciscan|mercy|notre|immaculate)/i, 'Religious/Sister', 'Religious Sister'],
+  [/\bbrother\b/i, 'Religious/Sister', 'Religious Brother'],
+  [/\bmonk\b/i, 'Religious/Sister', 'Religious'],
+  [/\bfriar\b/i, 'Religious/Sister', 'Religious'],
+  [/\bnun\b/i, 'Religious/Sister', 'Religious/Sister'],
+
+  // ── Parish/Finance Council ──────────────────────────────────────────────
+  [/\bfinance\s*(council|committee)\s*(chair|member|president|secretary|liaison)?/i, 'Parish/Finance Council', 'Finance Council'],
+  [/\bpastoral\s*council\s*(chair|member|president|secretary|vice)?/i, 'Parish/Finance Council', 'Pastoral Council'],
+  [/\bparish\s*council\s*(chair|member|president|secretary|vice)?/i, 'Parish/Finance Council', 'Parish Council'],
+  [/\btrustee\b/i, 'Parish/Finance Council', 'Trustee'],
+
+  // ── Music-related → Communications (closest valid PAR role for music ministry) ──
+  [/\bmusic\s*(director|minister|coordinator|ministry|leader)/i, 'Communications', 'Music Director'],
+  [/\bdirector\s*of\s*(music|liturgical\s*music|sacred\s*music)/i, 'Communications', 'Director of Music'],
+  [/\bchoir\s*(director|leader|coordinator)/i, 'Communications', 'Choir Director'],
+  [/\borganist\b/i, 'Communications', 'Organist'],
+  [/\bcantor\b/i, 'Communications', 'Cantor'],
+  [/\bdirector\s*of\s*liturgy/i, 'Communications', 'Director of Liturgy'],
+  [/\bliturg(y|ical)\s*(director|coordinator|minister|planner)/i, 'Communications', 'Liturgy Director'],
+  [/\bdirector\s*of\s*worship/i, 'Communications', 'Director of Worship'],
+
+  // ── Maintenance/Facilities → Office/Business Manager ────────────────────
+  [/\bfacilit(y|ies)\s*(manager|director|coordinator|supervisor)/i, 'Office/Business Manager', 'Facilities Manager'],
+  [/\bdirector\s*of\s*(facilities|maintenance|buildings)/i, 'Office/Business Manager', 'Director of Facilities'],
+  [/\bmaintenance\s*(director|manager|supervisor|coordinator)/i, 'Office/Business Manager', 'Maintenance Director'],
+  [/\bplant\s*manager/i, 'Office/Business Manager', 'Plant Manager'],
+  [/\bproperty\s*manager/i, 'Office/Business Manager', 'Property Manager'],
+
+  // ── Other common parish roles → closest PAR match ───────────────────────
+  [/\bdirector\s*of\s*stewardship/i, 'Communications', 'Director of Stewardship'],
+  [/\bdirector\s*of\s*(development|advancement)/i, 'Communications', 'Director of Development'],
+  [/\bsafe\s*environment/i, 'Administrative Assistant/Secretary', 'Safe Environment Coordinator'],
+  [/\bsacristan\b/i, 'Volunteer', 'Sacristan'],
+  [/\bcustodian\b/i, 'Other', 'Custodian'],
+  [/\bhousekeeper\b/i, 'Other', 'Housekeeper'],
+  [/\bcook\b/i, 'Other', 'Cook'],
+  [/\bnurse\b/i, 'Other', 'Nurse'],
+  [/\bcounselor\b/i, 'Other', 'Counselor'],
+  [/\blibrarian\b/i, 'Other', 'Librarian'],
+  [/\bathlet(ic|ics)\s*(director|coordinator)/i, 'Other', 'Athletic Director'],
+  [/\bdean\s*of\s*students/i, 'Other', 'Dean of Students'],
+  [/\bschool\s*counselor/i, 'Other', 'School Counselor'],
 ];
 
 /**
