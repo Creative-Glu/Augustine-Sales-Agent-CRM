@@ -529,6 +529,16 @@ export function mapRole(rawRole: string | null): [string, string, string] {
   return [raw, '', raw];
 }
 
+/**
+ * Final validation gate: ensures a PAR - Role value is one of the 30 valid roles.
+ * If not, returns empty string. Call this on ANY value before it goes into the
+ * PAR - Role column — whether from mapRole, from a previous export, or from HubSpot.
+ */
+export function validateParRole(value: string | null | undefined): string {
+  const trimmed = value?.trim() ?? '';
+  return VALID_PAR_ROLES.has(trimmed) ? trimmed : '';
+}
+
 const MAX_JOB_TITLE_LEN = 80;
 
 /**
@@ -843,7 +853,7 @@ export async function staffToCsv(
         firstName,                                             // First Name
         lastName,                                              // Last Name
         jobTitle,                                              // Job Title (cleaned)
-        parRole,                                               // PAR - Role (mapped)
+        validateParRole(parRole),                              // PAR - Role (validated against 30 valid values)
         email,                                                 // Email (cleaned)
         r.contact_number ?? '',                                // Phone Number (contact)
         company?.['Record ID'] ?? '',                          // Record ID - Company

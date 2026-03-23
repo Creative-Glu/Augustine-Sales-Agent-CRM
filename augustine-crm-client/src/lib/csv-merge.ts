@@ -8,7 +8,7 @@
  *   4. Dedup primarily by email; if no email, match on name + institution
  */
 
-import { splitName, cleanEmail, mapRole, toStateAbbrev, extractZipFromString, formatInstitutionName, parseAddress, looksLikeInstitutionName } from './csv-export';
+import { splitName, cleanEmail, mapRole, validateParRole, toStateAbbrev, extractZipFromString, formatInstitutionName, parseAddress, looksLikeInstitutionName } from './csv-export';
 
 // ─── CSV Parsing ───────────────────────────────────────────────────────────
 
@@ -205,7 +205,7 @@ function normalizeCrmRow(row: Record<string, string>): MergedRow {
     'First Name': sanitizeField(firstName),
     'Last Name': sanitizeField(lastName),
     'Job Title': sanitizeField(rawTitle),
-    'PAR - Role': sanitizeField(parRole),
+    'PAR - Role': validateParRole(parRole),
     'Email': email,
     'Phone Number': sanitizeField(phone),
     'Record ID - Company': sanitizeRecordId(recordIdCompany),
@@ -227,7 +227,7 @@ function normalizeHubSpotRow(row: Record<string, string>): MergedRow {
     'First Name': sanitizeField(row['First Name'] ?? ''),
     'Last Name': sanitizeField(row['Last Name'] ?? ''),
     'Job Title': sanitizeField(row['Job Title'] ?? ''),
-    'PAR - Role': sanitizeField(row['PAR - Role'] ?? ''),
+    'PAR - Role': validateParRole(row['PAR - Role']),
     'Email': (row['Email'] ?? '').trim(),
     'Phone Number': sanitizeField(row['Phone Number'] ?? ''),
     'Record ID - Company': sanitizeRecordId(row['Record ID - Company'] ?? ''),
