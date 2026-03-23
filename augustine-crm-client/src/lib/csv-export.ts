@@ -56,23 +56,61 @@ export function splitName(name: string | null): [string, string] {
 
 // ─── Role mapping ──────────────────────────────────────────────────────────
 
+/** Canonical PAR roles — only these values are allowed in the "PAR - Role" column. */
+const VALID_PAR_ROLES = new Set([
+  'Administrative Assistant/Secretary',
+  'Adult Faith Formation/RCIA',
+  'Administrator',
+  'Associate Pastor',
+  'Bible Study/Small Group Leader',
+  'Bishop',
+  'Bulletin Editor',
+  'Campus Minister',
+  'Chaplain',
+  'Communications',
+  'Confirmation Leader',
+  'Curriculum Coordinator',
+  'Deacon',
+  'Director of Evangelization',
+  'Director of Religious Education',
+  'Diocese Staff',
+  'IT/Data/Technology/Webmaster',
+  'Office/Business Manager',
+  'Other',
+  'Parish/Finance Council',
+  'Parishioner',
+  'Parent',
+  'Pastor',
+  'Pastoral Associate',
+  'Principal',
+  'Religious/Sister',
+  'Superintendent',
+  'Teacher/Catechist',
+  'Volunteer',
+  'Youth Ministry',
+]);
+
 const ROLE_MAP: [RegExp, string, string][] = [
   [/\bpastor\b/i, 'Pastor', 'Pastor'],
   [/\bparish priest\b/i, 'Pastor', 'Pastor'],
-  [/\bparochial vicar\b/i, 'Pastor', 'Parochial Vicar'],
+  [/\bparochial vicar\b/i, 'Associate Pastor', 'Parochial Vicar'],
   [/\bpastor emeritus\b/i, 'Pastor', 'Pastor Emeritus'],
   [/\bpriest\b/i, 'Pastor', 'Priest'],
   [/\brector\b/i, 'Pastor', 'Rector'],
-  [/\bchaplain\b/i, 'Pastor', 'Chaplain'],
+  [/\bchaplain\b/i, 'Chaplain', 'Chaplain'],
+  [/\bbishop\b/i, 'Bishop', 'Bishop'],
+  [/\barchbishop\b/i, 'Bishop', 'Archbishop'],
+  [/\bsuperintendent\b/i, 'Superintendent', 'Superintendent'],
   [/\b(dre|director of religious ed)/i, 'Director of Religious Education', 'Director of Religious Education'],
   [/\breligious ed(ucation)?\s*(director|coordinator)/i, 'Director of Religious Education', 'Director of Religious Education'],
   [/\bfaith formation\s*(director|coordinator)/i, 'Director of Religious Education', 'Faith Formation Director'],
   [/\bcatechetical\s*(director|leader)/i, 'Director of Religious Education', 'Catechetical Director'],
-  [/\badult faith/i, 'Director of Religious Education', 'Adult Faith Formation Director'],
-  [/\brcia\s*(director|coordinator)/i, 'Director of Religious Education', 'RCIA Director'],
+  [/\badult faith/i, 'Adult Faith Formation/RCIA', 'Adult Faith Formation'],
+  [/\brcia\s*(director|coordinator)?/i, 'Adult Faith Formation/RCIA', 'RCIA Director'],
   [/\byouth\s*(minister|ministry|coordinator|director|pastor)/i, 'Youth Ministry', 'Youth Ministry Coordinator'],
-  [/\bcampus\s*minister/i, 'Youth Ministry', 'Campus Minister'],
+  [/\bcampus\s*minister/i, 'Campus Minister', 'Campus Minister'],
   [/\byoung\s*adult/i, 'Youth Ministry', 'Young Adult Ministry'],
+  [/\bconfirmation\s*(leader|coordinator|director)/i, 'Confirmation Leader', 'Confirmation Leader'],
   [/\bprincipal\b/i, 'Principal', 'Principal'],
   [/\bhead\s*of\s*school/i, 'Principal', 'Head of School'],
   [/\bassistant\s*principal/i, 'Principal', 'Assistant Principal'],
@@ -83,11 +121,6 @@ const ROLE_MAP: [RegExp, string, string][] = [
   [/\btheology\b/i, 'Teacher/Catechist', 'Theology Teacher'],
   [/\breligion\s*teacher/i, 'Teacher/Catechist', 'Religion Teacher'],
   [/\bdeacon\b/i, 'Deacon', 'Deacon'],
-  [/\bmusic\s*(director|minister|coordinator)/i, 'Music/Liturgy', 'Music Director'],
-  [/\bliturgy|liturgical/i, 'Music/Liturgy', 'Liturgy Director'],
-  [/\bchoir\s*director/i, 'Music/Liturgy', 'Choir Director'],
-  [/\bworship/i, 'Music/Liturgy', 'Worship Director'],
-  [/\borganist\b/i, 'Music/Liturgy', 'Organist'],
   [/\badmin(istrative)?\s*(assistant|asst|coordinator)/i, 'Administrative Assistant/Secretary', 'Administrative Assistant'],
   [/\bsecretary\b/i, 'Administrative Assistant/Secretary', 'Secretary'],
   [/\bparish\s*secretary/i, 'Administrative Assistant/Secretary', 'Parish Secretary'],
@@ -102,31 +135,42 @@ const ROLE_MAP: [RegExp, string, string][] = [
   [/\bmedia\s*(director|coordinator|manager)/i, 'Communications', 'Media Coordinator'],
   [/\bsocial\s*media/i, 'Communications', 'Social Media Coordinator'],
   [/\bmarketing/i, 'Communications', 'Marketing Coordinator'],
-  [/\bbulletin\s*(editor|coordinator)/i, 'Communications', 'Bulletin Editor'],
-  [/\bwebmaster\b/i, 'Communications', 'Webmaster'],
+  [/\bbulletin\s*(editor|coordinator)/i, 'Bulletin Editor', 'Bulletin Editor'],
+  [/\bwebmaster\b/i, 'IT/Data/Technology/Webmaster', 'Webmaster'],
   [/\bpastoral\s*(associate|assistant|coordinator)/i, 'Pastoral Associate', 'Pastoral Associate'],
   [/\bpastoral\s*minister/i, 'Pastoral Associate', 'Pastoral Minister'],
   [/\bparish\s*(life|coordinator)/i, 'Pastoral Associate', 'Parish Life Coordinator'],
-  [/\bvolunteer\s*(coordinator|director|manager)/i, 'Volunteer', 'Volunteer Coordinator'],
-  [/\bexecutive\s*director/i, 'Director', 'Executive Director'],
-  [/\bdirector\b/i, 'Director', 'Director'],
-  [/\bcoordinator\b/i, 'Director', 'Coordinator'],
-  [/\bmanager\b/i, 'Director', 'Manager'],
-  [/\bmaintenance/i, 'Maintenance/Facilities', 'Maintenance'],
-  [/\bfacilit(y|ies)/i, 'Maintenance/Facilities', 'Facilities Manager'],
-  [/\bcustodian/i, 'Maintenance/Facilities', 'Custodian'],
-  [/\btechnolog(y|ist)/i, 'Technology', 'Technology Director'],
-  [/\bit\s*(director|manager|coordinator)/i, 'Technology', 'IT Director'],
+  [/\bvolunteer\s*(coordinator|director|manager)?/i, 'Volunteer', 'Volunteer'],
+  [/\bdirector\s*of\s*evangelization/i, 'Director of Evangelization', 'Director of Evangelization'],
+  [/\bcurriculum\s*(coordinator|director)/i, 'Curriculum Coordinator', 'Curriculum Coordinator'],
+  [/\bdiocese\s*staff/i, 'Diocese Staff', 'Diocese Staff'],
+  [/\bassociate\s*pastor/i, 'Associate Pastor', 'Associate Pastor'],
+  [/\badministrator\b/i, 'Administrator', 'Administrator'],
+  [/\bbible\s*study/i, 'Bible Study/Small Group Leader', 'Bible Study Leader'],
+  [/\bsmall\s*group\s*leader/i, 'Bible Study/Small Group Leader', 'Small Group Leader'],
+  [/\bparishioner\b/i, 'Parishioner', 'Parishioner'],
+  [/\breligious\b.*\bsister\b/i, 'Religious/Sister', 'Religious/Sister'],
+  [/\bsister\b/i, 'Religious/Sister', 'Sister'],
+  [/\btechnolog(y|ist)/i, 'IT/Data/Technology/Webmaster', 'Technology Director'],
+  [/\bit\s*(director|manager|coordinator)/i, 'IT/Data/Technology/Webmaster', 'IT Director'],
 ];
 
-/** Map raw title → [rawTitle, parRole, hubspotJobTitle]. Unmapped titles pass through as-is. */
+/**
+ * Map raw title → [rawTitle, parRole, hubspotJobTitle].
+ * PAR role is ONLY populated if it matches a valid canonical role.
+ * Unmapped or invalid titles get an empty PAR role — never raw scraped data.
+ */
 export function mapRole(rawRole: string | null): [string, string, string] {
   const raw = rawRole?.trim() ?? '';
   if (!raw) return ['', '', ''];
   for (const [pattern, parRole, jobTitle] of ROLE_MAP) {
-    if (pattern.test(raw)) return [raw, parRole, jobTitle];
+    if (pattern.test(raw)) {
+      // Only emit PAR role if it's in the valid set
+      return [raw, VALID_PAR_ROLES.has(parRole) ? parRole : '', jobTitle];
+    }
   }
-  return [raw, raw, raw];
+  // No regex match — leave PAR role blank, never pass through raw scraped data
+  return [raw, '', raw];
 }
 
 const MAX_JOB_TITLE_LEN = 80;
