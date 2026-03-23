@@ -6,8 +6,9 @@ import { getStateValue } from '@/services/websites-url/websitesUrl.service';
 
 export function escapeCsvCell(value: string | number | null | undefined): string {
   if (value == null) return '';
-  const s = String(value);
-  if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) {
+  // Strip newlines/tabs — these cause column shifts when CSV is opened in Excel
+  const s = String(value).replace(/[\r\n\t]+/g, ' ').trim();
+  if (s.includes(',') || s.includes('"')) {
     return `"${s.replace(/"/g, '""')}"`;
   }
   return s;
@@ -509,23 +510,31 @@ export function looksLikeInstitutionName(firstName: string): boolean {
  *   4. If no match → leave PAR blank (never pass raw scraped data)
  */
 export function mapRole(rawRole: string | null): [string, string, string] {
-  const raw = rawRole?.trim() ?? '';
+  // Strip newlines/tabs first — scraped data often has embedded line breaks
+  const raw = rawRole?.replace(/[\r\n\t]+/g, ' ').trim() ?? '';
   if (!raw) return ['', '', ''];
 
-  // Step 1: Reject obvious junk before even trying to map
-  if (isJunkValue(raw)) return [raw, '', raw];
-  if (looksLikePhone(raw)) return [raw, '', raw];
-  if (looksLikePersonName(raw)) return [raw, '', raw];
+  // Split on semicolons — scraped data often has multiple roles like
+  // "MATH RESOURCE; 5-8 MATH" or "Deacon; Pastoral Associate"
+  const parts = raw.includes(';') ? raw.split(';').map((p) => p.trim()).filter(Boolean) : [raw];
 
-  // Step 2: Try regex mapping
-  for (const [pattern, parRole, jobTitle] of ROLE_MAP) {
-    if (pattern.test(raw)) {
-      // Step 3: Only emit PAR role if it's in the valid set
-      return [raw, VALID_PAR_ROLES.has(parRole) ? parRole : '', jobTitle];
+  // Try each part independently, return the first valid PAR role found
+  for (const part of parts) {
+    if (isJunkValue(part)) continue;
+    if (looksLikePhone(part)) continue;
+    if (looksLikePersonName(part)) continue;
+
+    for (const [pattern, parRole, jobTitle] of ROLE_MAP) {
+      if (pattern.test(part)) {
+        if (VALID_PAR_ROLES.has(parRole)) {
+          return [raw, parRole, jobTitle];
+        }
+        break; // matched a pattern but not a valid PAR role, try next part
+      }
     }
   }
 
-  // Step 4: No regex match — leave PAR role blank
+  // No valid PAR role found in any part — leave blank
   return [raw, '', raw];
 }
 
@@ -549,6 +558,8 @@ const MAX_JOB_TITLE_LEN = 80;
 export function cleanJobTitle(raw: string | null | undefined): string {
   if (!raw?.trim()) return '';
   let t = raw.trim();
+  // Strip newlines/carriage returns FIRST — these cause CSV column shifts
+  t = t.replace(/[\r\n]+/g, ' ');
   // Remove emails
   t = t.replace(/\S+@\S+\.\S+/g, '');
   // Remove phone numbers (with optional ext/x)
