@@ -107,6 +107,8 @@ export interface StaffPaginatedParams {
   confidence_max?: number | null;
   /** Filter by US state (resolved via domain matching: websites_url → institutions → staff). */
   state?: string;
+  /** Filter by PAR role name (exact match on staff.par_role). */
+  par_role?: string;
   /** Pre-resolved institution IDs for the state filter. Skips the heavy resolution if provided. */
   _preResolvedStateIds?: number[];
 }
@@ -135,6 +137,7 @@ export async function getStaffPaginated({
   confidence_min,
   confidence_max,
   state,
+  par_role,
   _preResolvedStateIds,
 }: StaffPaginatedParams): Promise<StaffPaginatedResponse> {
   // Use pre-resolved IDs if available (from the hook's cached query), otherwise resolve
@@ -184,6 +187,7 @@ export async function getStaffPaginated({
     const maxDecimal = Math.min(1, Math.max(0, Number(confidence_max) / 100));
     query = query.lte('enrichment_confidence', maxDecimal);
   }
+  if (par_role?.trim()) query = query.eq('par_role', par_role.trim());
 
   if (enriched_only) {
     query = query
@@ -478,4 +482,50 @@ export async function getSyncLogs(offset = 0): Promise<{ data: SyncLogEntry[]; t
   const hasMore = offset + page.length < combined.length || combined.length >= limit * 2;
 
   return { data: page, total, hasMore };
+}
+
+// ─── Backend CSV export ──────────────────────────────────────────────────
+
+/**
+ * Download a CSV file generated entirely by the backend.
+ * Sends filter params as query string, receives text/csv, triggers browser download.
+ */
+export async function exportStaffCsv(params: Record<string, string>): Promise<void> {
+  const base = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/$/, '');
+  const qs = new URLSearchParams(params).toString();
+  const url = `${base}/api/staff/export-csv${qs ? `?${qs}` : ''}`;
+
+  const headers: Record<string, string> = {};
+  const apiKey =
+    (typeof window !== 'undefined' ? localStorage.getItem('augustine-api-key') : null) ??
+    process.env.NEXT_PUBLIC_AUGUSTINE_API_KEY ??
+    '';
+  const bearer =
+    typeof window !== 'undefined' ? localStorage.getItem('augustine-access-token') : null;
+
+  if (apiKey) {
+    headers['X-API-Key'] = apiKey;
+  } else if (bearer) {
+    headers['Authorization'] = `Bearer ${bearer}`;
+  }
+
+  const res = await fetch(url, { headers });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(body || `Export failed (${res.status})`);
+  }
+
+  // Extract filename from Content-Disposition or fall back to a default
+  const disposition = res.headers.get('Content-Disposition') ?? '';
+  const filenameMatch = disposition.match(/filename="?([^";\n]+)"?/);
+  const filename = filenameMatch?.[1] ?? `staff_export_${new Date().toISOString().slice(0, 10)}.csv`;
+
+  const blob = await res.blob();
+  const blobUrl = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = blobUrl;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(blobUrl);
 }

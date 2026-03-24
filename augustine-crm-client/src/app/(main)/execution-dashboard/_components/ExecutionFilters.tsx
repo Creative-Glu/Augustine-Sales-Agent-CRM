@@ -17,6 +17,8 @@ import type { JobStatusFilter } from '@/services/execution/job.service';
 import type { ResultStatusFilter, ResultSourceFilter } from '@/services/execution/result.service';
 import type { SyncStatus } from '@/types/execution';
 import { useDistinctStates } from '@/services/execution/useExecutionData';
+import { useQuery } from '@tanstack/react-query';
+import { listRoles } from '@/services/augustine/roles.service';
 
 function useExecutionParams() {
   const router = useRouter();
@@ -332,17 +334,13 @@ export function InstitutionFilters() {
 
 export function StaffFilters() {
   const { searchParams, setParams } = useExecutionParams();
-  const staff_name = searchParams.get('staff_name') ?? '';
-  const staff_email = searchParams.get('staff_email') ?? '';
   const staff_date_from = searchParams.get('staff_date_from') ?? '';
   const staff_date_to = searchParams.get('staff_date_to') ?? '';
   const is_eligible = searchParams.get('is_eligible') ?? '';
-  const synced_to_hubspot = searchParams.get('synced_to_hubspot') ?? '';
-  const sync_status = searchParams.get('sync_status') ?? '';
-  const confidence_min = searchParams.get('confidence_min') ?? '';
-  const confidence_max = searchParams.get('confidence_max') ?? '';
   const state = searchParams.get('state') ?? '';
+  const par_role = searchParams.get('par_role') ?? '';
   const statesQuery = useDistinctStates();
+  const rolesQuery = useQuery({ queryKey: ['augustine', 'roles', 'list'], queryFn: listRoles });
 
   return (
     <div className={filterBarClass}>
@@ -366,22 +364,23 @@ export function StaffFilters() {
         </Select>
       </div>
       <div className="space-y-1">
-        <Label className="text-xs">Name</Label>
-        <DebouncedInput
-          placeholder="Search name"
-          className="w-[180px]"
-          value={staff_name}
-          onDebouncedChange={(v) => setParams({ staff_name: v || null, offset: null })}
-        />
-      </div>
-      <div className="space-y-1">
-        <Label className="text-xs">Email</Label>
-        <DebouncedInput
-          placeholder="Search email"
-          className="w-[200px]"
-          value={staff_email}
-          onDebouncedChange={(v) => setParams({ staff_email: v || null, offset: null })}
-        />
+        <Label className="text-xs">Parish Role</Label>
+        <Select
+          value={par_role || 'all'}
+          onValueChange={(v) => setParams({ par_role: v === 'all' ? null : v, offset: null })}
+        >
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="All Roles" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Roles</SelectItem>
+            {(rolesQuery.data ?? []).map((r) => (
+              <SelectItem key={r.role_id} value={r.name}>
+                {r.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div className="space-y-1">
         <Label className="text-xs">From date</Label>
@@ -417,69 +416,6 @@ export function StaffFilters() {
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-1">
-        <Label className="text-xs">Synced to HubSpot</Label>
-        <Select
-          value={synced_to_hubspot || 'all'}
-          onValueChange={(v) => setParams({ synced_to_hubspot: v === 'all' ? null : v, offset: null })}
-        >
-          <SelectTrigger className="w-[100px]">
-            <SelectValue placeholder="All" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="1">Yes</SelectItem>
-            <SelectItem value="0">No</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-1">
-        <Label className="text-xs">Sync status</Label>
-        <Select
-          value={sync_status || 'all'}
-          onValueChange={(v) => setParams({ sync_status: v === 'all' ? null : (v as SyncStatus), offset: null })}
-        >
-          <SelectTrigger className="w-[110px]">
-            <SelectValue placeholder="All" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="success">Success</SelectItem>
-            <SelectItem value="failed">Failed</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-1">
-        <Label className="text-xs">Confidence (%)</Label>
-        <div className="flex items-center gap-1">
-          <DebouncedInput
-            type="text"
-            inputMode="numeric"
-            placeholder="0"
-            className="w-[64px] text-right tabular-nums"
-            value={confidence_min}
-            onDebouncedChange={(v) => {
-              const digits = v.replace(/\D/g, '').slice(0, 3);
-              setParams({ confidence_min: digits || null, offset: null });
-            }}
-          />
-          <span className="text-xs text-muted-foreground">%</span>
-          <span className="text-muted-foreground">–</span>
-          <DebouncedInput
-            type="text"
-            inputMode="numeric"
-            placeholder="100"
-            className="w-[64px] text-right tabular-nums"
-            value={confidence_max}
-            onDebouncedChange={(v) => {
-              const digits = v.replace(/\D/g, '').slice(0, 3);
-              setParams({ confidence_max: digits || null, offset: null });
-            }}
-          />
-          <span className="text-xs text-muted-foreground">%</span>
-        </div>
-      </div>
       <Button
         type="button"
         variant="outline"
@@ -487,15 +423,10 @@ export function StaffFilters() {
         onClick={() =>
           setParams({
             state: null,
-            staff_name: null,
-            staff_email: null,
+            par_role: null,
             staff_date_from: null,
             staff_date_to: null,
             is_eligible: null,
-            synced_to_hubspot: null,
-            sync_status: null,
-            confidence_min: null,
-            confidence_max: null,
             offset: null,
           })
         }

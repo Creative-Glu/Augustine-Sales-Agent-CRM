@@ -100,6 +100,7 @@ export interface Staff {
   last_synced_at?: string | null;
   sync_error?: string | null;
   hubspot_contact_id?: string | null;
+  par_role?: string | null;
 }
 
 /** Institution – from execution DB table institutions (id may be number or string from API) */

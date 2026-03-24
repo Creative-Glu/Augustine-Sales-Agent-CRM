@@ -11,6 +11,7 @@ import type { SyncStatus } from '@/types/execution';
 
 const COLUMNS = [
   { label: 'Staff', align: 'left' as const },
+  { label: 'Parish Role', align: 'left' as const },
   { label: 'Contact', align: 'left' as const },
   { label: 'Institution', align: 'left' as const },
   { label: 'Status', align: 'left' as const },
@@ -201,6 +202,17 @@ export default function StaffTable({
                         </div>
                       )}
                     </div>
+                  </td>
+
+                  {/* Parish Role */}
+                  <td className="py-3 px-4 align-top">
+                    {row.par_role ? (
+                      <Badge variant="outline" className="h-5 px-2 text-[11px] font-medium border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300">
+                        {row.par_role}
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </td>
 
                   {/* Email + contact number only (no contact field) */}

@@ -25,15 +25,13 @@ import {
 } from '@heroicons/react/24/outline';
 import Pagination from '@/components/Pagination';
 import { useStaffPaginated, useStaffCounts } from '@/services/execution/useExecutionData';
-import { getStaffForExport } from '@/services/execution/staff.service';
+import { exportStaffCsv } from '@/services/execution/staff.service';
 import { getInstitutionById } from '@/services/execution/institution.service';
-import { getWebsitesUrlMap, getWebsitesUrlByState } from '@/services/websites-url/websitesUrl.service';
 import type { Institution } from '@/types/execution';
 import InstitutionStaffModal from './InstitutionStaffModal';
 import { useToastHelpers } from '@/lib/toast';
 import { StaffFilters } from './ExecutionFilters';
 import StaffTable from './StaffTable';
-import { staffToCsv, downloadCsv } from '@/lib/csv-export';
 
 const DEFAULT_LIMIT = 10;
 
@@ -262,46 +260,27 @@ export default function ExecutionStaffPage() {
                     const confMinParam = searchParams.get('confidence_min');
                     const confMaxParam = searchParams.get('confidence_max');
                     const stateParam = searchParams.get('state') || undefined;
-                    const params = {
-                      name_search: searchParams.get('staff_name') || undefined,
-                      email_search: searchParams.get('staff_email') || undefined,
-                      date_from: searchParams.get('staff_date_from') || undefined,
-                      date_to: searchParams.get('staff_date_to') || undefined,
-                      enriched_only,
-                      enriched_require_phone: require_phone,
-                      is_eligible:
-                        isEligibleParam === '1'
-                          ? true
-                          : isEligibleParam === '0'
-                            ? false
-                            : undefined,
-                      synced_to_hubspot:
-                        syncedParam === '1'
-                          ? true
-                          : syncedParam === '0'
-                            ? false
-                            : undefined,
-                      sync_status: (syncStatusParam || undefined) as
-                        | import('@/types/execution').SyncStatus
-                        | undefined,
-                      confidence_min: confMinParam ? Number(confMinParam) : undefined,
-                      confidence_max: confMaxParam ? Number(confMaxParam) : undefined,
-                      state: stateParam,
-                    };
-                    const [rows, websitesUrlMap] = await Promise.all([
-                      getStaffForExport(params),
-                      stateParam
-                        ? getWebsitesUrlByState(stateParam)
-                        : getWebsitesUrlMap(),
-                    ]);
-                    if (rows.length === 0) {
-                      errorToast('No staff records to export with current filters.');
-                      return;
-                    }
-                    const csv = await staffToCsv(rows, websitesUrlMap);
-                    const stateSuffix = stateParam ? `_${stateParam.replace(/\s+/g, '_')}` : '';
-                    downloadCsv(csv, `staff_export${stateSuffix}_${new Date().toISOString().slice(0, 10)}.csv`);
-                    successToast(`Exported ${rows.length} staff record(s).`);
+
+                    const params: Record<string, string> = {};
+                    if (searchParams.get('staff_name')) params.name_search = searchParams.get('staff_name')!;
+                    if (searchParams.get('staff_email')) params.email_search = searchParams.get('staff_email')!;
+                    if (searchParams.get('staff_date_from')) params.date_from = searchParams.get('staff_date_from')!;
+                    if (searchParams.get('staff_date_to')) params.date_to = searchParams.get('staff_date_to')!;
+                    if (enriched_only) params.enriched_only = 'true';
+                    if (require_phone) params.enriched_require_phone = 'true';
+                    if (isEligibleParam === '1') params.is_eligible = 'true';
+                    else if (isEligibleParam === '0') params.is_eligible = 'false';
+                    if (syncedParam === '1') params.synced_to_hubspot = 'true';
+                    else if (syncedParam === '0') params.synced_to_hubspot = 'false';
+                    if (syncStatusParam) params.sync_status = syncStatusParam;
+                    if (confMinParam) params.confidence_min = confMinParam;
+                    if (confMaxParam) params.confidence_max = confMaxParam;
+                    if (stateParam) params.state = stateParam;
+                    const parRoleParam = searchParams.get('par_role');
+                    if (parRoleParam) params.par_role_filter = parRoleParam;
+
+                    await exportStaffCsv(params);
+                    successToast('CSV export downloaded.');
                   } catch (e) {
                     errorToast(e instanceof Error ? e.message : 'Export failed');
                   } finally {

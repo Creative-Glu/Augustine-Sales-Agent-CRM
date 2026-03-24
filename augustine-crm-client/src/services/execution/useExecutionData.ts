@@ -238,6 +238,7 @@ export function useStaffPaginated() {
   const confidence_min = parseNumParam(searchParams, 'confidence_min');
   const confidence_max = parseNumParam(searchParams, 'confidence_max');
   const state = searchParams.get('state') ?? undefined;
+  const par_role = searchParams.get('par_role') ?? undefined;
 
   // Pre-resolve institution IDs for the selected state (cached separately).
   // This way the heavy resolution only runs once per state change and is
@@ -272,6 +273,7 @@ export function useStaffPaginated() {
       confidence_min,
       confidence_max,
       state,
+      par_role,
     ],
     queryFn: () =>
       getStaffPaginated({
@@ -289,6 +291,7 @@ export function useStaffPaginated() {
         confidence_min: confidence_min ?? undefined,
         confidence_max: confidence_max ?? undefined,
         state: state || undefined,
+        par_role: par_role || undefined,
         // Pass pre-resolved IDs so getStaffPaginated skips the heavy resolution
         _preResolvedStateIds: stateIdsQuery.data ?? undefined,
       }),

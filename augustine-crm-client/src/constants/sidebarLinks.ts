@@ -6,6 +6,7 @@ import {
   Squares2X2Icon,
   ChartBarSquareIcon,
   DocumentDuplicateIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import { TreePine, ActivityIcon, MailSearchIcon } from 'lucide-react';
 
@@ -30,5 +31,6 @@ export const SIDEBAR_LINKS = [
   { href: '/marketing-dashboard', label: 'Marketing Dashboard', icon: ChartBarIcon },
   { href: '/marketing-jobs', label: 'Scrape Jobs', icon: ActivityIcon },
   { href: '/outreach', label: 'Outreach Approval', icon: ChartBarIcon },
+  { href: '/roles', label: 'Role Mapping', icon: ShieldCheckIcon },
   { href: '/admin-users', label: 'User Management', icon: UserGroupIcon },
 ];
