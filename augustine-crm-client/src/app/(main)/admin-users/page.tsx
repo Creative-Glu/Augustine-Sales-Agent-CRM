@@ -14,7 +14,7 @@ import {
   type AdminUser,
 } from '@/services/augustine/adminUsers.service';
 import { useAuth } from '@/providers/AuthProvider';
-import { Users, RefreshCw, UserPlus } from 'lucide-react';
+import { Users, RefreshCw, UserPlus, Eye, EyeOff } from 'lucide-react';
 
 export default function AdminUsersPage() {
   const { user } = useAuth();
@@ -32,6 +32,7 @@ export default function AdminUsersPage() {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<AdminUser['role']>('Reviewer');
   const [isActive, setIsActive] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
 
   const resetForm = () => {
     setEditing(null);
@@ -40,6 +41,7 @@ export default function AdminUsersPage() {
     setPassword('');
     setRole('Reviewer');
     setIsActive(true);
+    setShowPassword(false);
   };
 
   const startEdit = (u: AdminUser) => {
@@ -119,10 +121,14 @@ export default function AdminUsersPage() {
           icon={<Users className="w-6 h-6 text-white" />}
           showLive
         />
-        <div className="px-6 py-8">
-          <div className="bg-card rounded-2xl border border-border shadow-sm p-6 max-w-lg">
-            <p className="text-sm text-destructive">
-              You do not have permission to view this page. Ask an Admin to adjust your access.
+        <div className="px-6 py-20 flex justify-center">
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-8 text-center" style={{ minWidth: 360 }}>
+            <div className="rounded-full bg-destructive/10 p-3 mx-auto mb-4 w-fit">
+              <Users className="w-6 h-6 text-destructive" />
+            </div>
+            <p className="text-sm font-medium text-foreground mb-1">Access Denied</p>
+            <p className="text-sm text-muted-foreground whitespace-normal">
+              You do not have permission to view this page.<br />Ask an Admin to adjust your access.
             </p>
           </div>
         </div>
@@ -147,19 +153,31 @@ export default function AdminUsersPage() {
           <section className="bg-card rounded-2xl border border-border shadow-sm p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Users</h2>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => usersQuery.refetch()}
-                disabled={usersQuery.isLoading}
-                className="shrink-0 text-muted-foreground hover:text-foreground transition-colors duration-150"
-                aria-label="Refresh users"
-              >
-                <RefreshCw
-                  className={`w-4 h-4 ${usersQuery.isLoading ? 'animate-spin' : ''}`}
-                />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="default"
+                  size="sm"
+                  onClick={resetForm}
+                  className="gap-1.5 transition-all duration-150"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  Create User
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => usersQuery.refetch()}
+                  disabled={usersQuery.isLoading}
+                  className="shrink-0 text-muted-foreground hover:text-foreground transition-colors duration-150"
+                  aria-label="Refresh users"
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 ${usersQuery.isLoading ? 'animate-spin' : ''}`}
+                  />
+                </Button>
+              </div>
             </div>
             <div className="border border-border/60 rounded-xl overflow-hidden bg-muted/30 max-h-[400px] overflow-y-auto">
               <table className="min-w-full text-sm">
@@ -327,14 +345,24 @@ export default function AdminUsersPage() {
                     >
                       {editing ? 'New password (optional)' : 'Initial password'}
                     </label>
-                    <Input
-                      id="user-password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required={!editing}
-                      className="transition-[color,box-shadow] duration-150"
-                    />
+                    <div className="relative">
+                      <Input
+                        id="user-password"
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required={!editing}
+                        className="pr-10 transition-[color,box-shadow] duration-150"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
