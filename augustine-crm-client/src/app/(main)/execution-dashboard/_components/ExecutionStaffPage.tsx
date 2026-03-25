@@ -262,19 +262,10 @@ export default function ExecutionStaffPage() {
                     const stateParam = searchParams.get('state') || undefined;
 
                     const params: Record<string, string> = {};
-                    if (searchParams.get('staff_name')) params.name_search = searchParams.get('staff_name')!;
-                    if (searchParams.get('staff_email')) params.email_search = searchParams.get('staff_email')!;
                     if (searchParams.get('staff_date_from')) params.date_from = searchParams.get('staff_date_from')!;
                     if (searchParams.get('staff_date_to')) params.date_to = searchParams.get('staff_date_to')!;
-                    if (enriched_only) params.enriched_only = 'true';
-                    if (require_phone) params.enriched_require_phone = 'true';
                     if (isEligibleParam === '1') params.is_eligible = 'true';
                     else if (isEligibleParam === '0') params.is_eligible = 'false';
-                    if (syncedParam === '1') params.synced_to_hubspot = 'true';
-                    else if (syncedParam === '0') params.synced_to_hubspot = 'false';
-                    if (syncStatusParam) params.sync_status = syncStatusParam;
-                    if (confMinParam) params.confidence_min = confMinParam;
-                    if (confMaxParam) params.confidence_max = confMaxParam;
                     if (stateParam) params.state = stateParam;
                     const parRoleParam = searchParams.get('par_role');
                     if (parRoleParam) params.par_role_filter = parRoleParam;
