@@ -22,6 +22,7 @@ import {
   listJobTitles,
   type RoleMapping,
 } from '@/services/augustine/roleMappings.service';
+import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import {
   Shield,
   Plus,
@@ -43,6 +44,8 @@ export default function RolesPage() {
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [searchRoles, setSearchRoles] = useState('');
+  const [deleteRoleTarget, setDeleteRoleTarget] = useState<Role | null>(null);
+  const [deleteMappingTarget, setDeleteMappingTarget] = useState<RoleMapping | null>(null);
 
   const rolesQuery = useQuery({
     queryKey: ['augustine', 'roles', 'list'],
@@ -83,6 +86,7 @@ export default function RolesPage() {
       rolesQuery.refetch();
       mappingsQuery.refetch();
       resetRoleForm();
+      setDeleteRoleTarget(null);
     },
     onError: (err: any) => {
       toast({
@@ -202,6 +206,7 @@ export default function RolesPage() {
       toast({ title: 'Mapping deleted' });
       mappingsQuery.refetch();
       resetMappingForm();
+      setDeleteMappingTarget(null);
     },
     onError: (err: any) => {
       toast({
@@ -375,11 +380,7 @@ export default function RolesPage() {
                               size="sm"
                               variant="ghost"
                               className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
-                              onClick={() => {
-                                if (window.confirm(`Delete role "${role.name}"? Any mappings using this role will also be removed.`)) {
-                                  deleteRoleMutation.mutate(role.role_id);
-                                }
-                              }}
+                              onClick={() => setDeleteRoleTarget(role)}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </Button>
@@ -473,15 +474,7 @@ export default function RolesPage() {
                   type="button"
                   size="sm"
                   variant="outline"
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        'Apply all mapping rules to existing records? This will update par_role for all matching contacts.'
-                      )
-                    ) {
-                      applyMutation.mutate();
-                    }
-                  }}
+                  onClick={() => applyMutation.mutate()}
                   disabled={applyMutation.isPending || mappings.length === 0}
                   className="transition-all duration-150 ease-out"
                 >
@@ -579,11 +572,7 @@ export default function RolesPage() {
                               size="sm"
                               variant="ghost"
                               className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
-                              onClick={() => {
-                                if (window.confirm(`Delete mapping for "${m.job_title}"?`)) {
-                                  deleteMappingMutation.mutate(m.mapping_id);
-                                }
-                              }}
+                              onClick={() => setDeleteMappingTarget(m)}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </Button>
@@ -749,6 +738,26 @@ export default function RolesPage() {
           </section>
         </div>
       </div>
+
+      <ConfirmDeleteDialog
+        open={!!deleteRoleTarget}
+        onOpenChange={(open) => { if (!open) setDeleteRoleTarget(null); }}
+        title={`Delete "${deleteRoleTarget?.name}"?`}
+        description="This role will be permanently removed. Any job title mappings using this role will also be deleted."
+        onConfirm={() => { if (deleteRoleTarget) deleteRoleMutation.mutate(deleteRoleTarget.role_id); }}
+        loading={deleteRoleMutation.isPending}
+        error={deleteRoleMutation.error instanceof Error ? deleteRoleMutation.error.message : null}
+      />
+
+      <ConfirmDeleteDialog
+        open={!!deleteMappingTarget}
+        onOpenChange={(open) => { if (!open) setDeleteMappingTarget(null); }}
+        title={`Delete mapping for "${deleteMappingTarget?.job_title}"?`}
+        description={`The mapping "${deleteMappingTarget?.job_title}" → "${deleteMappingTarget?.role_name}" will be permanently removed.`}
+        onConfirm={() => { if (deleteMappingTarget) deleteMappingMutation.mutate(deleteMappingTarget.mapping_id); }}
+        loading={deleteMappingMutation.isPending}
+        error={deleteMappingMutation.error instanceof Error ? deleteMappingMutation.error.message : null}
+      />
     </div>
   );
 }

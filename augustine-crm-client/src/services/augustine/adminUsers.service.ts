@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiPut } from '@/lib/augustineApiClient';
+import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/augustineApiClient';
 
 export interface AdminUser {
   id: number;
@@ -36,5 +36,9 @@ export async function updateAdminUser(
   payload: UpdateAdminUserInput
 ): Promise<AdminUser> {
   return apiPut<AdminUser, UpdateAdminUserInput>(`/api/admin/users/${id}`, payload);
+}
+
+export async function deleteAdminUser(id: number): Promise<void> {
+  await apiDelete<unknown>(`/api/admin/users/${id}`);
 }
 

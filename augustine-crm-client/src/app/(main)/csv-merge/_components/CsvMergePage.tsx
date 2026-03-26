@@ -135,99 +135,98 @@ function FileDropZone({
 
 function ResultsDashboard({ result }: { result: MergeResult }) {
   const { stats, diffs } = result;
+  const matched = stats.matchedByEmail + stats.matchedByName;
+  const newContacts = stats.crmTotal - matched;
+  const total = stats.hubspotTotal + newContacts;
   const withChanges = diffs.filter((d) => d.changes.length > 0).length;
   const noChanges = diffs.filter((d) => d.changes.length === 0).length;
 
   return (
-    <Card className="border-border bg-card overflow-hidden">
-      <CardContent className="pt-6 space-y-6">
-        {/* Step 1: What we compared */}
-        <div>
-          <p className="text-sm font-semibold text-foreground mb-3">We compared your two files</p>
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/40">
-              <span className="text-xl font-bold tabular-nums text-blue-600">{stats.hubspotTotal.toLocaleString()}</span>
-              <span className="text-xs text-blue-700 dark:text-blue-300">contacts in HubSpot</span>
+    <div className="space-y-4">
+      {/* Section 1: Your Files */}
+      <Card className="border-border bg-card">
+        <CardContent className="pt-5 pb-4">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Your Files</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 rounded-xl bg-blue-50/50 dark:bg-blue-950/10 border border-blue-200/60 dark:border-blue-800/30 text-center">
+              <p className="text-3xl font-bold tabular-nums text-blue-600">{stats.hubspotTotal.toLocaleString()}</p>
+              <p className="text-sm text-blue-700 dark:text-blue-400 font-medium mt-1">HubSpot Contacts</p>
             </div>
-            <span className="text-muted-foreground text-lg">+</span>
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/40">
-              <span className="text-xl font-bold tabular-nums text-purple-600">{stats.crmTotal.toLocaleString()}</span>
-              <span className="text-xs text-purple-700 dark:text-purple-300">contacts in our CRM</span>
-            </div>
-            <span className="text-muted-foreground text-lg">=</span>
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/40 border border-border">
-              <span className="text-xl font-bold tabular-nums text-foreground">{stats.outputTotal.toLocaleString()}</span>
-              <span className="text-xs text-muted-foreground">rows in merged file</span>
+            <div className="p-4 rounded-xl bg-purple-50/50 dark:bg-purple-950/10 border border-purple-200/60 dark:border-purple-800/30 text-center">
+              <p className="text-3xl font-bold tabular-nums text-purple-600">{stats.crmTotal.toLocaleString()}</p>
+              <p className="text-sm text-purple-700 dark:text-purple-400 font-medium mt-1">CRM Contacts</p>
             </div>
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        <div className="border-t border-border/60" />
-
-        {/* Step 2: What will happen — plain English */}
-        <div>
-          <p className="text-sm font-semibold text-foreground mb-1">When you import the merged file into HubSpot:</p>
-          <p className="text-xs text-muted-foreground mb-4">Nothing in HubSpot will be deleted or overwritten. We only add missing information.</p>
-
-          <div className="space-y-3">
-            {/* New contacts */}
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50/60 dark:bg-amber-950/10 border border-amber-200/60 dark:border-amber-800/30">
-              <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
-                <span className="text-amber-600 font-bold text-base">+</span>
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm text-foreground">
-                  <span className="font-bold text-amber-600 text-lg tabular-nums">{stats.newFromCrm.toLocaleString()}</span>
-                  <span className="font-semibold ml-1.5">new contacts</span>
-                  <span className="text-muted-foreground ml-1">will be added to HubSpot</span>
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  These people are in our CRM but don&apos;t exist in HubSpot yet.
-                </p>
-              </div>
+      {/* Section 2: What We Found */}
+      <Card className="border-border bg-card">
+        <CardContent className="pt-5 pb-4">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">What We Found</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/10 border border-indigo-200/60 dark:border-indigo-800/30 text-center">
+              <p className="text-3xl font-bold tabular-nums text-indigo-600">{matched.toLocaleString()}</p>
+              <p className="text-sm text-indigo-700 dark:text-indigo-400 font-medium mt-1">Same Person in Both</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {stats.matchedByEmail > 0 && <>{stats.matchedByEmail} matched by email</>}
+                {stats.matchedByEmail > 0 && stats.matchedByName > 0 && ', '}
+                {stats.matchedByName > 0 && <>{stats.matchedByName} matched by name</>}
+              </p>
             </div>
-
-            {/* Updated contacts */}
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-green-50/60 dark:bg-green-950/10 border border-green-200/60 dark:border-green-800/30">
-              <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0">
-                <span className="text-green-600 font-bold text-base">&uarr;</span>
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm text-foreground">
-                  <span className="font-bold text-green-600 text-lg tabular-nums">{withChanges.toLocaleString()}</span>
-                  <span className="font-semibold ml-1.5">existing contacts</span>
-                  <span className="text-muted-foreground ml-1">will get missing info filled in</span>
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  <span className="text-foreground font-medium">{stats.fieldsFilledIn}</span> blank fields
-                  (like phone, address, job title) will be filled from our CRM data.
-                  {stats.matchedByEmail > 0 && <> Matched {stats.matchedByEmail} by email.</>}
-                  {stats.matchedByName > 0 && <> Matched {stats.matchedByName} by name.</>}
-                </p>
-              </div>
-            </div>
-
-            {/* No changes */}
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border/60">
-              <div className="w-10 h-10 rounded-full bg-muted/60 flex items-center justify-center shrink-0">
-                <CheckCircleIcon className="w-5 h-5 text-muted-foreground" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm text-foreground">
-                  <span className="font-bold text-muted-foreground text-lg tabular-nums">{(noChanges + stats.hubspotOnly).toLocaleString()}</span>
-                  <span className="font-semibold text-muted-foreground ml-1.5">contacts</span>
-                  <span className="text-muted-foreground ml-1">won&apos;t change at all</span>
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {noChanges > 0 && <>{noChanges} already have complete data in HubSpot. </>}
-                  {stats.hubspotOnly > 0 && <>{stats.hubspotOnly} are only in HubSpot and we have no new info for them.</>}
-                </p>
-              </div>
+            <div className="p-4 rounded-xl bg-amber-50/50 dark:bg-amber-950/10 border border-amber-200/60 dark:border-amber-800/30 text-center">
+              <p className="text-3xl font-bold tabular-nums text-amber-600">{newContacts.toLocaleString()}</p>
+              <p className="text-sm text-amber-700 dark:text-amber-400 font-medium mt-1">New People</p>
+              <p className="text-xs text-muted-foreground mt-1">Only in CRM, not in HubSpot</p>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      {/* Section 3: What Will Happen */}
+      <Card className="border-border bg-card">
+        <CardContent className="pt-5 pb-4">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">What Happens After Import</p>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/10 border border-amber-200/60 dark:border-amber-800/30 text-center">
+              <p className="text-2xl font-bold tabular-nums text-amber-600">{newContacts.toLocaleString()}</p>
+              <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mt-1">Added to HubSpot</p>
+            </div>
+            <div className="p-3 rounded-xl bg-green-50/50 dark:bg-green-950/10 border border-green-200/60 dark:border-green-800/30 text-center">
+              <p className="text-2xl font-bold tabular-nums text-green-600">{withChanges.toLocaleString()}</p>
+              <p className="text-xs font-medium text-green-700 dark:text-green-400 mt-1">Updated</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{stats.fieldsFilledIn} fields filled</p>
+            </div>
+            <div className="p-3 rounded-xl bg-muted/30 border border-border/60 text-center">
+              <p className="text-2xl font-bold tabular-nums text-muted-foreground">{(noChanges + stats.hubspotOnly).toLocaleString()}</p>
+              <p className="text-xs font-medium text-muted-foreground mt-1">No Changes</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Section 4: Total — the math */}
+      <Card className="border-border bg-card">
+        <CardContent className="py-4">
+          <div className="flex items-center justify-center gap-2 flex-wrap text-sm">
+            <span className="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/40 font-bold tabular-nums text-blue-600">
+              {stats.hubspotTotal.toLocaleString()}
+            </span>
+            <span className="text-xs text-muted-foreground">HubSpot</span>
+            <span className="text-lg font-bold text-muted-foreground">+</span>
+            <span className="px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 font-bold tabular-nums text-amber-600">
+              {newContacts.toLocaleString()}
+            </span>
+            <span className="text-xs text-muted-foreground">new</span>
+            <span className="text-lg font-bold text-muted-foreground">=</span>
+            <span className="px-4 py-2 rounded-lg bg-foreground text-background font-bold tabular-nums text-base">
+              {total.toLocaleString()}
+            </span>
+            <span className="text-sm font-semibold text-foreground">total in merged file</span>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
