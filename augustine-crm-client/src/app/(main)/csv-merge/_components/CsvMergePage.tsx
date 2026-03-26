@@ -135,66 +135,96 @@ function FileDropZone({
 
 function ResultsDashboard({ result }: { result: MergeResult }) {
   const { stats, diffs } = result;
-  const totalMatched = stats.matchedByEmail + stats.matchedByName;
   const withChanges = diffs.filter((d) => d.changes.length > 0).length;
   const noChanges = diffs.filter((d) => d.changes.length === 0).length;
 
   return (
     <Card className="border-border bg-card overflow-hidden">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-semibold text-foreground">Dry Run Summary</CardTitle>
-        <p className="text-xs text-muted-foreground">Here&apos;s what will happen when you import the merged CSV into HubSpot.</p>
-      </CardHeader>
-      <CardContent className="space-y-5">
-        {/* Input counts */}
-        <div className="flex gap-6 pb-4 border-b border-border/60">
-          <div>
-            <p className="text-2xl font-bold tabular-nums text-blue-600">{stats.hubspotTotal.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">contacts in HubSpot</p>
-          </div>
-          <div>
-            <p className="text-2xl font-bold tabular-nums text-purple-600">{stats.crmTotal.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">contacts in CRM</p>
-          </div>
-        </div>
-
-        {/* What will happen — 3 action blocks */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* New contacts */}
-          <div className="rounded-lg border border-amber-200 dark:border-amber-800/50 bg-amber-50/50 dark:bg-amber-900/10 p-4">
-            <p className="text-2xl font-bold tabular-nums text-amber-600">{stats.newFromCrm.toLocaleString()}</p>
-            <p className="text-sm font-medium text-amber-700 dark:text-amber-400">New contacts to create</p>
-            <p className="text-xs text-muted-foreground mt-1">These people are in our CRM but not in HubSpot. They will be added as new contacts.</p>
-          </div>
-
-          {/* Matched & updated */}
-          <div className="rounded-lg border border-green-200 dark:border-green-800/50 bg-green-50/50 dark:bg-green-900/10 p-4">
-            <p className="text-2xl font-bold tabular-nums text-green-600">{withChanges.toLocaleString()}</p>
-            <p className="text-sm font-medium text-green-700 dark:text-green-400">Existing contacts to update</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Matched by email ({stats.matchedByEmail}) or name ({stats.matchedByName}).
-              <strong className="text-foreground"> {stats.fieldsFilledIn}</strong> blank fields will be filled in.
-              No existing data is overwritten.
-            </p>
-          </div>
-
-          {/* Unchanged */}
-          <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
-            <p className="text-2xl font-bold tabular-nums text-muted-foreground">{(noChanges + stats.hubspotOnly).toLocaleString()}</p>
-            <p className="text-sm font-medium text-muted-foreground">No changes</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {noChanges > 0 && <>{noChanges} matched contacts already have complete data. </>}
-              {stats.hubspotOnly > 0 && <>{stats.hubspotOnly} HubSpot-only contacts have no CRM match.</>}
-            </p>
+      <CardContent className="pt-6 space-y-6">
+        {/* Step 1: What we compared */}
+        <div>
+          <p className="text-sm font-semibold text-foreground mb-3">We compared your two files</p>
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/40">
+              <span className="text-xl font-bold tabular-nums text-blue-600">{stats.hubspotTotal.toLocaleString()}</span>
+              <span className="text-xs text-blue-700 dark:text-blue-300">contacts in HubSpot</span>
+            </div>
+            <span className="text-muted-foreground text-lg">+</span>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/40">
+              <span className="text-xl font-bold tabular-nums text-purple-600">{stats.crmTotal.toLocaleString()}</span>
+              <span className="text-xs text-purple-700 dark:text-purple-300">contacts in our CRM</span>
+            </div>
+            <span className="text-muted-foreground text-lg">=</span>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/40 border border-border">
+              <span className="text-xl font-bold tabular-nums text-foreground">{stats.outputTotal.toLocaleString()}</span>
+              <span className="text-xs text-muted-foreground">rows in merged file</span>
+            </div>
           </div>
         </div>
 
-        {/* Output total */}
-        <div className="flex items-center gap-3 pt-3 border-t border-border/60">
-          <p className="text-sm text-muted-foreground">
-            Total rows in merged CSV:
-            <strong className="text-foreground text-lg ml-2 tabular-nums">{stats.outputTotal.toLocaleString()}</strong>
-          </p>
+        <div className="border-t border-border/60" />
+
+        {/* Step 2: What will happen — plain English */}
+        <div>
+          <p className="text-sm font-semibold text-foreground mb-1">When you import the merged file into HubSpot:</p>
+          <p className="text-xs text-muted-foreground mb-4">Nothing in HubSpot will be deleted or overwritten. We only add missing information.</p>
+
+          <div className="space-y-3">
+            {/* New contacts */}
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50/60 dark:bg-amber-950/10 border border-amber-200/60 dark:border-amber-800/30">
+              <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
+                <span className="text-amber-600 font-bold text-base">+</span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm text-foreground">
+                  <span className="font-bold text-amber-600 text-lg tabular-nums">{stats.newFromCrm.toLocaleString()}</span>
+                  <span className="font-semibold ml-1.5">new contacts</span>
+                  <span className="text-muted-foreground ml-1">will be added to HubSpot</span>
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  These people are in our CRM but don&apos;t exist in HubSpot yet.
+                </p>
+              </div>
+            </div>
+
+            {/* Updated contacts */}
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-green-50/60 dark:bg-green-950/10 border border-green-200/60 dark:border-green-800/30">
+              <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0">
+                <span className="text-green-600 font-bold text-base">&uarr;</span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm text-foreground">
+                  <span className="font-bold text-green-600 text-lg tabular-nums">{withChanges.toLocaleString()}</span>
+                  <span className="font-semibold ml-1.5">existing contacts</span>
+                  <span className="text-muted-foreground ml-1">will get missing info filled in</span>
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  <span className="text-foreground font-medium">{stats.fieldsFilledIn}</span> blank fields
+                  (like phone, address, job title) will be filled from our CRM data.
+                  {stats.matchedByEmail > 0 && <> Matched {stats.matchedByEmail} by email.</>}
+                  {stats.matchedByName > 0 && <> Matched {stats.matchedByName} by name.</>}
+                </p>
+              </div>
+            </div>
+
+            {/* No changes */}
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border/60">
+              <div className="w-10 h-10 rounded-full bg-muted/60 flex items-center justify-center shrink-0">
+                <CheckCircleIcon className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm text-foreground">
+                  <span className="font-bold text-muted-foreground text-lg tabular-nums">{(noChanges + stats.hubspotOnly).toLocaleString()}</span>
+                  <span className="font-semibold text-muted-foreground ml-1.5">contacts</span>
+                  <span className="text-muted-foreground ml-1">won&apos;t change at all</span>
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {noChanges > 0 && <>{noChanges} already have complete data in HubSpot. </>}
+                  {stats.hubspotOnly > 0 && <>{stats.hubspotOnly} are only in HubSpot and we have no new info for them.</>}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -225,23 +255,22 @@ function UpdatedContactsSection({ diffs }: { diffs: MatchedRecordDiff[] }) {
         <div className="flex items-center gap-2">
           <span className="inline-block w-3 h-3 rounded-full bg-green-500" />
           <CardTitle className="text-sm font-semibold text-foreground">
-            Contacts Being Updated ({diffs.length})
+            {diffs.length} contacts getting missing info filled in
           </CardTitle>
         </div>
         <p className="text-xs text-muted-foreground mt-1">
-          These contacts already exist in HubSpot. Only their <strong>empty fields</strong> will be filled with data from our CRM.
-          Existing HubSpot data is never overwritten. Click a row to see exactly what changes.
+          These people are already in HubSpot, but some fields are blank (like phone number or address). We&apos;ll fill in what&apos;s missing. Click any row to see exactly what gets added.
         </p>
       </CardHeader>
       <CardContent>
         <div className="rounded-lg border border-border/60 overflow-hidden">
           {/* Table header */}
           <div className="grid grid-cols-[80px_1fr_1fr_1fr_60px] gap-0 text-xs font-medium text-muted-foreground bg-muted/40 border-b border-border/60">
-            <div className="px-3 py-2">Match</div>
-            <div className="px-3 py-2">Contact</div>
-            <div className="px-3 py-2">Company</div>
-            <div className="px-3 py-2">Matched On</div>
-            <div className="px-3 py-2 text-right">Fields</div>
+            <div className="px-3 py-2">Found By</div>
+            <div className="px-3 py-2">Name</div>
+            <div className="px-3 py-2">Parish / Company</div>
+            <div className="px-3 py-2">Matched Using</div>
+            <div className="px-3 py-2 text-right">Filling</div>
           </div>
 
           {/* Table rows */}
@@ -273,15 +302,15 @@ function UpdatedContactsSection({ diffs }: { diffs: MatchedRecordDiff[] }) {
                   <div className="bg-green-50/30 dark:bg-green-900/5 border-t border-green-200/50 dark:border-green-800/30">
                     <div className="px-4 py-2">
                       <p className="text-[10px] uppercase font-semibold tracking-wide text-muted-foreground mb-2">
-                        What will change for this contact
+                        Missing info that will be filled in
                       </p>
                       <table className="w-full text-xs">
                         <thead>
                           <tr>
                             <th className="text-left font-medium text-muted-foreground pb-1 w-[150px]">Field</th>
-                            <th className="text-left font-medium text-red-400 pb-1">Currently in HubSpot</th>
+                            <th className="text-left font-medium text-red-400 pb-1">Currently</th>
                             <th className="text-left pb-1 w-8"></th>
-                            <th className="text-left font-medium text-green-600 pb-1">Will become</th>
+                            <th className="text-left font-medium text-green-600 pb-1">After Import</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -336,21 +365,20 @@ function MatchedNoChangesSection({ diffs }: { diffs: MatchedRecordDiff[] }) {
         <div className="flex items-center gap-2">
           <CheckCircleIcon className="w-4 h-4 text-muted-foreground" />
           <CardTitle className="text-sm font-semibold text-foreground">
-            Matched — Already Complete ({diffs.length})
+            {diffs.length} contacts already have everything
           </CardTitle>
         </div>
         <p className="text-xs text-muted-foreground mt-1">
-          These contacts were found in both HubSpot and CRM, but HubSpot already has all the data.
-          Nothing will change for these contacts.
+          We found these people in both files, but HubSpot already has all their info. Nothing will change for them.
         </p>
       </CardHeader>
       <CardContent>
         <div className="rounded-lg border border-border/60 overflow-hidden">
           <div className="grid grid-cols-[80px_1fr_1fr_1fr] gap-0 text-xs font-medium text-muted-foreground bg-muted/40 border-b border-border/60">
-            <div className="px-3 py-2">Match</div>
-            <div className="px-3 py-2">Contact</div>
-            <div className="px-3 py-2">Company</div>
-            <div className="px-3 py-2">Matched On</div>
+            <div className="px-3 py-2">Found By</div>
+            <div className="px-3 py-2">Name</div>
+            <div className="px-3 py-2">Parish / Company</div>
+            <div className="px-3 py-2">Matched Using</div>
           </div>
           {visible.map((diff, idx) => (
             <div
@@ -377,15 +405,16 @@ function MatchedNoChangesSection({ diffs }: { diffs: MatchedRecordDiff[] }) {
 // ─── Shared badge ──────────────────────────────────────────────────────────
 
 function MatchBadge({ type }: { type: string }) {
+  const isEmail = type === 'email';
   return (
     <span
       className={`shrink-0 inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${
-        type === 'email'
+        isEmail
           ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
           : 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
       }`}
     >
-      {type}
+      {isEmail ? 'Email' : 'Name'}
     </span>
   );
 }
@@ -453,22 +482,22 @@ export default function CsvMergePage() {
     <div className="space-y-6 w-full">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-semibold text-foreground">Dry Run Tool</h1>
-        <p className="text-sm text-muted-foreground mt-1">Compare HubSpot and CRM data side-by-side. See exactly what will change before importing.</p>
+        <h1 className="text-xl font-semibold text-foreground">Preview Before Import</h1>
+        <p className="text-sm text-muted-foreground mt-1">Upload both files to see exactly what will happen in HubSpot before you make any changes.</p>
       </div>
 
       {/* Upload area */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <FileDropZone
-          label="1. HubSpot Export"
-          description="Existing contacts — their data takes priority and is never overwritten."
+          label="Step 1: Your HubSpot File"
+          description="Export this from HubSpot. These are your current contacts — their data is always kept safe."
           slot={hubspot}
           onFile={handleFile(setHubspot)}
           onClear={() => { setHubspot(EMPTY_SLOT); setMergeResult(null); }}
         />
         <FileDropZone
-          label="2. CRM Export"
-          description="Our enriched data — new contacts added, blank HubSpot fields filled."
+          label="Step 2: Our CRM File"
+          description="The enriched contacts from Augustine. New people will be added and missing info will be filled in."
           slot={crm}
           onFile={handleFile(setCrm)}
           onClear={() => { setCrm(EMPTY_SLOT); setMergeResult(null); }}
@@ -479,12 +508,12 @@ export default function CsvMergePage() {
       <div className="flex items-center gap-3 flex-wrap">
         <Button onClick={handleMerge} disabled={!canMerge || merging} className="gap-2">
           <ArrowPathIcon className={`w-4 h-4 ${merging ? 'animate-spin' : ''}`} />
-          {merging ? 'Analyzing...' : 'Run Dry Run'}
+          {merging ? 'Analyzing...' : 'Preview Changes'}
         </Button>
         {mergeResult && (
           <Button onClick={handleDownload} variant="outline" className="gap-2">
             <DocumentArrowDownIcon className="w-4 h-4" />
-            Download Merged CSV ({mergeResult.stats.outputTotal.toLocaleString()} rows)
+            Download Ready-to-Import File ({mergeResult.stats.outputTotal.toLocaleString()} contacts)
           </Button>
         )}
         {(hubspot.file || crm.file) && (
