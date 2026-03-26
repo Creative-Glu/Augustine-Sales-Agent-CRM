@@ -622,6 +622,22 @@ for (const [full, abbr] of Object.entries(STATE_ABBREV)) {
     .join(' ');
 }
 
+/** Convert a state abbreviation (e.g. "MI") to full name (e.g. "Michigan"). Passes through full names unchanged. */
+export function toStateFullName(state: string): string {
+  if (!state) return '';
+  const trimmed = state.trim();
+  const lower = trimmed.toLowerCase();
+  // If it's a 2-letter abbreviation, convert to full name
+  if (lower.length === 2 && ABBREV_TO_STATE[lower]) {
+    return ABBREV_TO_STATE[lower];
+  }
+  // If it's already a full name, title-case it
+  if (STATE_ABBREV[lower]) {
+    return lower.split(' ').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  }
+  return trimmed;
+}
+
 interface ParsedAddress {
   streetAddress: string;
   city: string;

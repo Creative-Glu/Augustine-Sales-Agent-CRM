@@ -8,7 +8,7 @@
  *   4. Dedup primarily by email; if no email, match on name + institution
  */
 
-import { splitName, cleanEmail, mapRole, validateParRole, toStateAbbrev, extractZipFromString, formatInstitutionName, parseAddress, looksLikeInstitutionName } from './csv-export';
+import { splitName, cleanEmail, mapRole, validateParRole, toStateAbbrev, toStateFullName, extractZipFromString, formatInstitutionName, parseAddress, looksLikeInstitutionName } from './csv-export';
 
 // ─── CSV Parsing ───────────────────────────────────────────────────────────
 
@@ -148,9 +148,14 @@ export const MERGED_CSV_COLUMNS = [
   'City',
   'State - Dropdown (COMPANY)',
   'Postal Code',
-  'Source',           // "HubSpot", "CRM", or "Merged"
-  'Match Type',       // "email", "name+institution", or "new"
+  'Source',           // internal only — not exported
+  'Match Type',       // internal only — not exported
 ] as const;
+
+/** Columns included in the downloaded CSV (excludes internal-only columns). */
+const EXPORT_CSV_COLUMNS = MERGED_CSV_COLUMNS.filter(
+  (col) => col !== 'Source' && col !== 'Match Type'
+);
 
 export type MergedRow = Record<(typeof MERGED_CSV_COLUMNS)[number], string>;
 
@@ -179,7 +184,6 @@ function normalizeCrmRow(row: Record<string, string>): MergedRow {
 
   // Institution / Company
   const companyName = row['Company name'] ?? row['institution_name'] ?? '';
-  const recordIdCompany = row['Record ID - Company'] ?? '';
   let streetAddress = row['Street Address'] ?? '';
   let city = row['City'] ?? '';
   let stateRaw = row['State - Dropdown (COMPANY)'] ?? row['State'] ?? '';
@@ -201,18 +205,18 @@ function normalizeCrmRow(row: Record<string, string>): MergedRow {
   const formattedCompany = formatInstitutionName(companyName, stateAbbr, zip);
 
   return {
-    'Record ID - Contact': sanitizeRecordId(row['Record ID - Contact'] ?? row['staff_id'] ?? ''),
+    'Record ID - Contact': '',
     'First Name': sanitizeField(firstName),
     'Last Name': sanitizeField(lastName),
     'Job Title': sanitizeField(rawTitle),
     'PAR - Role': validateParRole(parRole),
     'Email': email,
     'Phone Number': sanitizeField(phone),
-    'Record ID - Company': sanitizeRecordId(recordIdCompany),
+    'Record ID - Company': '',
     'Company name': sanitizeField(formattedCompany || companyName),
     'Street Address': sanitizeField(streetAddress),
     'City': sanitizeField(city),
-    'State - Dropdown (COMPANY)': sanitizeField(stateRaw),
+    'State - Dropdown (COMPANY)': toStateFullName(stateRaw),
     'Postal Code': sanitizeField(zip),
     'Source': 'CRM',
     'Match Type': 'new',
@@ -250,7 +254,8 @@ function normalizeHubSpotRow(row: Record<string, string>): MergedRow {
 function fillBlanks(target: MergedRow, source: MergedRow, matchType: string): MergedRow {
   const merged = { ...target };
   for (const col of MERGED_CSV_COLUMNS) {
-    if (col === 'Source' || col === 'Match Type') continue;
+    // Never touch metadata or record ID columns — HubSpot owns these
+    if (col === 'Source' || col === 'Match Type' || col === 'Record ID - Contact' || col === 'Record ID - Company') continue;
     if (!merged[col]?.trim() && source[col]?.trim()) {
       merged[col] = source[col];
     }
@@ -343,7 +348,7 @@ export function mergeCsvs(hubspotRaw: Record<string, string>[], crmRaw: Record<s
   function processMatch(hs: MergedRow, crm: MergedRow, matchType: 'email' | 'name+institution', matchKey: string) {
     const changes: FieldChange[] = [];
     for (const col of MERGED_CSV_COLUMNS) {
-      if (col === 'Source' || col === 'Match Type') continue;
+      if (col === 'Source' || col === 'Match Type' || col === 'Record ID - Contact' || col === 'Record ID - Company') continue;
       if (!hs[col]?.trim() && crm[col]?.trim()) {
         changes.push({ column: col, before: '', after: crm[col] });
       }
@@ -424,9 +429,9 @@ function escapeCsvCell(value: string): string {
 }
 
 export function mergedRowsToCsv(rows: MergedRow[]): string {
-  const header = MERGED_CSV_COLUMNS.join(',');
+  const header = EXPORT_CSV_COLUMNS.join(',');
   const body = rows.map((row) =>
-    MERGED_CSV_COLUMNS.map((col) => escapeCsvCell(row[col] ?? '')).join(',')
+    EXPORT_CSV_COLUMNS.map((col) => escapeCsvCell(row[col] ?? '')).join(',')
   );
   return [header, ...body].join('\r\n');
 }
