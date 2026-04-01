@@ -1,20 +1,31 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   DocumentArrowDownIcon,
   DocumentArrowUpIcon,
   ArrowPathIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
+  FunnelIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 import {
   parseCsv,
   mergeCsvs,
   mergedRowsToCsv,
   type MergeResult,
+  type MergedRow,
   type MatchedRecordDiff,
 } from '@/lib/csv-merge';
 
@@ -28,6 +39,72 @@ type UploadSlot = {
 };
 
 const EMPTY_SLOT: UploadSlot = { file: null, rows: [], columns: [], error: null };
+
+// ─── Filter & Sort types ──────────────────────────────────────────────────
+
+type FilterCategory = 'new_scraped' | 'updated' | 'matched_no_changes' | 'hubspot_only';
+
+type SortOption =
+  | 'record_group'
+  | 'company_asc'
+  | 'company_desc'
+  | 'email_present'
+  | 'email_missing';
+
+function getFilterCategory(row: MergedRow): FilterCategory {
+  if (row['Record Group'] === 'new_scraped') return 'new_scraped';
+  if (row['Record Group'] === 'updated') return 'updated';
+  if (row['Match Type'] === 'hubspot-only') return 'hubspot_only';
+  return 'matched_no_changes';
+}
+
+const FILTER_CONFIG: Record<FilterCategory, { label: string; color: string; bgColor: string; borderColor: string; description: string }> = {
+  new_scraped: {
+    label: 'New Scraped',
+    color: 'text-amber-700 dark:text-amber-300',
+    bgColor: 'bg-amber-50 dark:bg-amber-950/20',
+    borderColor: 'border-amber-200 dark:border-amber-800/40',
+    description: 'Only in CRM — will be added to HubSpot',
+  },
+  updated: {
+    label: 'Updated',
+    color: 'text-green-700 dark:text-green-300',
+    bgColor: 'bg-green-50 dark:bg-green-950/20',
+    borderColor: 'border-green-200 dark:border-green-800/40',
+    description: 'Matched — blank fields will be filled',
+  },
+  matched_no_changes: {
+    label: 'Matched - No Changes',
+    color: 'text-indigo-700 dark:text-indigo-300',
+    bgColor: 'bg-indigo-50 dark:bg-indigo-950/20',
+    borderColor: 'border-indigo-200 dark:border-indigo-800/40',
+    description: 'Found in both files — already complete',
+  },
+  hubspot_only: {
+    label: 'HubSpot Only',
+    color: 'text-blue-700 dark:text-blue-300',
+    bgColor: 'bg-blue-50 dark:bg-blue-950/20',
+    borderColor: 'border-blue-200 dark:border-blue-800/40',
+    description: 'Only in HubSpot — not in CRM data',
+  },
+};
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: 'record_group', label: 'Record Group Priority' },
+  { value: 'company_asc', label: 'Company A → Z' },
+  { value: 'company_desc', label: 'Company Z → A' },
+  { value: 'email_present', label: 'Has Email First' },
+  { value: 'email_missing', label: 'Missing Email First' },
+];
+
+const RECORD_GROUP_SORT_PRIORITY: Record<string, number> = {
+  new_scraped: 0,
+  updated: 1,
+  matched_no_changes: 2,
+  hubspot_only: 3,
+};
+
+const PAGE_SIZE = 25;
 
 // ─── File Upload ───────────────────────────────────────────────────────────
 
@@ -230,6 +307,286 @@ function ResultsDashboard({ result }: { result: MergeResult }) {
   );
 }
 
+// ─── Filter & Sort Toolbar ────────────────────────────────────────────────
+
+function FilterSortToolbar({
+  rows,
+  activeFilters,
+  onToggleFilter,
+  onResetFilters,
+  sortOption,
+  onSortChange,
+  filteredCount,
+}: {
+  rows: MergedRow[];
+  activeFilters: Set<FilterCategory>;
+  onToggleFilter: (cat: FilterCategory) => void;
+  onResetFilters: () => void;
+  sortOption: SortOption;
+  onSortChange: (opt: SortOption) => void;
+  filteredCount: number;
+}) {
+  // Compute counts per category
+  const counts = useMemo(() => {
+    const c: Record<FilterCategory, number> = { new_scraped: 0, updated: 0, matched_no_changes: 0, hubspot_only: 0 };
+    for (const row of rows) {
+      c[getFilterCategory(row)]++;
+    }
+    return c;
+  }, [rows]);
+
+  const allActive = activeFilters.size === 4;
+
+  return (
+    <Card className="border-border bg-card">
+      <CardContent className="py-4">
+        <div className="flex flex-col gap-3">
+          {/* Row 1: Filter pills + sort */}
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <FunnelIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide shrink-0">Filter</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground shrink-0 mr-1">Sort by</span>
+              <Select value={sortOption} onValueChange={(v) => onSortChange(v as SortOption)}>
+                <SelectTrigger size="sm" className="h-8 text-xs min-w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SORT_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Row 2: Filter pills */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Show All pill */}
+            <button
+              onClick={onResetFilters}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
+                allActive
+                  ? 'bg-foreground text-background border-foreground'
+                  : 'bg-muted/40 text-muted-foreground border-border hover:bg-muted/60'
+              }`}
+            >
+              Show All
+              <span className={`tabular-nums ${allActive ? 'text-background/70' : 'text-muted-foreground/60'}`}>
+                {rows.length.toLocaleString()}
+              </span>
+            </button>
+
+            <span className="w-px h-5 bg-border/60" />
+
+            {/* Category pills */}
+            {(Object.keys(FILTER_CONFIG) as FilterCategory[]).map((cat) => {
+              const cfg = FILTER_CONFIG[cat];
+              const isActive = activeFilters.has(cat);
+              const count = counts[cat];
+              if (count === 0) return null;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => onToggleFilter(cat)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
+                    isActive
+                      ? `${cfg.bgColor} ${cfg.color} ${cfg.borderColor}`
+                      : 'bg-muted/20 text-muted-foreground/50 border-border/40 line-through decoration-muted-foreground/30'
+                  }`}
+                  title={cfg.description}
+                >
+                  {cfg.label}
+                  <span className={`tabular-nums ${isActive ? 'opacity-70' : 'opacity-40'}`}>
+                    {count.toLocaleString()}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Row 3: Result count */}
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              Showing <span className="font-semibold text-foreground tabular-nums">{filteredCount.toLocaleString()}</span>
+              {filteredCount !== rows.length && (
+                <> of <span className="tabular-nums">{rows.length.toLocaleString()}</span></>
+              )} records
+            </p>
+            {!allActive && (
+              <button
+                onClick={onResetFilters}
+                className="text-xs text-primary hover:underline cursor-pointer"
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── Data Table ───────────────────────────────────────────────────────────
+
+function RecordGroupBadge({ row }: { row: MergedRow }) {
+  const cat = getFilterCategory(row);
+  const cfg = FILTER_CONFIG[cat];
+  return (
+    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${cfg.bgColor} ${cfg.color} ${cfg.borderColor} border whitespace-nowrap`}>
+      {cfg.label}
+    </span>
+  );
+}
+
+function MergedDataTable({
+  rows,
+  page,
+  onPageChange,
+}: {
+  rows: MergedRow[];
+  page: number;
+  onPageChange: (p: number) => void;
+}) {
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const safeCurrentPage = Math.min(page, totalPages);
+  const startIdx = (safeCurrentPage - 1) * PAGE_SIZE;
+  const pageRows = rows.slice(startIdx, startIdx + PAGE_SIZE);
+
+  if (rows.length === 0) {
+    return (
+      <Card className="border-border bg-card">
+        <CardContent className="py-12 text-center">
+          <p className="text-sm text-muted-foreground">No records match the current filters.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="border-border bg-card">
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-border/60 bg-muted/40">
+                <th className="text-left px-3 py-2.5 font-medium text-muted-foreground w-[140px]">Record Group</th>
+                <th className="text-left px-3 py-2.5 font-medium text-muted-foreground">Name</th>
+                <th className="text-left px-3 py-2.5 font-medium text-muted-foreground">Email</th>
+                <th className="text-left px-3 py-2.5 font-medium text-muted-foreground">Job Title</th>
+                <th className="text-left px-3 py-2.5 font-medium text-muted-foreground">Company</th>
+                <th className="text-left px-3 py-2.5 font-medium text-muted-foreground w-[80px]">State</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pageRows.map((row, idx) => {
+                const name = [row['First Name'], row['Last Name']].filter(Boolean).join(' ') || '-';
+                const email = row['Email'] || '';
+                return (
+                  <tr
+                    key={startIdx + idx}
+                    className={`border-b border-border/30 hover:bg-muted/20 transition-colors ${
+                      idx % 2 === 0 ? '' : 'bg-muted/10'
+                    }`}
+                  >
+                    <td className="px-3 py-2">
+                      <RecordGroupBadge row={row} />
+                    </td>
+                    <td className="px-3 py-2 font-medium text-foreground truncate max-w-[160px]" title={name}>
+                      {name}
+                    </td>
+                    <td className="px-3 py-2 truncate max-w-[200px]" title={email}>
+                      {email ? (
+                        <span className="text-foreground">{email}</span>
+                      ) : (
+                        <span className="text-muted-foreground/50 italic">no email</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground truncate max-w-[160px]" title={row['Job Title']}>
+                      {row['Job Title'] || '-'}
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground truncate max-w-[200px]" title={row['Company name']}>
+                      {row['Company name'] || '-'}
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">
+                      {row['State - Dropdown (COMPANY)'] || '-'}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border/60">
+            <p className="text-xs text-muted-foreground tabular-nums">
+              {startIdx + 1}–{Math.min(startIdx + PAGE_SIZE, rows.length)} of {rows.length.toLocaleString()}
+            </p>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPageChange(safeCurrentPage - 1)}
+                disabled={safeCurrentPage <= 1}
+                className="h-7 w-7 p-0"
+              >
+                <ChevronLeftIcon className="w-3.5 h-3.5" />
+              </Button>
+              {generatePageNumbers(safeCurrentPage, totalPages).map((p, i) =>
+                p === null ? (
+                  <span key={`ellipsis-${i}`} className="px-1 text-xs text-muted-foreground">...</span>
+                ) : (
+                  <Button
+                    key={p}
+                    variant={p === safeCurrentPage ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => onPageChange(p)}
+                    className="h-7 min-w-[28px] px-2 text-xs tabular-nums"
+                  >
+                    {p}
+                  </Button>
+                )
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPageChange(safeCurrentPage + 1)}
+                disabled={safeCurrentPage >= totalPages}
+                className="h-7 w-7 p-0"
+              >
+                <ChevronRightIcon className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Generate page numbers with ellipsis for pagination. */
+function generatePageNumbers(current: number, total: number): (number | null)[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages: (number | null)[] = [];
+  if (current <= 4) {
+    for (let i = 1; i <= 5; i++) pages.push(i);
+    pages.push(null, total);
+  } else if (current >= total - 3) {
+    pages.push(1, null);
+    for (let i = total - 4; i <= total; i++) pages.push(i);
+  } else {
+    pages.push(1, null, current - 1, current, current + 1, null, total);
+  }
+  return pages;
+}
+
 // ─── Section: Contacts that will be UPDATED ────────────────────────────────
 
 function UpdatedContactsSection({ diffs }: { diffs: MatchedRecordDiff[] }) {
@@ -418,6 +775,42 @@ function MatchBadge({ type }: { type: string }) {
   );
 }
 
+// ─── Sorting logic ────────────────────────────────────────────────────────
+
+function applySortToRows(rows: MergedRow[], sortOption: SortOption): MergedRow[] {
+  const sorted = [...rows];
+  switch (sortOption) {
+    case 'record_group':
+      sorted.sort((a, b) => {
+        const pa = RECORD_GROUP_SORT_PRIORITY[getFilterCategory(a)] ?? 9;
+        const pb = RECORD_GROUP_SORT_PRIORITY[getFilterCategory(b)] ?? 9;
+        return pa - pb;
+      });
+      break;
+    case 'company_asc':
+      sorted.sort((a, b) => (a['Company name'] || '').localeCompare(b['Company name'] || ''));
+      break;
+    case 'company_desc':
+      sorted.sort((a, b) => (b['Company name'] || '').localeCompare(a['Company name'] || ''));
+      break;
+    case 'email_present':
+      sorted.sort((a, b) => {
+        const aHas = a['Email']?.trim() ? 0 : 1;
+        const bHas = b['Email']?.trim() ? 0 : 1;
+        return aHas - bHas;
+      });
+      break;
+    case 'email_missing':
+      sorted.sort((a, b) => {
+        const aHas = a['Email']?.trim() ? 1 : 0;
+        const bHas = b['Email']?.trim() ? 1 : 0;
+        return aHas - bHas;
+      });
+      break;
+  }
+  return sorted;
+}
+
 // ─── Main Page ─────────────────────────────────────────────────────────────
 
 export default function CsvMergePage() {
@@ -425,6 +818,39 @@ export default function CsvMergePage() {
   const [crm, setCrm] = useState<UploadSlot>(EMPTY_SLOT);
   const [mergeResult, setMergeResult] = useState<MergeResult | null>(null);
   const [merging, setMerging] = useState(false);
+
+  // Filter & sort state
+  const ALL_FILTERS = new Set<FilterCategory>(['new_scraped', 'updated', 'matched_no_changes', 'hubspot_only']);
+  const [activeFilters, setActiveFilters] = useState<Set<FilterCategory>>(new Set(ALL_FILTERS));
+  const [sortOption, setSortOption] = useState<SortOption>('record_group');
+  const [tablePage, setTablePage] = useState(1);
+
+  const handleToggleFilter = useCallback((cat: FilterCategory) => {
+    setActiveFilters((prev) => {
+      const next = new Set(prev);
+      if (next.has(cat)) {
+        // Don't allow deselecting all filters
+        if (next.size <= 1) return prev;
+        next.delete(cat);
+      } else {
+        next.add(cat);
+      }
+      return next;
+    });
+    setTablePage(1);
+  }, []);
+
+  const handleResetFilters = useCallback(() => {
+    setActiveFilters(new Set(ALL_FILTERS));
+    setTablePage(1);
+  }, []);
+
+  // Compute filtered + sorted rows
+  const filteredRows = useMemo(() => {
+    if (!mergeResult) return [];
+    const filtered = mergeResult.rows.filter((row) => activeFilters.has(getFilterCategory(row)));
+    return applySortToRows(filtered, sortOption);
+  }, [mergeResult, activeFilters, sortOption]);
 
   const handleFile = useCallback((setter: typeof setHubspot) => async (file: File) => {
     try {
@@ -449,6 +875,10 @@ export default function CsvMergePage() {
       try {
         const result = mergeCsvs(hubspot.rows, crm.rows);
         setMergeResult(result);
+        // Reset filter/sort/page on new merge
+        setActiveFilters(new Set(ALL_FILTERS));
+        setSortOption('record_group');
+        setTablePage(1);
       } catch (err) {
         console.error('Merge failed:', err);
       } finally {
@@ -459,23 +889,31 @@ export default function CsvMergePage() {
 
   const handleDownload = useCallback(() => {
     if (!mergeResult) return;
-    const csv = mergedRowsToCsv(mergeResult.rows);
+    const rowsToExport = filteredRows;
+    if (rowsToExport.length === 0) return;
+    const csv = mergedRowsToCsv(rowsToExport);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `merged_contacts_${new Date().toISOString().slice(0, 10)}.csv`;
+    const isFiltered = activeFilters.size < 4;
+    const suffix = isFiltered ? '_filtered' : '';
+    a.download = `merged_contacts${suffix}_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [mergeResult]);
+  }, [mergeResult, filteredRows, activeFilters]);
 
   const handleReset = useCallback(() => {
     setHubspot(EMPTY_SLOT);
     setCrm(EMPTY_SLOT);
     setMergeResult(null);
+    setActiveFilters(new Set(ALL_FILTERS));
+    setSortOption('record_group');
+    setTablePage(1);
   }, []);
 
   const canMerge = hubspot.rows.length > 0 && crm.rows.length > 0 && !hubspot.error && !crm.error;
+  const isFiltered = activeFilters.size < 4;
 
   return (
     <div className="space-y-6 w-full">
@@ -510,9 +948,12 @@ export default function CsvMergePage() {
           {merging ? 'Analyzing...' : 'Preview Changes'}
         </Button>
         {mergeResult && (
-          <Button onClick={handleDownload} variant="outline" className="gap-2">
+          <Button onClick={handleDownload} variant="outline" className="gap-2" disabled={filteredRows.length === 0}>
             <DocumentArrowDownIcon className="w-4 h-4" />
-            Download Ready-to-Import File ({mergeResult.stats.outputTotal.toLocaleString()} contacts)
+            {isFiltered
+              ? `Export Filtered (${filteredRows.length.toLocaleString()} contacts)`
+              : `Download Ready-to-Import File (${mergeResult.stats.outputTotal.toLocaleString()} contacts)`
+            }
           </Button>
         )}
         {(hubspot.file || crm.file) && (
@@ -527,13 +968,36 @@ export default function CsvMergePage() {
         <>
           <ResultsDashboard result={mergeResult} />
 
-          <UpdatedContactsSection
-            diffs={mergeResult.diffs.filter((d) => d.changes.length > 0)}
+          {/* Filter & Sort Toolbar */}
+          <FilterSortToolbar
+            rows={mergeResult.rows}
+            activeFilters={activeFilters}
+            onToggleFilter={handleToggleFilter}
+            onResetFilters={handleResetFilters}
+            sortOption={sortOption}
+            onSortChange={(opt) => { setSortOption(opt); setTablePage(1); }}
+            filteredCount={filteredRows.length}
           />
 
-          <MatchedNoChangesSection
-            diffs={mergeResult.diffs.filter((d) => d.changes.length === 0)}
+          {/* Merged Data Table */}
+          <MergedDataTable
+            rows={filteredRows}
+            page={tablePage}
+            onPageChange={setTablePage}
           />
+
+          {/* Detailed diff sections — only show when relevant filter is active */}
+          {activeFilters.has('updated') && (
+            <UpdatedContactsSection
+              diffs={mergeResult.diffs.filter((d) => d.changes.length > 0)}
+            />
+          )}
+
+          {activeFilters.has('matched_no_changes') && (
+            <MatchedNoChangesSection
+              diffs={mergeResult.diffs.filter((d) => d.changes.length === 0)}
+            />
+          )}
         </>
       )}
     </div>

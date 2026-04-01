@@ -107,11 +107,12 @@ function sanitizeRecordId(raw: string): string {
   return match ? match[0] : '';
 }
 
-/** Clean a field value — collapse whitespace, strip control characters. */
+/** Clean a field value — strip control characters, collapse whitespace. */
 function sanitizeField(raw: string): string {
   if (!raw) return '';
   return raw
-    .replace(/[\r\n\t]+/g, ' ')  // Replace newlines/tabs with space
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // strip control chars
+    .replace(/[\r\n\t]+/g, ' ')   // Replace newlines/tabs with space
     .replace(/\s{2,}/g, ' ')      // Collapse multiple spaces
     .trim();
 }
@@ -148,6 +149,7 @@ export const MERGED_CSV_COLUMNS = [
   'City',
   'State - Dropdown (COMPANY)',
   'Postal Code',
+  'Record Group',     // new_scraped | updated | existing_hubspot
   'Source',           // internal only — not exported
   'Match Type',       // internal only — not exported
 ] as const;
@@ -156,6 +158,13 @@ export const MERGED_CSV_COLUMNS = [
 const EXPORT_CSV_COLUMNS = MERGED_CSV_COLUMNS.filter(
   (col) => col !== 'Source' && col !== 'Match Type'
 );
+
+/** Sort priority for record groups — lower number = appears first in CSV. */
+const RECORD_GROUP_PRIORITY: Record<string, number> = {
+  'new_scraped': 0,
+  'updated': 1,
+  'existing_hubspot': 2,
+};
 
 export type MergedRow = Record<(typeof MERGED_CSV_COLUMNS)[number], string>;
 
@@ -218,6 +227,7 @@ function normalizeCrmRow(row: Record<string, string>): MergedRow {
     'City': sanitizeField(city),
     'State - Dropdown (COMPANY)': toStateFullName(stateRaw),
     'Postal Code': sanitizeField(zip),
+    'Record Group': 'new_scraped',
     'Source': 'CRM',
     'Match Type': 'new',
   };
@@ -240,6 +250,7 @@ function normalizeHubSpotRow(row: Record<string, string>): MergedRow {
     'City': sanitizeField(row['City'] ?? ''),
     'State - Dropdown (COMPANY)': sanitizeField(row['State - Dropdown (COMPANY)'] ?? row['State'] ?? ''),
     'Postal Code': sanitizeField(row['Postal Code'] ?? ''),
+    'Record Group': 'existing_hubspot',
     'Source': 'HubSpot',
     'Match Type': '',
   };
@@ -251,17 +262,18 @@ function normalizeHubSpotRow(row: Record<string, string>): MergedRow {
  * Fill blank fields in `target` from `source`. Never overwrite existing data.
  * Returns a new merged row.
  */
-function fillBlanks(target: MergedRow, source: MergedRow, matchType: string): MergedRow {
+function fillBlanks(target: MergedRow, source: MergedRow, matchType: string, hasChanges: boolean): MergedRow {
   const merged = { ...target };
   for (const col of MERGED_CSV_COLUMNS) {
     // Never touch metadata or record ID columns — HubSpot owns these
-    if (col === 'Source' || col === 'Match Type' || col === 'Record ID - Contact' || col === 'Record ID - Company') continue;
+    if (col === 'Source' || col === 'Match Type' || col === 'Record Group' || col === 'Record ID - Contact' || col === 'Record ID - Company') continue;
     if (!merged[col]?.trim() && source[col]?.trim()) {
       merged[col] = source[col];
     }
   }
   merged['Source'] = 'Merged';
   merged['Match Type'] = matchType;
+  merged['Record Group'] = hasChanges ? 'updated' : 'existing_hubspot';
   return merged;
 }
 
@@ -348,7 +360,7 @@ export function mergeCsvs(hubspotRaw: Record<string, string>[], crmRaw: Record<s
   function processMatch(hs: MergedRow, crm: MergedRow, matchType: 'email' | 'name+institution', matchKey: string) {
     const changes: FieldChange[] = [];
     for (const col of MERGED_CSV_COLUMNS) {
-      if (col === 'Source' || col === 'Match Type' || col === 'Record ID - Contact' || col === 'Record ID - Company') continue;
+      if (col === 'Source' || col === 'Match Type' || col === 'Record Group' || col === 'Record ID - Contact' || col === 'Record ID - Company') continue;
       if (!hs[col]?.trim() && crm[col]?.trim()) {
         changes.push({ column: col, before: '', after: crm[col] });
       }
@@ -364,7 +376,7 @@ export function mergeCsvs(hubspotRaw: Record<string, string>[], crmRaw: Record<s
       changes,
     });
 
-    output.push(fillBlanks(hs, crm, matchType));
+    output.push(fillBlanks(hs, crm, matchType, changes.length > 0));
   }
 
   // Process each CRM row
@@ -415,21 +427,35 @@ export function mergeCsvs(hubspotRaw: Record<string, string>[], crmRaw: Record<s
     }
   }
 
+  // 5. Sort by record group: new_scraped → updated → existing_hubspot
+  output.sort((a, b) => {
+    const pa = RECORD_GROUP_PRIORITY[a['Record Group']] ?? 9;
+    const pb = RECORD_GROUP_PRIORITY[b['Record Group']] ?? 9;
+    return pa - pb;
+  });
+
   stats.outputTotal = output.length;
   return { rows: output, stats, diffs };
 }
 
 // ─── CSV serialization ─────────────────────────────────────────────────────
 
+/** Sanitize and quote a cell value for CSV output.
+ *  - Strips control characters (NUL, tabs, stray CR/LF, etc.)
+ *  - Always wraps in double quotes to prevent column misalignment */
 function escapeCsvCell(value: string): string {
-  if (value.includes(',') || value.includes('"') || value.includes('\n') || value.includes('\r')) {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
-  return value;
+  // Strip control characters that can break CSV parsing (keep spaces)
+  const clean = value
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // remove control chars
+    .replace(/[\r\n\t]+/g, ' ')                           // newlines/tabs → space
+    .replace(/\s{2,}/g, ' ')                               // collapse whitespace
+    .trim();
+  // Always quote every cell to guarantee column alignment
+  return `"${clean.replace(/"/g, '""')}"`;
 }
 
 export function mergedRowsToCsv(rows: MergedRow[]): string {
-  const header = EXPORT_CSV_COLUMNS.join(',');
+  const header = EXPORT_CSV_COLUMNS.map((col) => `"${col}"`).join(',');
   const body = rows.map((row) =>
     EXPORT_CSV_COLUMNS.map((col) => escapeCsvCell(row[col] ?? '')).join(',')
   );
