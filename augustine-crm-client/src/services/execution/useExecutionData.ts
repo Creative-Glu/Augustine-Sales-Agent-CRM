@@ -11,7 +11,7 @@ import {
   type ResultStatusFilter,
   type ResultSourceFilter,
 } from './result.service';
-import { getStaffPaginated, getStaffCounts, getSyncLogs, resolveInstitutionIdsForState } from './staff.service';
+import { getStaffPaginated, getStaffCounts, getSyncLogs, resolveInstitutionIdsForStates } from './staff.service';
 import { getInstitutionPaginated, getInstitutionCounts } from './institution.service';
 import type { SyncStatus } from '@/types/execution';
 import {
@@ -221,6 +221,13 @@ export function useExecutionStats() {
   };
 }
 
+/** Parse a comma-separated URL param into a trimmed, non-empty array. */
+function parseMultiParam(sp: URLSearchParams, key: string): string[] {
+  const raw = sp.get(key) ?? '';
+  if (!raw) return [];
+  return raw.split(',').map((s) => s.trim()).filter(Boolean);
+}
+
 export function useStaffPaginated() {
   const searchParams = useSearchParams();
   const view = useExecutionView();
@@ -237,28 +244,32 @@ export function useStaffPaginated() {
   const sync_status = (searchParams.get('sync_status') as SyncStatus | null) || undefined;
   const confidence_min = parseNumParam(searchParams, 'confidence_min');
   const confidence_max = parseNumParam(searchParams, 'confidence_max');
-  const state = searchParams.get('state') ?? undefined;
-  const par_role = searchParams.get('par_role') ?? undefined;
+  // Multi-select: comma-separated in URL (e.g. state=CA,TX)
+  const states = parseMultiParam(searchParams, 'state');
+  const par_roles = parseMultiParam(searchParams, 'par_role');
+  // Stable string keys for React Query (sorted to avoid order-dependent cache misses)
+  const stateKey = [...states].sort().join(',') || undefined;
+  const parRoleKey = [...par_roles].sort().join(',') || undefined;
 
-  // Pre-resolve institution IDs for the selected state (cached separately).
-  // This way the heavy resolution only runs once per state change and is
-  // shared across pagination clicks.
+  const hasStateFilter = states.length > 0;
+
+  // Pre-resolve institution IDs for the selected state(s) (cached separately).
   const stateIdsQuery = useQuery({
-    queryKey: ['execution', 'state-institution-ids', state],
-    queryFn: () => resolveInstitutionIdsForState(state!),
-    enabled: view === 'staff' && !!state,
-    staleTime: 5 * 60 * 1000, // 5 min — state mapping doesn't change often
+    queryKey: ['execution', 'state-institution-ids', stateKey],
+    queryFn: () => resolveInstitutionIdsForStates(states),
+    enabled: view === 'staff' && hasStateFilter,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   // The staff query only runs once state IDs are resolved (or no state filter).
-  const stateIdsReady = !state || stateIdsQuery.isSuccess;
-  const isStateResolving = !!state && (stateIdsQuery.isLoading || stateIdsQuery.isFetching);
+  const stateIdsReady = !hasStateFilter || stateIdsQuery.isSuccess;
+  const isStateResolving = hasStateFilter && (stateIdsQuery.isLoading || stateIdsQuery.isFetching);
 
   const staffQuery = useQuery({
     queryKey: [
       'execution',
       'staff',
-      view,
       offset,
       limit,
       name_search,
@@ -272,8 +283,8 @@ export function useStaffPaginated() {
       sync_status,
       confidence_min,
       confidence_max,
-      state,
-      par_role,
+      stateKey,
+      parRoleKey,
     ],
     queryFn: () =>
       getStaffPaginated({
@@ -290,8 +301,8 @@ export function useStaffPaginated() {
         sync_status: sync_status ?? undefined,
         confidence_min: confidence_min ?? undefined,
         confidence_max: confidence_max ?? undefined,
-        state: state || undefined,
-        par_role: par_role || undefined,
+        state: states.length > 0 ? states : undefined,
+        par_role: par_roles.length > 0 ? par_roles : undefined,
         // Pass pre-resolved IDs so getStaffPaginated skips the heavy resolution
         _preResolvedStateIds: stateIdsQuery.data ?? undefined,
       }),

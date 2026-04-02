@@ -91,6 +91,24 @@ async function getInstitutionIdsForState(state: string): Promise<number[]> {
 /** Public wrapper so the hook can pre-resolve IDs in a separate cached query. */
 export const resolveInstitutionIdsForState = getInstitutionIdsForState;
 
+/**
+ * Resolve institution IDs for multiple states. Resolves each individually (leveraging per-state cache)
+ * and merges the results into a single deduplicated array.
+ */
+export async function resolveInstitutionIdsForStates(states: string[]): Promise<number[]> {
+  if (states.length === 0) return [];
+  if (states.length === 1) return getInstitutionIdsForState(states[0]);
+  const allIds = await Promise.all(states.map((s) => getInstitutionIdsForState(s)));
+  return [...new Set(allIds.flat())];
+}
+
+/** Normalize a string | string[] | undefined into a trimmed, non-empty array. */
+function normalizeToArray(val: string | string[] | undefined): string[] {
+  if (!val) return [];
+  if (Array.isArray(val)) return val.map((s) => s.trim()).filter(Boolean);
+  return val.split(',').map((s) => s.trim()).filter(Boolean);
+}
+
 export interface StaffPaginatedParams {
   offset: number;
   limit: number;
@@ -105,10 +123,10 @@ export interface StaffPaginatedParams {
   sync_status?: SyncStatus | null;
   confidence_min?: number | null;
   confidence_max?: number | null;
-  /** Filter by US state (resolved via domain matching: websites_url → institutions → staff). */
-  state?: string;
-  /** Filter by PAR role name (exact match on staff.par_role). */
-  par_role?: string;
+  /** Filter by US state(s) (resolved via domain matching: websites_url → institutions → staff). */
+  state?: string | string[];
+  /** Filter by PAR role name(s) (exact match or .in() for multiple). */
+  par_role?: string | string[];
   /** Pre-resolved institution IDs for the state filter. Skips the heavy resolution if provided. */
   _preResolvedStateIds?: number[];
 }
@@ -140,6 +158,11 @@ export async function getStaffPaginated({
   par_role,
   _preResolvedStateIds,
 }: StaffPaginatedParams): Promise<StaffPaginatedResponse> {
+  // Normalize state to array
+  const stateArr = normalizeToArray(state);
+  // Normalize par_role to array
+  const parRoleArr = normalizeToArray(par_role);
+
   // Use pre-resolved IDs if available (from the hook's cached query), otherwise resolve
   let stateInstitutionIds: number[] | undefined;
   if (_preResolvedStateIds) {
@@ -147,8 +170,10 @@ export async function getStaffPaginated({
     if (stateInstitutionIds.length === 0) {
       return { data: [], total: 0, hasMore: false };
     }
-  } else if (state?.trim()) {
-    stateInstitutionIds = await getInstitutionIdsForState(state.trim());
+  } else if (stateArr.length > 0) {
+    // Resolve each state in parallel and merge unique IDs
+    const allIds = await Promise.all(stateArr.map((s) => getInstitutionIdsForState(s)));
+    stateInstitutionIds = [...new Set(allIds.flat())];
     if (stateInstitutionIds.length === 0) {
       return { data: [], total: 0, hasMore: false };
     }
@@ -187,7 +212,11 @@ export async function getStaffPaginated({
     const maxDecimal = Math.min(1, Math.max(0, Number(confidence_max) / 100));
     query = query.lte('enrichment_confidence', maxDecimal);
   }
-  if (par_role?.trim()) query = query.eq('par_role', par_role.trim());
+  if (parRoleArr.length === 1) {
+    query = query.eq('par_role', parRoleArr[0]);
+  } else if (parRoleArr.length > 1) {
+    query = query.in('par_role', parRoleArr);
+  }
 
   if (enriched_only) {
     query = query

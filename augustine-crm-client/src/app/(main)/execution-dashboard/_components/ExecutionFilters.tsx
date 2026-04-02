@@ -19,6 +19,7 @@ import type { SyncStatus } from '@/types/execution';
 import { useDistinctStates } from '@/services/execution/useExecutionData';
 import { useQuery } from '@tanstack/react-query';
 import { listRoles } from '@/services/augustine/roles.service';
+import { MultiSelect } from '@/components/MultiSelect';
 
 function useExecutionParams() {
   const router = useRouter();
@@ -332,55 +333,47 @@ export function InstitutionFilters() {
   );
 }
 
+/** Parse a comma-separated URL param into an array. */
+function parseMultiParam(sp: URLSearchParams, key: string): string[] {
+  const raw = sp.get(key) ?? '';
+  if (!raw) return [];
+  return raw.split(',').map((s) => s.trim()).filter(Boolean);
+}
+
 export function StaffFilters() {
   const { searchParams, setParams } = useExecutionParams();
   const staff_date_from = searchParams.get('staff_date_from') ?? '';
   const staff_date_to = searchParams.get('staff_date_to') ?? '';
   const is_eligible = searchParams.get('is_eligible') ?? '';
-  const state = searchParams.get('state') ?? '';
-  const par_role = searchParams.get('par_role') ?? '';
+  const selectedStates = parseMultiParam(searchParams, 'state');
+  const selectedRoles = parseMultiParam(searchParams, 'par_role');
   const statesQuery = useDistinctStates();
   const rolesQuery = useQuery({ queryKey: ['augustine', 'roles', 'list'], queryFn: listRoles });
 
+  const stateOptions = (statesQuery.data ?? []).map((s) => ({ label: s, value: s }));
+  const roleOptions = (rolesQuery.data ?? []).map((r) => ({ label: r.name, value: r.name }));
+
   return (
     <div className={filterBarClass}>
-      <div className="space-y-1">
+      <div className="space-y-1 min-w-[180px] max-w-[280px]">
         <Label className="text-xs">State</Label>
-        <Select
-          value={state || 'all'}
-          onValueChange={(v) => setParams({ state: v === 'all' ? null : v, offset: null })}
-        >
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="All States" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All States</SelectItem>
-            {(statesQuery.data ?? []).map((s) => (
-              <SelectItem key={s} value={s}>
-                {s}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <MultiSelect
+          options={stateOptions}
+          selected={selectedStates}
+          onChange={(vals) => setParams({ state: vals.length > 0 ? vals.join(',') : null, offset: null })}
+          placeholder="All States"
+          loading={statesQuery.isLoading}
+        />
       </div>
-      <div className="space-y-1">
+      <div className="space-y-1 min-w-[220px] max-w-[320px]">
         <Label className="text-xs">Parish Role</Label>
-        <Select
-          value={par_role || 'all'}
-          onValueChange={(v) => setParams({ par_role: v === 'all' ? null : v, offset: null })}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="All Roles" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Roles</SelectItem>
-            {(rolesQuery.data ?? []).map((r) => (
-              <SelectItem key={r.role_id} value={r.name}>
-                {r.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <MultiSelect
+          options={roleOptions}
+          selected={selectedRoles}
+          onChange={(vals) => setParams({ par_role: vals.length > 0 ? vals.join(',') : null, offset: null })}
+          placeholder="All Roles"
+          loading={rolesQuery.isLoading}
+        />
       </div>
       <div className="space-y-1">
         <Label className="text-xs">From date</Label>
