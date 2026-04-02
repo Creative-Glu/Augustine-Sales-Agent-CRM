@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { SIDEBAR_LINKS } from '../constants/sidebarLinks';
-import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import { SIDEBAR_GROUPS } from '../constants/sidebarLinks';
+import { ArrowRightOnRectangleIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/providers/AuthProvider';
 
@@ -12,130 +12,91 @@ export default function Sidebar() {
   const router = useRouter();
   const { user, logout } = useAuth();
 
-  const sidebarVariants = {
-    hidden: { x: -20, opacity: 0 },
-    visible: {
-      x: 0,
-      opacity: 1,
-      transition: { duration: 0.5, ease: 'easeOut' },
-    },
-  };
-
-  const navItemVariants = {
-    hidden: { opacity: 0, x: -10 },
-    visible: (i: number) => ({
-      opacity: 1,
-      x: 0,
-      transition: { delay: i * 0.05, duration: 0.3 },
-    }),
-  };
+  /** Check if a link is active — exact match or starts-with for nested routes. */
+  const isActive = (href: string) =>
+    pathname === href || (href !== '/dashboard' && pathname?.startsWith(href + '/'));
 
   return (
-    <motion.aside
-      // variants={sidebarVariants}
-      initial="hidden"
-      animate="visible"
-      className="fixed left-0 top-0 h-screen w-64 bg-linear-to-b from-slate-900 via-slate-900 to-slate-950 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900 text-white flex flex-col shadow-2xl border-r border-slate-700/50"
-    >
-      {/* Brand Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="p-6 border-b border-slate-700/50 bg-linear-to-r from-blue-600/10 to-cyan-600/10"
-      >
-        <div className="flex items-center justify-center gap-3 mb-2">
-          {/* <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg">
-            <Bars3Icon className="w-5 h-5 text-white" />
-          </div> */}
-          <h1 className="text-2xl font-bold tracking-tight bg-linear-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-            Augustine
-          </h1>
+    <aside className="fixed left-0 top-0 h-screen w-64 bg-gradient-to-b from-slate-950 to-gray-950 text-white flex flex-col border-r border-slate-700/40 shadow-2xl">
+      {/* ── Brand Section ── */}
+      <div className="px-6 pt-8 pb-6">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-sm font-bold text-white">
+            A
+          </div>
+          <h1 className="text-xl font-bold tracking-tight text-white">Augustine</h1>
         </div>
-        <p className="text-xs text-slate-400 font-medium uppercase tracking-widest ml-11">
-          Sales & Leads
+        <p className="text-xs text-slate-400 font-medium tracking-wide ml-10">
+          Sales & Leads Management
         </p>
-      </motion.div>
+      </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar">
-        {SIDEBAR_LINKS.map(({ href, label, icon: Icon }, index) => {
-          const isActive = pathname === href;
-          return (
-            <motion.div
-              key={href}
-              custom={index}
-              variants={navItemVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              <Link
-                href={href}
-                className={`group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 relative overflow-hidden
-                ${
-                  isActive
-                    ? 'bg-linear-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/30'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
-                }`}
-              >
-                {/* Animated background for hover state */}
-                {!isActive && (
-                  <div className="absolute inset-0 bg-linear-to-r from-blue-600/0 to-cyan-600/0 group-hover:from-blue-600/10 group-hover:to-cyan-600/10 transition-all duration-300" />
-                )}
+      <div className="h-px bg-gradient-to-r from-slate-800/0 via-slate-700/40 to-slate-800/0 mx-4" />
 
-                {/* Icon */}
-                <motion.div
-                  whileHover={!isActive ? { scale: 1.1, rotate: 5 } : {}}
-                  transition={{ duration: 0.2 }}
-                  className="relative z-10"
-                >
-                  <Icon
-                    className={`w-5 h-5 transition-all duration-300 ${
-                      isActive ? 'text-white' : 'text-slate-400 group-hover:text-blue-400'
-                    }`}
-                  />
-                </motion.div>
+      {/* ── Navigation ── */}
+      <nav className="flex-1 overflow-y-auto px-3 pt-6 pb-2 custom-scrollbar">
+        {SIDEBAR_GROUPS.map((group, gi) => (
+          <div key={group.title} className={gi > 0 ? 'mt-6' : ''}>
+            <p className="px-3 mb-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-500 select-none opacity-70">
+              {group.title}
+            </p>
+            <div className="space-y-1">
+              {group.links.map(({ href, label, icon: Icon }) => {
+                const active = isActive(href);
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`group relative flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                      ${
+                        active
+                          ? 'bg-gradient-to-r from-blue-600/25 to-blue-600/10 text-blue-300 shadow-lg shadow-blue-500/10'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/40'
+                      }`}
+                  >
+                    {/* Active indicator bar */}
+                    {active && (
+                      <motion.div
+                        layoutId="sidebar-active"
+                        className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-gradient-to-b from-blue-400 to-blue-500 shadow-lg shadow-blue-500/50"
+                        transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                      />
+                    )}
 
-                {/* Label */}
-                <span className="relative z-10 flex-1">{label}</span>
+                    <Icon
+                      className={`w-5 h-5 shrink-0 transition-all duration-200 ${
+                        active ? 'text-blue-300' : 'text-slate-500 group-hover:text-slate-300'
+                      }`}
+                    />
+                    <span className="truncate flex-1">{label}</span>
 
-                {/* Active indicator dot */}
-                {isActive && (
-                  <motion.div
-                    layoutId="activeIndicator"
-                    className="w-2 h-2 rounded-full bg-white"
-                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  />
-                )}
-              </Link>
-            </motion.div>
-          );
-        })}
+                    {/* Animated arrow on hover */}
+                    {!active && (
+                      <ChevronRightIcon className="w-4 h-4 text-slate-600 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" />
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
-      {/* Divider */}
-      <div className="h-px bg-linear-to-r from-slate-700/0 via-slate-700/50 to-slate-700/0" />
-
-      {/* Footer */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="p-4 border-t border-slate-700/50 bg-linear-to-t from-slate-950 to-slate-900"
-      >
+      {/* ── Footer Section ── */}
+      <div className="border-t border-slate-700/40 px-3 py-4 bg-gradient-to-t from-slate-950/50 to-transparent">
         {user && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="text-center mb-4 px-2 space-y-1"
-          >
-            <p className="text-sm font-semibold text-white truncate">
-              {user.full_name || 'User'}
-            </p>
-            <p className="text-xs text-slate-400 truncate">{user.email}</p>
-            <p className="text-[11px] text-slate-500">Role: {user.role}</p>
-          </motion.div>
+          <div className="flex items-center gap-3 px-3 mb-4 pb-4 border-b border-slate-700/30">
+            {/* Avatar */}
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-500 flex items-center justify-center text-sm font-bold text-white shrink-0 shadow-lg shadow-blue-500/30">
+              {(user.full_name || user.email || 'U').charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-slate-100 truncate leading-tight">
+                {user.full_name || 'User'}
+              </p>
+              <p className="text-xs text-white truncate leading-tight">{user.role}</p>
+            </div>
+          </div>
         )}
 
         <button
@@ -144,12 +105,12 @@ export default function Sidebar() {
             logout();
             router.push('/login');
           }}
-          className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-700/60 bg-slate-900 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 transition-colors"
+          className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-slate-700/60 bg-slate-800/30 px-3.5 py-2.5 text-xs font-semibold text-slate-400 hover:text-slate-100 hover:bg-red-500/10 hover:border-red-500/30 transition-all duration-200 cursor-pointer group"
         >
-          <ArrowRightOnRectangleIcon className="w-4 h-4" />
+          <ArrowRightOnRectangleIcon className="w-4 h-4 transition-colors duration-200 group-hover:text-red-400" />
           Sign out
         </button>
-      </motion.div>
-    </motion.aside>
+      </div>
+    </aside>
   );
 }

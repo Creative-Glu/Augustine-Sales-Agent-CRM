@@ -11,7 +11,14 @@ export async function GET() {
     if (!base) {
       return NextResponse.json({ enabled: false, worker_running: false });
     }
-    const res = await fetch(`${base}/api/hubspot-health`, { cache: 'no-store' });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
+    let res: Response;
+    try {
+      res = await fetch(`${base}/api/hubspot-health`, { cache: 'no-store', signal: controller.signal });
+    } finally {
+      clearTimeout(timeout);
+    }
     if (!res.ok) {
       return NextResponse.json({ enabled: false, worker_running: false });
     }

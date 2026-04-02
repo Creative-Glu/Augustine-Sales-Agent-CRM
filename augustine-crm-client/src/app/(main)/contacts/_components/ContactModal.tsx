@@ -105,7 +105,6 @@ export default function ContactModal({ open, onClose, onCreated, contact }: Cont
         onClose();
       } catch (err) {
         errorToast(isEditMode ? 'Error updating contact' : 'Error creating contact');
-        console.error(isEditMode ? 'Update contact error:' : 'Create contact error:', err);
       } finally {
         setSubmitting(false);
       }

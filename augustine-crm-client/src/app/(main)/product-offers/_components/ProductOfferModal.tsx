@@ -74,7 +74,6 @@ export default function ProductOfferModal({
         onClose();
         resetForm();
       } catch (err) {
-        console.error(err);
         errorToast(isEditMode ? 'Error updating offer' : 'Error creating offer');
       } finally {
         setSubmitting(false);

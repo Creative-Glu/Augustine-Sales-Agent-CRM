@@ -26,15 +26,25 @@ export async function POST(request: NextRequest) {
       const payload = isQueueRetry
         ? { type: 'queue' as const, queue_id: String(queue_id).trim(), id: String(queue_id).trim() }
         : { type, id };
-      const res = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15_000);
+      let res: Response;
+      try {
+        res = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeout);
+      }
+
       if (!res.ok) {
-        const text = await res.text();
+        // Don't leak internal webhook error details to client
         return NextResponse.json(
-          { error: `Sync service returned ${res.status}: ${text}` },
+          { error: `Sync service returned an error (${res.status}). Please try again.` },
           { status: 502 }
         );
       }

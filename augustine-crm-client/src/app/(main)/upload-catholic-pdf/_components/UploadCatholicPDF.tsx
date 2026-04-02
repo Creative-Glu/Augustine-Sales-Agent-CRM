@@ -9,6 +9,14 @@ import { useQueryClient } from '@tanstack/react-query';
 import FileNameCounts from './FileNameCounts';
 
 const API_URL = '/api/upload-catholic-pdf';
+/** Maximum PDF file size: 25 MB */
+const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
+
+function validatePdf(file: File): string | null {
+  if (file.type !== 'application/pdf') return 'Please upload a PDF file.';
+  if (file.size > MAX_FILE_SIZE_BYTES) return `File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum allowed is 25 MB.`;
+  return null;
+}
 
 export default function UploadCatholicPDF() {
   const [file, setFile] = useState<File | null>(null);
@@ -42,22 +50,20 @@ export default function UploadCatholicPDF() {
     setIsDragging(false);
 
     const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile && droppedFile.type === 'application/pdf') {
-      setFile(droppedFile);
-      setUploadSuccess(false);
-    } else {
-      errorToast('Invalid file type', 'Please upload a PDF file.');
-    }
+    if (!droppedFile) return;
+    const err = validatePdf(droppedFile);
+    if (err) { errorToast('Invalid file', err); return; }
+    setFile(droppedFile);
+    setUploadSuccess(false);
   };
 
   const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
-    if (selectedFile && selectedFile.type === 'application/pdf') {
-      setFile(selectedFile);
-      setUploadSuccess(false);
-    } else {
-      errorToast('Invalid file type', 'Please upload a PDF file.');
-    }
+    if (!selectedFile) return;
+    const err = validatePdf(selectedFile);
+    if (err) { errorToast('Invalid file', err); return; }
+    setFile(selectedFile);
+    setUploadSuccess(false);
   };
 
   const handleRemoveFile = () => {
@@ -115,7 +121,6 @@ export default function UploadCatholicPDF() {
         }
       }, 2000);
     } catch (error) {
-      console.error('Upload error:', error);
       errorToast(
         'Upload failed',
         error instanceof Error ? error.message : 'An error occurred while uploading the file.'

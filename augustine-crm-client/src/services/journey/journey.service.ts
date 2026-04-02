@@ -14,7 +14,6 @@ export async function getJourneys(): Promise<Journey[]> {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching journeys:', error.message);
     return []; // return empty array on error
   }
 

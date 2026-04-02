@@ -8,9 +8,7 @@ export default function Home() {
   (async () => {
     const health = await checkSupabaseHealth();
     if (health.valid) {
-      console.log('✅ Supabase connected successfully');
     } else {
-      console.error('❌ Supabase connection failed:', health.error);
     }
   })();
 

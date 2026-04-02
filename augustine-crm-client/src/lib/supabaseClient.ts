@@ -48,7 +48,6 @@ export async function validateSupabaseConnection(): Promise<boolean> {
     // Auth errors are acceptable for connection validation
     return !error || error.message.includes('session');
   } catch (error) {
-    console.error('Supabase connection validation failed:', error);
     return false;
   }
 }

@@ -45,8 +45,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!base) {
           // Fall back to stored user if base URL missing
           if (storedUser) {
-            setAccessToken(storedToken);
-            setUser(JSON.parse(storedUser) as AuthUser);
+            try {
+              const parsed = JSON.parse(storedUser);
+              if (parsed && typeof parsed.id !== 'undefined' && parsed.email) {
+                setAccessToken(storedToken);
+                setUser(parsed as AuthUser);
+              }
+            } catch {
+              // Corrupted stored user — clear and treat as logged out
+              window.localStorage.removeItem(STORAGE_KEY_USER);
+              window.localStorage.removeItem(STORAGE_KEY_TOKEN);
+            }
           }
           return;
         }

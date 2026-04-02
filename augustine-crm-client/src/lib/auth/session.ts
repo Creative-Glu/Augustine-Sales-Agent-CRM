@@ -39,7 +39,6 @@ export async function signIn(
 
     return { success: true, session };
   } catch (error) {
-    console.error('signIn error:', error);
     return { success: false, error: 'Failed to sign in' };
   }
 }

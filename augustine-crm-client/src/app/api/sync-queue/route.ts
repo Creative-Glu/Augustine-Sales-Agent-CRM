@@ -8,8 +8,13 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status') ?? '';
-    const entity_type = searchParams.get('entity_type') ?? '';
+    const ALLOWED_STATUSES = ['', 'pending', 'processing', 'success', 'failed'];
+    const ALLOWED_ENTITY_TYPES = ['', 'institution', 'staff'];
+
+    const rawStatus = searchParams.get('status') ?? '';
+    const rawEntityType = searchParams.get('entity_type') ?? '';
+    const status = ALLOWED_STATUSES.includes(rawStatus) ? rawStatus : '';
+    const entity_type = ALLOWED_ENTITY_TYPES.includes(rawEntityType) ? rawEntityType : '';
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') ?? '50', 10) || 50));
 
     const base = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '');
@@ -18,7 +23,20 @@ export async function GET(request: NextRequest) {
       ...(entity_type && { entity_type }),
       limit: String(limit),
     }).toString()}` : null;
-    const res = url ? await fetch(url, { cache: 'no-store' }).catch(() => null) : null;
+
+    // Fetch with timeout to prevent hanging requests
+    let res: Response | null = null;
+    if (url) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15_000);
+      try {
+        res = await fetch(url, { cache: 'no-store', signal: controller.signal });
+      } catch {
+        res = null;
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
 
     if (res?.ok) {
       const raw = await res.json();

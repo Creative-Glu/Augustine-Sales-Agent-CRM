@@ -13,8 +13,12 @@ if (!FILE_UPLOAD_SUPABASE_URL || !FILE_UPLOAD_SUPABASE_ANON_KEY) {
   throw new Error('File upload Supabase credentials are not set');
 }
 
-// Create Supabase client for server-side use (for file upload checks)
 const supabase = createClient(FILE_UPLOAD_SUPABASE_URL, FILE_UPLOAD_SUPABASE_ANON_KEY);
+
+/** Maximum allowed PDF size: 25 MB */
+const MAX_FILE_SIZE = 25 * 1024 * 1024;
+/** Fetch timeout for webhook calls */
+const WEBHOOK_TIMEOUT_MS = 60_000;
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,6 +34,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Only PDF files are allowed' }, { status: 400 });
     }
 
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: `File exceeds the maximum allowed size of ${MAX_FILE_SIZE / 1024 / 1024} MB` },
+        { status: 413 }
+      );
+    }
+
     // Check if file_name already exists in institution table
     const fileName = file.name;
     const { data: existingFiles, error: checkError } = await supabase
@@ -39,52 +51,54 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (checkError) {
-      console.error('Error checking file existence:', checkError);
       // Continue with upload even if check fails (don't block upload due to DB error)
     } else if (existingFiles && existingFiles.length > 0) {
       return NextResponse.json(
-        { 
+        {
           error: 'This PDF has already been processed',
           message: `The file "${fileName}" already exists in the system. Please upload a different file.`
         },
-        { status: 409 } // 409 Conflict status code
+        { status: 409 }
       );
     }
 
-    // Create a new FormData to forward to the webhook
+    // Forward to webhook with timeout
     const webhookFormData = new FormData();
     webhookFormData.append('data', file, file.name);
 
-    // Forward the file to the webhook via POST request
-    const response = await fetch(WEBHOOK_URL, {
-      method: 'POST',
-      body: webhookFormData,
-      // Don't set Content-Type header - let fetch set it automatically with boundary for FormData
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), WEBHOOK_TIMEOUT_MS);
+
+    let response: Response;
+    try {
+      response = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        body: webhookFormData,
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
 
     if (!response.ok) {
-      const errorText = await response.text();
+      // Don't leak internal webhook error details to the client
       return NextResponse.json(
-        { error: `Webhook error: ${response.statusText}`, details: errorText },
-        { status: response.status }
+        { error: 'PDF processing service returned an error. Please try again later.' },
+        { status: 502 }
       );
     }
 
     const responseData = await response.text();
-    
+
     return NextResponse.json(
       { success: true, message: 'PDF uploaded successfully', data: responseData },
       { status: 200 }
     );
   } catch (error) {
-    console.error('Upload error:', error);
+    const isTimeout = error instanceof DOMException && error.name === 'AbortError';
     return NextResponse.json(
-      {
-        error: 'Failed to upload PDF',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
+      { error: isTimeout ? 'Upload timed out. Please try again.' : 'Failed to upload PDF' },
+      { status: isTimeout ? 504 : 500 }
     );
   }
 }
-

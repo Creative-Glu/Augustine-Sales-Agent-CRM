@@ -21,7 +21,6 @@ export async function getDashboardAnalytics() {
       campaigns: campaigns.count ?? 0,
     };
   } catch (error) {
-    console.error('Error fetching dashboard stats:', error);
     throw error;
   }
 }

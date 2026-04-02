@@ -17,6 +17,13 @@ import { runHubspotSingleSync } from '@/services/augustine/hubspotSync.service';
 import { useAuth } from '@/providers/AuthProvider';
 import { formatDateTime } from '@/utils/format';
 
+const HUBSPOT_BASE = 'https://app.hubspot.com/contacts';
+
+/** Build a HubSpot contact/company URL from portal ID and entity ID. */
+function hubspotUrl(portalId: string, entityType: 'contact' | 'company', entityId: string): string {
+  return `${HUBSPOT_BASE}/${portalId}/${entityType}/${entityId}`;
+}
+
 function ManagedInHubSpotBanner({
   entityType,
   hubspotId,
@@ -28,9 +35,7 @@ function ManagedInHubSpotBanner({
 }) {
   const href =
     portalId && hubspotId
-      ? entityType === 'staff'
-        ? `https://app.hubspot.com/contacts/${portalId}/contact/${hubspotId}`
-        : `https://app.hubspot.com/contacts/${portalId}/company/${hubspotId}`
+      ? hubspotUrl(portalId, entityType === 'staff' ? 'contact' : 'company', hubspotId)
       : null;
 
   return (
@@ -238,7 +243,7 @@ export default function InstitutionStaffModal({
                                 row.hubspot_contact_id &&
                                 process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID && (
                                   <a
-                                    href={`https://app.hubspot.com/contacts/${process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID}/contact/${row.hubspot_contact_id}`}
+                                    href={hubspotUrl(process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID!, 'contact', row.hubspot_contact_id)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-xs text-primary hover:underline"

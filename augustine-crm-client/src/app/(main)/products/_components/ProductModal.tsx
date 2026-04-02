@@ -68,7 +68,6 @@ export default function ProductModal({ open, onClose, onCreated, product }: Prod
         onClose();
       } catch (err) {
         errorToast(isEditMode ? 'Error updating product' : 'Error creating product');
-        console.error(isEditMode ? 'Update product error:' : 'Create product error:', err);
       } finally {
         setSubmitting(false);
       }

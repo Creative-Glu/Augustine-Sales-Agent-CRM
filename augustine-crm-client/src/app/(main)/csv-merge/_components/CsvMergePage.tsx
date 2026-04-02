@@ -880,7 +880,6 @@ export default function CsvMergePage() {
         setSortOption('record_group');
         setTablePage(1);
       } catch (err) {
-        console.error('Merge failed:', err);
       } finally {
         setMerging(false);
       }
