@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, Fragment, useEffect } from 'react';
+import { useState, Fragment, useEffect, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { TableHeader } from '@/components/TableHeader';
 import { Staff } from '@/types/execution';
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
 import { ExecutionStatusPipelinePanel } from './ExecutionStatusPipelinePanel';
 import { Badge } from '@/components/ui/badge';
-import type { SyncStatus } from '@/types/execution';
+import { SmallSyncBadge, QueueBadge } from '@/components/SyncBadges';
+import { formatDateTime, cellValue } from '@/utils/format';
 
 const COLUMNS = [
   { label: 'Staff', align: 'left' as const },
@@ -17,79 +18,6 @@ const COLUMNS = [
   { label: 'Status', align: 'left' as const },
   { label: 'Created', align: 'left' as const },
 ];
-
-function cell(value: string | null | undefined): string {
-  return value ?? '—';
-}
-
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
-}
-
-function smallSyncBadge(status: SyncStatus | null | undefined) {
-  if (!status) {
-    return <span className="text-xs text-muted-foreground">Sync: Not available</span>;
-  }
-  let className =
-    'border-border/60 bg-muted text-muted-foreground';
-  if (status === 'success') {
-    className = 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';
-  } else if (status === 'failed') {
-    className = 'border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-400';
-  } else if (status === 'processing') {
-    className = 'border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-400';
-  } else if (status === 'pending') {
-    className = 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400';
-  }
-  return (
-    <span className="flex items-center gap-1 text-xs text-muted-foreground">
-      <span>Sync:</span>
-      <Badge variant="outline" className={`h-5 px-2 text-[11px] font-medium border ${className}`}>
-        {status}
-      </Badge>
-    </span>
-  );
-}
-
-function queueBadge(syncStatus: SyncStatus | null | undefined, syncedToHubspot: boolean | null | undefined) {
-  if (syncStatus === 'success' || syncedToHubspot === true) {
-    return (
-      <Badge variant="outline" className="h-5 px-2 text-[11px] font-medium border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
-        Synced
-      </Badge>
-    );
-  }
-  if (syncStatus === 'pending') {
-    return (
-      <Badge variant="outline" className="h-5 px-2 text-[11px] font-medium border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400">
-        Queued
-      </Badge>
-    );
-  }
-  if (syncStatus === 'processing') {
-    return (
-      <Badge variant="outline" className="h-5 px-2 text-[11px] font-medium border border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-400">
-        Processing
-      </Badge>
-    );
-  }
-  if (syncStatus === 'failed') {
-    return (
-      <Badge variant="outline" className="h-5 px-2 text-[11px] font-medium border border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-400">
-        Failed
-      </Badge>
-    );
-  }
-  return (
-    <Badge variant="outline" className="h-5 px-2 text-[11px] font-medium border border-border/60 bg-muted text-muted-foreground">
-      Not queued
-    </Badge>
-  );
-}
 
 export default function StaffTable({
   rows,
@@ -195,10 +123,10 @@ export default function StaffTable({
                   {/* Staff info */}
                   <td className="py-3 px-4 align-top max-w-[220px]">
                     <div className="flex flex-col gap-1.5 min-w-0">
-                      <div className="text-base font-semibold text-foreground truncate">{cell(row.name)}</div>
+                      <div className="text-base font-semibold text-foreground truncate">{cellValue(row.name)}</div>
                       {row.role && (
                         <div className="text-xs text-muted-foreground truncate" title={row.role}>
-                          {cell(row.role)}
+                          {cellValue(row.role)}
                         </div>
                       )}
                     </div>
@@ -233,7 +161,7 @@ export default function StaffTable({
                       <div>
                         <span className="text-muted-foreground">Contact number</span>
                         <div className="text-sm text-foreground">
-                          {row.contact_number ? cell(row.contact_number) : (
+                          {row.contact_number ? cellValue(row.contact_number) : (
                             <span className="text-muted-foreground">Not available</span>
                           )}
                         </div>
@@ -267,8 +195,8 @@ export default function StaffTable({
                   <td className="py-3 px-4 align-top">
                     <div className="flex flex-col items-start gap-1.5">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        {smallSyncBadge(row.sync_status ?? null)}
-                        {queueBadge(row.sync_status ?? null, row.synced_to_hubspot ?? null)}
+                        {<SmallSyncBadge status={row.sync_status ?? null} />}
+                        {<QueueBadge syncStatus={row.sync_status ?? null} syncedToHubspot={row.synced_to_hubspot ?? null} />}
                       </div>
                       <button
                         type="button"
@@ -282,7 +210,7 @@ export default function StaffTable({
 
                   {/* Created */}
                   <td className="py-3 px-4 text-muted-foreground align-top whitespace-nowrap">
-                    {formatDate(row.created_at)}
+                    {formatDateTime(row.created_at)}
                   </td>
                 </tr>
                 </Fragment>

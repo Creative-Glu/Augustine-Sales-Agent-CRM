@@ -26,6 +26,7 @@ import {
   type HubspotEntityType,
 } from '@/services/augustine/hubspotSync.service';
 import { useAuth } from '@/providers/AuthProvider';
+import { formatDateTime, formatRelativeTime, truncate } from '@/utils/format';
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -40,37 +41,6 @@ const ENTITY_OPTIONS: { value: string; label: string }[] = [
   { value: 'institution', label: 'Institution' },
   { value: 'staff', label: 'Staff' },
 ];
-
-function formatDate(iso: string | null): string {
-  if (!iso) return '—';
-  try {
-    return new Date(iso).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' });
-  } catch {
-    return iso;
-  }
-}
-
-function formatRelative(iso: string | null): string {
-  if (!iso) return '—';
-  try {
-    const d = new Date(iso);
-    const now = Date.now();
-    const diff = d.getTime() - now;
-    if (diff < 0) return 'overdue';
-    if (diff < 60_000) return 'in <1m';
-    if (diff < 3600_000) return `in ${Math.floor(diff / 60_000)}m`;
-    if (diff < 86400_000) return `in ${Math.floor(diff / 3600_000)}h`;
-    return d.toLocaleDateString();
-  } catch {
-    return iso;
-  }
-}
-
-function truncateError(err: string | null, max = 120): string {
-  if (!err) return '—';
-  const t = err.trim();
-  return t.length <= max ? t : `${t.slice(0, max)}…`;
-}
 
 function statusBadgeClass(status: SyncQueueStatus): string {
   switch (status) {
@@ -447,7 +417,7 @@ export default function ExecutionSyncQueuePage() {
             <CardContent className="p-3">
               <p className="text-[13px] text-muted-foreground">Oldest Pending</p>
               <p className="text-sm font-medium tabular-nums">
-                {metrics.oldest_pending_at ? formatRelative(metrics.oldest_pending_at) : '—'}
+                {metrics.oldest_pending_at ? formatRelativeTime(metrics.oldest_pending_at) : '—'}
               </p>
             </CardContent>
           </Card>
@@ -559,16 +529,16 @@ export default function ExecutionSyncQueuePage() {
                     </td>
                     <td className="py-3 px-4 text-right tabular-nums text-muted-foreground">{row.attempts}</td>
                     <td className="py-3 px-4 text-[13px] text-muted-foreground">
-                      {row.next_retry_at ? formatRelative(row.next_retry_at) : '—'}
+                      {row.next_retry_at ? formatRelativeTime(row.next_retry_at) : '—'}
                     </td>
                     <td
                       className="py-3 px-4 text-[13px] text-muted-foreground max-w-[200px] truncate"
                       title={row.last_error ?? undefined}
                     >
-                      {truncateError(row.last_error, 120)}
+                      {truncate(row.last_error, 120)}
                     </td>
                     <td className="py-3 px-4 text-[13px] text-muted-foreground whitespace-nowrap">
-                      {formatDate(row.created_at)}
+                      {formatDateTime(row.created_at)}
                     </td>
                     <td className="py-3 px-4">
                       {row.status === 'failed' ? (

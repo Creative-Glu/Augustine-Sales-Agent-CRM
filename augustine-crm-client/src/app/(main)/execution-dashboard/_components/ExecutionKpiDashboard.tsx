@@ -19,18 +19,7 @@ import { TableHeader } from '@/components/TableHeader';
 import { cn } from '@/lib/utils';
 import type { ExecutionStats } from '@/services/execution/stats.service';
 import type { Job, Result } from '@/types/execution';
-
-function formatDate(iso: string | null): string {
-  if (!iso) return '—';
-  try {
-    return new Date(iso).toLocaleString(undefined, {
-      dateStyle: 'short',
-      timeStyle: 'short',
-    });
-  } catch {
-    return iso;
-  }
-}
+import { formatDateTime } from '@/utils/format';
 
 const jobStatusVariant: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
   pending: 'outline',
@@ -388,10 +377,10 @@ export default function ExecutionKpiDashboard({
                         {row.urls?.length ?? 0}
                       </td>
                       <td className="py-3 px-4 text-muted-foreground">
-                        {formatDate(row.submitted_at)}
+                        {formatDateTime(row.submitted_at)}
                       </td>
                       <td className="py-3 px-4 text-muted-foreground">
-                        {formatDate(row.updated_at)}
+                        {formatDateTime(row.updated_at)}
                       </td>
                       <td className="py-3 px-4 text-right tabular-nums text-muted-foreground">
                         {getJobProcessingTime(row)}
@@ -457,7 +446,7 @@ export default function ExecutionKpiDashboard({
                           {row.source}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 text-muted-foreground">{formatDate(row.processed_at)}</td>
+                      <td className="py-3 px-4 text-muted-foreground">{formatDateTime(row.processed_at)}</td>
                       <td
                         className="py-3 px-4 text-destructive max-w-[280px] truncate"
                         title={row.error ?? row.error_type ?? ''}

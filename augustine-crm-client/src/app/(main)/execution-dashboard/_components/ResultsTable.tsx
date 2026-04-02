@@ -3,6 +3,7 @@
 import { TableHeader } from '@/components/TableHeader';
 import { Result } from '@/types/execution';
 import { Badge } from '@/components/ui/badge';
+import { formatDateTime } from '@/utils/format';
 
 const COLUMNS = [
   { label: 'URL', align: 'left' as const },
@@ -11,15 +12,6 @@ const COLUMNS = [
   { label: 'Processed', align: 'left' as const },
   { label: 'Error', align: 'left' as const },
 ];
-
-function formatDate(iso: string | null): string {
-  if (!iso) return '—';
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
-}
 
 export default function ResultsTable({
   rows,
@@ -88,7 +80,7 @@ export default function ResultsTable({
                       {row.status}
                     </Badge>
                   </td>
-                  <td className="py-3 px-4 text-muted-foreground">{formatDate(row.processed_at)}</td>
+                  <td className="py-3 px-4 text-muted-foreground">{formatDateTime(row.processed_at)}</td>
                   <td className="py-3 px-4 text-destructive max-w-[180px] truncate" title={row.error ?? ''}>
                     {row.error ?? '—'}
                   </td>

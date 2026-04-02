@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { useToastHelpers } from '@/lib/toast';
 import { runHubspotSingleSync } from '@/services/augustine/hubspotSync.service';
 import { useAuth } from '@/providers/AuthProvider';
+import { formatDateTime } from '@/utils/format';
 
 function ManagedInHubSpotBanner({
   entityType,
@@ -61,14 +62,6 @@ const STAFF_COLUMNS = [
 
 function cell(value: string | null | undefined): string {
   return value ?? '—';
-}
-
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
 }
 
 function DetailRow({ label, value }: { label: string; value: string | null | undefined }) {
@@ -164,14 +157,14 @@ export default function InstitutionStaffModal({
                   <DetailRow label="Website" value={institution.website_url} />
                   <DetailRow label="Address" value={institution.address} />
                   <DetailRow label="Type" value={institution.type} />
-                  <DetailRow label="Created" value={formatDate(institution.created_at)} />
+                  <DetailRow label="Created" value={formatDateTime(institution.created_at)} />
                 </dl>
                 <div className="mt-4 pt-4 border-t border-border/60">
                   <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">HubSpot Sync Status</h4>
                   <dl className="text-sm space-y-1">
                     <DetailRow label="Sync Status" value={institution.sync_status ?? '—'} />
                     <DetailRow label="HubSpot ID" value={institution.hubspot_company_id ?? '—'} />
-                    <DetailRow label="Last Sync Time" value={institution.last_synced_at ? formatDate(institution.last_synced_at) : '—'} />
+                    <DetailRow label="Last Sync Time" value={institution.last_synced_at ? formatDateTime(institution.last_synced_at) : '—'} />
                     <DetailRow label="Sync Error" value={institution.sync_error ?? '—'} />
                     <DetailRow label="Current Queue Status" value={institution.sync_status ? String(institution.sync_status) : 'Not in sync queue'} />
                   </dl>
@@ -308,7 +301,7 @@ export default function InstitutionStaffModal({
                             {cell(row.contact_number)}
                           </td>
                           <td className="py-3 px-4 text-sm text-muted-foreground">
-                            {formatDate(row.created_at)}
+                            {formatDateTime(row.created_at)}
                           </td>
                         </tr>
                       ))}

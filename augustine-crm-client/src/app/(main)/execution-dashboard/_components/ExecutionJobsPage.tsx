@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
   Select,
   SelectContent,
@@ -12,37 +11,16 @@ import { Button } from '@/components/ui/button';
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import Pagination from '@/components/Pagination';
 import { useJobsPaginated } from '@/services/execution/useExecutionData';
+import { usePaginationParams } from '@/hooks/usePaginationParams';
 import { JobsFilters } from './ExecutionFilters';
 import JobsTable from './JobsTable';
 
-const DEFAULT_LIMIT = 10;
-
-function getLimit(searchParams: URLSearchParams): number {
-  const v = searchParams.get('limit');
-  const n = v ? parseInt(v, 10) : NaN;
-  return Number.isNaN(n) || n < 1 ? DEFAULT_LIMIT : Math.min(n, 100);
-}
-
-function getOffset(searchParams: URLSearchParams): number {
-  const v = searchParams.get('offset');
-  const n = v ? parseInt(v, 10) : NaN;
-  return Number.isNaN(n) || n < 0 ? 0 : n;
-}
-
 export default function ExecutionJobsPage() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const basePath = pathname ?? '/execution-dashboard/jobs';
-  const limit = getLimit(searchParams);
-  const offset = getOffset(searchParams);
+  const { offset, limit, setLimit, basePath, paginationMeta } = usePaginationParams();
 
   const jobsQuery = useJobsPaginated();
   const total = jobsQuery.data?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / limit));
-  const currentPage = Math.floor(offset / limit) + 1;
-  const hasMore = offset + limit < total;
-  const showPagination = total > limit;
+  const { totalPages, currentPage, hasMore, showPagination } = paginationMeta(total);
 
   return (
     <div className="space-y-6">
@@ -59,15 +37,7 @@ export default function ExecutionJobsPage() {
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground font-medium">Per page</span>
-                <Select
-                  value={String(limit)}
-                  onValueChange={(v) => {
-                    const params = new URLSearchParams(searchParams.toString());
-                    params.set('limit', v);
-                    params.delete('offset');
-                    router.push(`${basePath}?${params.toString()}`);
-                  }}
-                >
+                <Select value={String(limit)} onValueChange={(v) => setLimit(Number(v))}>
                   <SelectTrigger className="w-[72px] h-9 border-border/80">
                     <SelectValue />
                   </SelectTrigger>
