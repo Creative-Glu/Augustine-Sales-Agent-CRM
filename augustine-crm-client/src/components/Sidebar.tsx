@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { SIDEBAR_GROUPS } from '../constants/sidebarLinks';
 import { ArrowRightOnRectangleIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
@@ -19,16 +20,17 @@ export default function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-gradient-to-b from-slate-950 to-gray-950 text-white flex flex-col border-r border-slate-700/40 shadow-2xl">
       {/* ── Brand Section ── */}
-      <div className="px-6 pt-8 pb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-sm font-bold text-white">
-            A
-          </div>
-          <h1 className="text-xl font-bold tracking-tight text-white">Augustine</h1>
-        </div>
-        <p className="text-xs text-slate-400 font-medium tracking-wide ml-10">
-          Sales & Leads Management
-        </p>
+      <div className="px-5 pt-6 pb-5">
+        <Link href="/dashboard" className="block">
+          <Image
+            src="/augustine-logo.png"
+            alt="Augustine Institute"
+            width={200}
+            height={48}
+            className="h-10 w-auto object-contain"
+            priority
+          />
+        </Link>
       </div>
 
       <div className="h-px bg-gradient-to-r from-slate-800/0 via-slate-700/40 to-slate-800/0 mx-4" />

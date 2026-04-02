@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
@@ -39,39 +39,51 @@ export default function LoginPage() {
       description: 'Welcome back!',
     });
 
-    router.push('/marketing-dashboard');
+    router.push('/execution-dashboard');
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-slate-50 dark:bg-slate-950">
-      <div className="w-75pace-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Augustine</h1>
-          <p className="text-sm text-slate-600 dark:text-slate-300">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      <div className="w-100  space-y-8">
+        {/* Logo */}
+        <div className="flex flex-col items-center gap-4">
+          <Image
+            src="/augustine-logo.png"
+            alt="Augustine Institute"
+            width={280}
+            height={67}
+            className="h-14 w-auto object-contain"
+            priority
+            quality={100}
+          />
+          <p className="text-sm text-slate-400 font-medium tracking-wide">
             Lead Gen &amp; Outreach Operations
           </p>
         </div>
 
+        {/* Form */}
         <form
           onSubmit={handleSubmit}
-          className="bg-card rounded-2xl border border-border shadow-sm px-6 py-7 space-y-5"
+          className="bg-slate-900/60 backdrop-blur-sm rounded-2xl border border-slate-700/50 px-7 py-8 space-y-5 shadow-2xl"
         >
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-muted-foreground" htmlFor="email">
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-slate-300" htmlFor="email">
               Email
             </label>
             <Input
               id="email"
               type="email"
               autoComplete="email"
+              placeholder="you@augustineinstitute.org"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              className="bg-slate-800/50 border-slate-700/60 text-white placeholder:text-slate-500 focus:border-blue-500"
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-muted-foreground" htmlFor="password">
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-slate-300" htmlFor="password">
               Password
             </label>
             <div className="relative">
@@ -79,15 +91,16 @@ export default function LoginPage() {
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="current-password"
+                placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="pr-10"
+                className="pr-10 bg-slate-800/50 border-slate-700/60 text-white placeholder:text-slate-500 focus:border-blue-500"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-300 transition-colors"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -95,33 +108,20 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <Button type="submit" className="w-full mt-2" disabled={isSubmitting}>
+          <Button
+            type="submit"
+            className="w-full mt-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-semibold shadow-lg shadow-blue-600/20 transition-all duration-200"
+            disabled={isSubmitting}
+          >
             {isSubmitting ? 'Signing in…' : 'Sign in'}
           </Button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-          © {new Date().getFullYear()} Augustine CRM. All rights reserved.
+        {/* Footer */}
+        <p className="text-center text-xs text-slate-500">
+          © {new Date().getFullYear()} Augustine Institute. All rights reserved.
         </p>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
-          className="text-center"
-        >
-          <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="mt-2 flex items-center justify-center gap-2 text-slate-400 text-xs"
-          >
-            <div className="h-px w-8 bg-linear-to-r from-transparent to-slate-600" />
-            <span>JWT-secured backend authentication</span>
-            <div className="h-px w-8 bg-linear-to-l from-transparent to-slate-600" />
-          </motion.div>
-        </motion.div>
       </div>
     </div>
   );
 }
-
