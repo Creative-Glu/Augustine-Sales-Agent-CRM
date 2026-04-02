@@ -1,37 +1,42 @@
-// import { NextResponse } from 'next/server';
-// import type { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-// export default function proxy(request: NextRequest) {
-//   const token = request.cookies.get('auth_token')?.value;
-//   const pathname = request.nextUrl.pathname;
+/**
+ * Next.js 16 proxy (replaces middleware.ts).
+ *
+ * Checks for the `augustine-auth` cookie (set by AuthProvider on login).
+ * - Protected routes → redirect to /login if no cookie
+ * - /login → redirect to /dashboard if cookie exists (already logged in)
+ *
+ * This prevents the "flash of protected content" that happens with
+ * client-side-only auth checks via useEffect.
+ */
 
-//   if (!token && pathname.startsWith('/')) {
-//     return NextResponse.redirect(new URL('/login', request.url));
-//   }
+const AUTH_COOKIE = 'augustine-auth';
+const LOGIN_PATH = '/login';
+const DEFAULT_AUTHENTICATED_PATH = '/execution-dashboard';
 
-//   return NextResponse.next();
-// }
+export default function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const hasAuthCookie = request.cookies.has(AUTH_COOKIE);
 
-// export const config = {
-//   matcher: [
-//     '/dashboard/:path*',
-//     '/products/:path*',
-//     '/campaigns/:path*',
-//     '/icp/:path*',
-//     '/kpi-dashboard/:path*',
-//     '/product-offers/:path*',
-//   ],
-// };
+  // If on login page and already authenticated → redirect to dashboard
+  if (pathname === LOGIN_PATH && hasAuthCookie) {
+    return NextResponse.redirect(new URL(DEFAULT_AUTHENTICATED_PATH, request.url));
+  }
 
-import { clerkMiddleware } from '@clerk/nextjs/server';
+  // If on a protected page and NOT authenticated → redirect to login
+  if (!hasAuthCookie && pathname !== LOGIN_PATH) {
+    const loginUrl = new URL(LOGIN_PATH, request.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
 
-export default clerkMiddleware();
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
-    '/(api|trpc)(.*)',
+    // Run on all pages except Next.js internals, static files, and API routes
+    '/((?!_next|api|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
   ],
 };
