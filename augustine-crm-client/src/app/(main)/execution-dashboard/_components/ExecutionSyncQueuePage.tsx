@@ -27,20 +27,7 @@ import {
 } from '@/services/augustine/hubspotSync.service';
 import { useAuth } from '@/providers/AuthProvider';
 import { formatDateTime, formatRelativeTime, truncate } from '@/utils/format';
-
-const STATUS_OPTIONS: { value: string; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'processing', label: 'Processing' },
-  { value: 'success', label: 'Success' },
-  { value: 'failed', label: 'Failed' },
-];
-
-const ENTITY_OPTIONS: { value: string; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'institution', label: 'Institution' },
-  { value: 'staff', label: 'Staff' },
-];
+import { SYNC_QUEUE_STATUS_OPTIONS, SYNC_QUEUE_ENTITY_OPTIONS, SYNC_QUEUE_TABLE_COLUMNS } from '@/constants/execution';
 
 function statusBadgeClass(status: SyncQueueStatus): string {
   switch (status) {
@@ -56,18 +43,6 @@ function statusBadgeClass(status: SyncQueueStatus): string {
       return 'bg-muted text-muted-foreground border-border/60';
   }
 }
-
-const COLUMNS = [
-  { label: 'Queue ID', align: 'left' as const },
-  { label: 'Entity Type', align: 'left' as const },
-  { label: 'Entity Name', align: 'left' as const },
-  { label: 'Status', align: 'left' as const },
-  { label: 'Attempts', align: 'right' as const },
-  { label: 'Next Retry', align: 'left' as const },
-  { label: 'Last Error', align: 'left' as const },
-  { label: 'Created', align: 'left' as const },
-  { label: 'Actions', align: 'left' as const },
-];
 
 export default function ExecutionSyncQueuePage() {
   const { user } = useAuth();
@@ -431,7 +406,7 @@ export default function ExecutionSyncQueuePage() {
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              {STATUS_OPTIONS.map((o) => (
+              {SYNC_QUEUE_STATUS_OPTIONS.map((o) => (
                 <SelectItem key={o.value} value={o.value}>
                   {o.label}
                 </SelectItem>
@@ -443,7 +418,7 @@ export default function ExecutionSyncQueuePage() {
               <SelectValue placeholder="Entity type" />
             </SelectTrigger>
             <SelectContent>
-              {ENTITY_OPTIONS.map((o) => (
+              {SYNC_QUEUE_ENTITY_OPTIONS.map((o) => (
                 <SelectItem key={o.value} value={o.value}>
                   {o.label}
                 </SelectItem>
@@ -467,7 +442,7 @@ export default function ExecutionSyncQueuePage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/40">
-                {COLUMNS.map((col) => (
+                {SYNC_QUEUE_TABLE_COLUMNS.map((col) => (
                   <th
                     key={col.label}
                     className={`py-3 px-4 text-xs font-medium text-muted-foreground ${col.align === 'right' ? 'text-right' : 'text-left'}`}
@@ -480,14 +455,14 @@ export default function ExecutionSyncQueuePage() {
             <tbody>
               {isLoading && (
                 <tr>
-                  <td colSpan={COLUMNS.length} className="py-12 text-center text-muted-foreground text-[13px]">
+                  <td colSpan={SYNC_QUEUE_TABLE_COLUMNS.length} className="py-12 text-center text-muted-foreground text-[13px]">
                     Loading sync queue…
                   </td>
                 </tr>
               )}
               {isError && (
                 <tr>
-                  <td colSpan={COLUMNS.length} className="py-12 text-center text-destructive text-[13px]">
+                  <td colSpan={SYNC_QUEUE_TABLE_COLUMNS.length} className="py-12 text-center text-destructive text-[13px]">
                     Failed to load.{' '}
                     <button
                       type="button"
@@ -501,7 +476,7 @@ export default function ExecutionSyncQueuePage() {
               )}
               {!isLoading && !isError && data.length === 0 && (
                 <tr>
-                  <td colSpan={COLUMNS.length} className="py-12 text-center text-muted-foreground text-[13px]">
+                  <td colSpan={SYNC_QUEUE_TABLE_COLUMNS.length} className="py-12 text-center text-muted-foreground text-[13px]">
                     No queue jobs.
                   </td>
                 </tr>

@@ -28,16 +28,9 @@ import type {
 } from '@/types/augustine';
 import { cn } from '@/lib/utils';
 import { Activity, Copy, Plus, RefreshCw } from 'lucide-react';
+import { JOB_STAGES_ORDER } from '@/constants/execution';
 
-const STAGES_ORDER = [
-  'job_started',
-  'url_processing',
-  'extraction',
-  'db_saving',
-  'hubspot_sync',
-  'completed',
-] as const;
-type StepKey = (typeof STAGES_ORDER)[number];
+type StepKey = (typeof JOB_STAGES_ORDER)[number];
 type StepState = 'pending' | 'active' | 'completed' | 'failed' | 'skipped';
 
 type TokenUsageByModel = {
@@ -423,13 +416,13 @@ export default function MarketingJobsPage() {
       const stage = stageStr(e.stage);
       const step = eventStageToStep(stage);
       if (!step) return;
-      const idx = STAGES_ORDER.indexOf(step);
+      const idx = JOB_STAGES_ORDER.indexOf(step);
       if (idx > highestReached) highestReached = idx;
       if (stage.includes('failed') && failedIdx < 0) failedIdx = idx;
       if (stage.includes('skipped')) skippedIdxs.add(idx);
     });
     const states: Record<StepKey, StepState> = {} as Record<StepKey, StepState>;
-    STAGES_ORDER.forEach((key, idx) => {
+    JOB_STAGES_ORDER.forEach((key, idx) => {
       if (idx === failedIdx) states[key] = 'failed';
       else if (skippedIdxs.has(idx)) states[key] = 'skipped';
       else if (idx < highestReached) states[key] = 'completed';
@@ -764,9 +757,9 @@ export default function MarketingJobsPage() {
                 </div>
 
                 <div className="mb-4 flex items-center justify-between gap-2">
-                  {STAGES_ORDER.map((stage, idx) => {
+                  {JOB_STAGES_ORDER.map((stage, idx) => {
                     const state = stepStates[stage];
-                    const isLast = idx === STAGES_ORDER.length - 1;
+                    const isLast = idx === JOB_STAGES_ORDER.length - 1;
                     return (
                       <div key={stage} className="flex flex-1 items-center">
                         <div className="flex flex-col items-center gap-1">

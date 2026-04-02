@@ -8,14 +8,7 @@ import { ExecutionStatusPipelinePanel } from './ExecutionStatusPipelinePanel';
 import { SmallSyncBadge, QueueBadge } from '@/components/SyncBadges';
 import { formatDateTime, cellValue } from '@/utils/format';
 import { sanitizeUrl } from '@/utils/url';
-
-const COLUMNS = [
-  { label: 'Institution', align: 'left' as const },
-  { label: 'Contact', align: 'left' as const },
-  { label: 'Address', align: 'left' as const },
-  { label: 'Status', align: 'left' as const },
-  { label: 'Created', align: 'left' as const },
-];
+import { INSTITUTION_TABLE_COLUMNS } from '@/constants/execution';
 
 export default function InstitutionTable({
   rows,
@@ -30,7 +23,7 @@ export default function InstitutionTable({
   onRetry?: () => void;
   onSelect?: (institution: Institution) => void;
 }) {
-  const colSpan = COLUMNS.length;
+  const colSpan = INSTITUTION_TABLE_COLUMNS.length;
   const [expandedId, setExpandedId] = useState<string | number | null>(null);
   const [panelAnchor, setPanelAnchor] = useState<{ top: number; left: number } | null>(null);
 
@@ -71,7 +64,7 @@ export default function InstitutionTable({
     <div className="w-full rounded-lg border border-border overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <TableHeader columns={COLUMNS} />
+          <TableHeader columns={INSTITUTION_TABLE_COLUMNS} />
           <tbody>
             {isLoading && (
               <tr>

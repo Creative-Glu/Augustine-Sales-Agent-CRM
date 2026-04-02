@@ -16,6 +16,7 @@ import { useToastHelpers } from '@/lib/toast';
 import { runHubspotSingleSync } from '@/services/augustine/hubspotSync.service';
 import { useAuth } from '@/providers/AuthProvider';
 import { formatDateTime } from '@/utils/format';
+import { INSTITUTION_STAFF_MODAL_COLUMNS } from '@/constants/execution';
 
 const HUBSPOT_BASE = 'https://app.hubspot.com/contacts';
 
@@ -56,14 +57,6 @@ function ManagedInHubSpotBanner({
     </div>
   );
 }
-
-const STAFF_COLUMNS = [
-  { label: 'Name', align: 'left' as const },
-  { label: 'Role', align: 'left' as const },
-  { label: 'Email', align: 'left' as const },
-  { label: 'Contact number', align: 'left' as const },
-  { label: 'Created', align: 'left' as const },
-];
 
 function cell(value: string | null | undefined): string {
   return value ?? '—';
@@ -229,7 +222,7 @@ export default function InstitutionStaffModal({
                     />
                   )}
                   <table className="w-full">
-                    <TableHeader columns={STAFF_COLUMNS} />
+                    <TableHeader columns={INSTITUTION_STAFF_MODAL_COLUMNS} />
                     <tbody>
                       {staff.map((row) => (
                         <tr

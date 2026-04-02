@@ -4,16 +4,7 @@ import { TableHeader } from '@/components/TableHeader';
 import { Job } from '@/types/execution';
 import { Badge } from '@/components/ui/badge';
 import { formatDateTime } from '@/utils/format';
-
-const COLUMNS = [
-  { label: 'Status', align: 'left' as const },
-  { label: 'URLs count', align: 'right' as const },
-  { label: 'Submitted', align: 'left' as const },
-  { label: 'Started', align: 'left' as const },
-  { label: 'Completed', align: 'left' as const },
-  { label: 'Execution time', align: 'right' as const },
-  { label: 'Error', align: 'left' as const },
-];
+import { JOBS_TABLE_COLUMNS, JOB_STATUS_VARIANT } from '@/constants/execution';
 
 function formatDuration(ms: number): string {
   if (ms < 0) return '—';
@@ -37,13 +28,6 @@ function cell(value: string | null | undefined): string {
   return value ?? '—';
 }
 
-const statusVariant: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  pending: 'outline',
-  running: 'default',
-  completed: 'secondary',
-  failed: 'destructive',
-};
-
 export default function JobsTable({
   rows,
   isLoading,
@@ -55,13 +39,13 @@ export default function JobsTable({
   isError: boolean;
   onRetry?: () => void;
 }) {
-  const colSpan = COLUMNS.length;
+  const colSpan = JOBS_TABLE_COLUMNS.length;
 
   return (
     <div className="w-full rounded-lg border border-border overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <TableHeader columns={COLUMNS} />
+          <TableHeader columns={JOBS_TABLE_COLUMNS} />
           <tbody>
             {isLoading && (
               <tr>
@@ -94,7 +78,7 @@ export default function JobsTable({
               rows.map((row) => (
                 <tr key={row.job_id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                   <td className="py-3 px-4">
-                    <Badge variant={statusVariant[row.status] ?? 'secondary'} className="text-xs">
+                    <Badge variant={JOB_STATUS_VARIANT[row.status] ?? 'secondary'} className="text-xs">
                       {row.status}
                     </Badge>
                   </td>

@@ -1,8 +1,7 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import ExecutionOverviewPage from './_components/ExecutionOverviewPage';
-
-const TABLE_VIEWS = ['institution', 'websites', 'jobs', 'results', 'staff', 'sync-queue'] as const;
+import { EXECUTION_VIEWS } from '@/constants/execution';
 
 export default async function ExecutionDashboardPage({
   searchParams,
@@ -11,7 +10,7 @@ export default async function ExecutionDashboardPage({
 }) {
   const params = await searchParams;
   const view = params.view;
-  if (view && TABLE_VIEWS.includes(view as (typeof TABLE_VIEWS)[number])) {
+  if (view && EXECUTION_VIEWS.includes(view as (typeof EXECUTION_VIEWS)[number])) {
     const rest = new URLSearchParams(params);
     rest.delete('view');
     const q = rest.toString();

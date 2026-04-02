@@ -17,8 +17,7 @@ import {
 import type { Campaign, CampaignStatus } from '@/types/augustine';
 import { listIcps } from '@/services/augustine/icp.service';
 import { Megaphone, Plus } from 'lucide-react';
-
-const STATUS_OPTIONS: CampaignStatus[] = ['draft', 'active', 'paused', 'completed'];
+import { CAMPAIGN_STATUS_OPTIONS } from '@/constants';
 
 function statusBadgeClass(status: CampaignStatus): string {
   const base = 'inline-flex rounded-md text-xs font-medium px-2 py-1';
@@ -348,7 +347,7 @@ export default function CampaignsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {STATUS_OPTIONS.map((s) => (
+                    {CAMPAIGN_STATUS_OPTIONS.map((s) => (
                       <SelectItem key={s} value={s}>
                         {s}
                       </SelectItem>

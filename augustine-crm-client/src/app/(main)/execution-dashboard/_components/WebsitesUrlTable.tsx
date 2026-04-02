@@ -4,17 +4,7 @@ import { TableHeader } from '@/components/TableHeader';
 import { WebsitesUrl } from '@/types/websitesUrl';
 import { getStateValue } from '@/services/websites-url/websitesUrl.service';
 import { Badge } from '@/components/ui/badge';
-
-const EXECUTION_DASHBOARD_COLUMNS = [
-  { label: 'Company name', align: 'left' as const },
-  { label: 'Company Domain', align: 'left' as const },
-  { label: 'Website URL', align: 'left' as const },
-  { label: 'Street Address', align: 'left' as const },
-  { label: 'Phone Number', align: 'left' as const },
-  { label: 'City', align: 'left' as const },
-  { label: 'State', align: 'left' as const },
-  { label: 'Status', align: 'left' as const },
-];
+import { WEBSITES_URL_TABLE_COLUMNS } from '@/constants/execution';
 
 interface WebsitesUrlTableProps {
   rows: WebsitesUrl[];
@@ -41,13 +31,13 @@ export default function WebsitesUrlTable({
   isError,
   onRetry,
 }: WebsitesUrlTableProps) {
-  const colSpan = EXECUTION_DASHBOARD_COLUMNS.length;
+  const colSpan = WEBSITES_URL_TABLE_COLUMNS.length;
 
   return (
     <div className="w-full rounded-lg border border-border overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <TableHeader columns={EXECUTION_DASHBOARD_COLUMNS} />
+          <TableHeader columns={WEBSITES_URL_TABLE_COLUMNS} />
           <tbody>
             {isLoading && (
               <tr>

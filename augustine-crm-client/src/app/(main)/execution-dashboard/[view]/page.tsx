@@ -6,13 +6,10 @@ import ExecutionJobsPage from '../_components/ExecutionJobsPage';
 import ExecutionResultsPage from '../_components/ExecutionResultsPage';
 import ExecutionStaffPage from '../_components/ExecutionStaffPage';
 import ExecutionSyncQueuePage from '../_components/ExecutionSyncQueuePage';
+import { EXECUTION_VIEWS, type ExecutionViewSegment } from '@/constants/execution';
 
-const VALID_VIEWS = ['institution', 'websites', 'jobs', 'results', 'staff', 'sync-queue'] as const;
-
-type ViewSegment = (typeof VALID_VIEWS)[number];
-
-function isValidView(view: string): view is ViewSegment {
-  return VALID_VIEWS.includes(view as ViewSegment);
+function isValidView(view: string): view is ExecutionViewSegment {
+  return EXECUTION_VIEWS.includes(view as ExecutionViewSegment);
 }
 
 interface ExecutionViewPageProps {

@@ -42,13 +42,7 @@ export const CAMPAIGN_COLUMNS: TableHeaderColumn[] = [
     label: 'Actions',
   },
 ];
-export const CAMPAIGN_STATUS_OPTIONS: any[] = [
-  { label: 'Running', value: 'Running' },
-  { label: 'Active', value: 'Active' },
-  { label: 'Draft', value: 'Draft' },
-  { label: 'Stopped', value: 'Stopped' },
-  { label: 'AFA', value: 'AFA' },
-];
+export const CAMPAIGN_STATUS_OPTIONS = ['draft', 'active', 'paused', 'completed'] as const;
 
 export const CONTACTS_TABLE_COLUMNS: TableHeaderColumn[] = [
   { label: 'Parish Name', align: 'left' },

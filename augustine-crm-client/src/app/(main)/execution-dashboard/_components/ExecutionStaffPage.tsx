@@ -32,6 +32,7 @@ import InstitutionStaffModal from './InstitutionStaffModal';
 import { useToastHelpers } from '@/lib/toast';
 import { StaffFilters } from './ExecutionFilters';
 import StaffTable from './StaffTable';
+import { ENRICHMENT_CRITERIA } from '@/constants/execution';
 
 const DEFAULT_LIMIT = 10;
 
@@ -46,14 +47,6 @@ function getOffset(searchParams: URLSearchParams): number {
   const n = v ? parseInt(v, 10) : NaN;
   return Number.isNaN(n) || n < 0 ? 0 : n;
 }
-
-const ENRICHMENT_CRITERIA = [
-  { field: 'Name', confidence: 'High', source: 'Scraped from team/leadership pages' },
-  { field: 'Job title / Role', confidence: 'High', source: 'Scraped from page context' },
-  { field: 'Email', confidence: 'High', source: 'Scraped from team/leadership pages' },
-  { field: 'Phone', confidence: 'Medium', source: 'Scraped where available (contact number)' },
-  { field: 'Institution', confidence: 'High', source: 'Linked to the associated institution' },
-];
 
 export default function ExecutionStaffPage() {
   const router = useRouter();

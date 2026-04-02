@@ -4,14 +4,7 @@ import { TableHeader } from '@/components/TableHeader';
 import { Result } from '@/types/execution';
 import { Badge } from '@/components/ui/badge';
 import { formatDateTime } from '@/utils/format';
-
-const COLUMNS = [
-  { label: 'URL', align: 'left' as const },
-  { label: 'Source', align: 'left' as const },
-  { label: 'Status', align: 'left' as const },
-  { label: 'Processed', align: 'left' as const },
-  { label: 'Error', align: 'left' as const },
-];
+import { RESULTS_TABLE_COLUMNS } from '@/constants/execution';
 
 export default function ResultsTable({
   rows,
@@ -24,13 +17,13 @@ export default function ResultsTable({
   isError: boolean;
   onRetry?: () => void;
 }) {
-  const colSpan = COLUMNS.length;
+  const colSpan = RESULTS_TABLE_COLUMNS.length;
 
   return (
     <div className="w-full rounded-lg border border-border overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <TableHeader columns={COLUMNS} />
+          <TableHeader columns={RESULTS_TABLE_COLUMNS} />
           <tbody>
             {isLoading && (
               <tr>

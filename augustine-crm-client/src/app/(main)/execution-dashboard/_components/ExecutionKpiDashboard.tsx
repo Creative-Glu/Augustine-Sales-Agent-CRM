@@ -20,22 +20,7 @@ import { cn } from '@/lib/utils';
 import type { ExecutionStats } from '@/services/execution/stats.service';
 import type { Job, Result } from '@/types/execution';
 import { formatDateTime } from '@/utils/format';
-
-const jobStatusVariant: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  pending: 'outline',
-  running: 'default',
-  completed: 'secondary',
-  failed: 'destructive',
-};
-
-const LOG_COLUMNS = [
-  { label: 'Status', align: 'left' as const },
-  { label: 'URLs', align: 'right' as const },
-  { label: 'Submitted', align: 'left' as const },
-  { label: 'Updated', align: 'left' as const },
-  { label: 'Processing time', align: 'right' as const },
-  { label: 'Error', align: 'left' as const },
-];
+import { JOB_STATUS_VARIANT, KPI_RECENT_JOBS_COLUMNS, KPI_FAILED_RESULTS_COLUMNS } from '@/constants/execution';
 
 function formatDuration(ms: number): string {
   if (ms < 0) return '—';
@@ -54,13 +39,6 @@ function getJobProcessingTime(job: Job): string {
   if (Number.isNaN(submitted) || Number.isNaN(updated)) return '—';
   return formatDuration(updated - submitted);
 }
-
-const FAILED_RESULTS_COLUMNS = [
-  { label: 'URL', align: 'left' as const },
-  { label: 'Source', align: 'left' as const },
-  { label: 'Processed', align: 'left' as const },
-  { label: 'Error', align: 'left' as const },
-];
 
 interface ExecutionKpiDashboardProps {
   stats: ExecutionStats | undefined;
@@ -348,17 +326,17 @@ export default function ExecutionKpiDashboard({
         <CardContent className="p-0">
           <div className="overflow-x-auto rounded-b-xl">
             <table className="w-full text-sm">
-              <TableHeader columns={LOG_COLUMNS} />
+              <TableHeader columns={KPI_RECENT_JOBS_COLUMNS} />
               <tbody>
                 {isRecentJobsLoading ? (
                   <tr>
-                    <td colSpan={LOG_COLUMNS.length} className="py-6 text-center text-muted-foreground text-sm">
+                    <td colSpan={KPI_RECENT_JOBS_COLUMNS.length} className="py-6 text-center text-muted-foreground text-sm">
                       Loading…
                     </td>
                   </tr>
                 ) : recentJobs.length === 0 ? (
                   <tr>
-                    <td colSpan={LOG_COLUMNS.length} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={KPI_RECENT_JOBS_COLUMNS.length} className="py-8 text-center text-muted-foreground">
                       No jobs yet.
                     </td>
                   </tr>
@@ -369,7 +347,7 @@ export default function ExecutionKpiDashboard({
                       className="border-b border-border/50 hover:bg-muted/30 transition-colors"
                     >
                       <td className="py-3 px-4">
-                        <Badge variant={jobStatusVariant[row.status] ?? 'secondary'} className="text-xs">
+                        <Badge variant={JOB_STATUS_VARIANT[row.status] ?? 'secondary'} className="text-xs">
                           {row.status}
                         </Badge>
                       </td>
@@ -411,17 +389,17 @@ export default function ExecutionKpiDashboard({
         <CardContent className="p-0">
           <div className="overflow-x-auto rounded-b-xl">
             <table className="w-full text-sm">
-              <TableHeader columns={FAILED_RESULTS_COLUMNS} />
+              <TableHeader columns={KPI_FAILED_RESULTS_COLUMNS} />
               <tbody>
                 {isRecentFailedResultsLoading ? (
                   <tr>
-                    <td colSpan={FAILED_RESULTS_COLUMNS.length} className="py-6 text-center text-muted-foreground text-sm">
+                    <td colSpan={KPI_FAILED_RESULTS_COLUMNS.length} className="py-6 text-center text-muted-foreground text-sm">
                       Loading…
                     </td>
                   </tr>
                 ) : recentFailedResults.length === 0 ? (
                   <tr>
-                    <td colSpan={FAILED_RESULTS_COLUMNS.length} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={KPI_FAILED_RESULTS_COLUMNS.length} className="py-8 text-center text-muted-foreground">
                       No failed results.
                     </td>
                   </tr>

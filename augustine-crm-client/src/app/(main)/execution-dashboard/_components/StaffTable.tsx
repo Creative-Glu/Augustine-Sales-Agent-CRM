@@ -9,15 +9,7 @@ import { ExecutionStatusPipelinePanel } from './ExecutionStatusPipelinePanel';
 import { Badge } from '@/components/ui/badge';
 import { SmallSyncBadge, QueueBadge } from '@/components/SyncBadges';
 import { formatDateTime, cellValue } from '@/utils/format';
-
-const COLUMNS = [
-  { label: 'Staff', align: 'left' as const },
-  { label: 'Parish Role', align: 'left' as const },
-  { label: 'Contact', align: 'left' as const },
-  { label: 'Institution', align: 'left' as const },
-  { label: 'Status', align: 'left' as const },
-  { label: 'Created', align: 'left' as const },
-];
+import { STAFF_TABLE_COLUMNS } from '@/constants/execution';
 
 export default function StaffTable({
   rows,
@@ -36,7 +28,7 @@ export default function StaffTable({
   /** When provided, institution name is shown as a link that calls this with institution_id. */
   onInstitutionClick?: (institutionId: number) => void;
 }) {
-  const colSpan = COLUMNS.length;
+  const colSpan = STAFF_TABLE_COLUMNS.length;
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [panelAnchor, setPanelAnchor] = useState<{ top: number; left: number } | null>(null);
 
@@ -87,7 +79,7 @@ export default function StaffTable({
       )}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <TableHeader columns={COLUMNS} />
+          <TableHeader columns={STAFF_TABLE_COLUMNS} />
           <tbody>
             {isLoading && (
               <tr>

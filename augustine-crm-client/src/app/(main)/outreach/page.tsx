@@ -46,10 +46,9 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Inbox, RefreshCw, ChevronDown, ChevronRight, Info, Send, Check, X } from 'lucide-react';
+import { OUTREACH_TABS, type OutreachTabKey } from '@/constants/outreach';
 
-type TabKey = 'pending' | 'approved_unsent' | 'sent' | 'rejected';
-
-function getStatusesForTab(tab: TabKey): string {
+function getStatusesForTab(tab: OutreachTabKey): string {
   if (tab === 'pending') return 'generated,under_review,edited';
   if (tab === 'approved_unsent') return 'approved';
   if (tab === 'sent') return 'sent';
@@ -92,15 +91,8 @@ function StatusBadge({ status }: { status: OutreachStatus }) {
   return <span className={`${base} ${styles[group]}`}>{label}</span>;
 }
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: 'pending', label: 'Pending' },
-  { key: 'approved_unsent', label: 'Approved' },
-  { key: 'sent', label: 'Sent' },
-  { key: 'rejected', label: 'Rejected' },
-];
-
 export default function OutreachPage() {
-  const [activeTab, setActiveTab] = useState<TabKey>('pending');
+  const [activeTab, setActiveTab] = useState<OutreachTabKey>('pending');
   const [selected, setSelected] = useState<OutreachItem | null>(null);
   const [editSubject, setEditSubject] = useState('');
   const [editBody, setEditBody] = useState('');
@@ -281,7 +273,7 @@ export default function OutreachPage() {
             role="tablist"
             className="inline-flex rounded-lg border border-border bg-muted/30 p-1 gap-0.5"
           >
-            {TABS.map((tab) => {
+            {OUTREACH_TABS.map((tab) => {
               const isActive = activeTab === tab.key;
               return (
                 <button
