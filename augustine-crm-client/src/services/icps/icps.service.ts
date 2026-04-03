@@ -7,7 +7,7 @@ export const getICPs = async () => {
     .select('*')
     .order('created_at', { ascending: false });
 
-  if (error) throw error;
+  if (error) throw new Error(`Error fetching ICPs: ${error.message}`);
   return data;
 };
 

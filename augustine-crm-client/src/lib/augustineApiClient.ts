@@ -1,10 +1,21 @@
 export type ApiRole = 'Viewer' | 'Reviewer' | 'Admin';
 
-export interface NormalizedApiError {
+/**
+ * API error that extends Error so `instanceof Error` checks work correctly
+ * in catch blocks throughout the app.
+ */
+export class NormalizedApiError extends Error {
   status: number;
   code?: string;
-  message: string;
   raw?: unknown;
+
+  constructor(status: number, message: string, code?: string, raw?: unknown) {
+    super(message);
+    this.name = 'NormalizedApiError';
+    this.status = status;
+    this.code = code;
+    this.raw = raw;
+  }
 }
 
 export interface ApiClientOptions {
@@ -112,12 +123,7 @@ export function createNormalizedError(
 ): NormalizedApiError {
   const parsed = parseErrorBody(body);
   const message = parsed.message || fallbackMessage || 'Request failed';
-  return {
-    status,
-    code: parsed.code,
-    message,
-    raw: body,
-  };
+  return new NormalizedApiError(status, message, parsed.code, body);
 }
 
 async function parseJsonSafe(res: Response): Promise<unknown> {
@@ -155,6 +161,7 @@ export async function apiRequest<T>(
         try {
           window.localStorage.removeItem('augustine-access-token');
           window.localStorage.removeItem('augustine-auth-user');
+          document.cookie = 'augustine-auth=; path=/; max-age=0; SameSite=Lax';
           if (!window.location.pathname.startsWith('/login')) {
             window.location.href = '/login';
           }
