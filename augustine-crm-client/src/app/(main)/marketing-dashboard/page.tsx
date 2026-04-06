@@ -14,12 +14,13 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { Activity, Database, Mail, TrendingUp, Clock, Users } from 'lucide-react';
+import { Activity, Database, Mail, TrendingUp, Clock } from 'lucide-react';
+import type { Campaign } from '@/types/augustine';
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 export default function MarketingDashboardPage() {
-  const { overview, system, roi, campaigns, isLoading, isError } = useAugustineMetrics();
+  const { overview, system, campaigns, isLoading, isError } = useAugustineMetrics();
   const {
     data: jobCostMetrics,
   } = useQuery({
@@ -65,6 +66,11 @@ export default function MarketingDashboardPage() {
       maximumFractionDigits: 6,
     }).format(value);
 
+  const enrichmentRate =
+    overview && overview.total_contacts > 0
+      ? `${Math.round((overview.enriched_contacts / overview.total_contacts) * 100)}%`
+      : '—';
+
   const contactsStats = [
     {
       title: 'Total contacts',
@@ -81,52 +87,18 @@ export default function MarketingDashboardPage() {
       color: 'from-emerald-100 via-emerald-200 to-emerald-300',
     },
     {
-      title: 'HubSpot synced',
-      value: overview?.hubspot_synced ?? 0,
-      subtitle: 'CRM-ready in HubSpot',
-      icon: Mail,
+      title: 'Enrichment rate',
+      value: enrichmentRate,
+      subtitle: 'Contacts meeting quality target',
+      icon: TrendingUp,
       color: 'from-sky-100 via-sky-200 to-sky-300',
     },
     {
-      title: 'Failed sync',
-      value: overview?.failed_sync ?? 0,
-      subtitle: 'Need attention',
-      icon: TrendingUp,
-      color: 'from-rose-100 via-rose-200 to-rose-300',
-    },
-  ];
-
-  const roiCards = [
-    {
-      title: 'All-time hours saved',
-      value: roi?.roi_estimates.total_hours_saved?.toFixed(1) ?? '0.0',
-      subtitle: 'Manual work replaced by automation',
-      icon: Clock,
-      color: 'from-emerald-100 via-emerald-200 to-emerald-300',
-    },
-    {
-      title: 'All-time FTE equivalent',
-      value: roi?.roi_estimates.fte_equivalent?.toFixed(2) ?? '0.00',
-      subtitle: 'Full-time roles worth of capacity',
-      icon: Users,
-      color: 'from-indigo-100 via-indigo-200 to-indigo-300',
-    },
-    {
-      title: `Recent hours saved (${roi?.recent.days ?? 30}d)`,
-      value: roi?.recent.estimated_hours_saved?.toFixed(1) ?? '0.0',
-      subtitle: 'Last period across contacts + outreach',
-      icon: Clock,
-      color: 'from-amber-100 via-amber-200 to-amber-300',
-    },
-    {
-      title: 'Avg hours to CRM-ready',
-      value:
-        roi?.flow.avg_hours_new_contact_to_crm_ready != null
-          ? roi.flow.avg_hours_new_contact_to_crm_ready.toFixed(1)
-          : '—',
-      subtitle: 'From new lead to synced contact',
-      icon: TrendingUp,
-      color: 'from-slate-100 via-slate-200 to-slate-300',
+      title: 'Websites scraped',
+      value: jobCostMetrics?.totalUrls ?? 0,
+      subtitle: 'Across recent scrape jobs',
+      icon: Mail,
+      color: 'from-violet-100 via-violet-200 to-violet-300',
     },
   ];
 
@@ -134,16 +106,10 @@ export default function MarketingDashboardPage() {
   const distributionLabels = Object.keys(enrichmentDistribution).sort();
   const distributionValues = distributionLabels.map((k) => enrichmentDistribution[k] ?? 0);
 
-  const alerts = system?.alerts ?? [];
-
-  const campaignMetrics = campaigns.map((c) => {
+  const campaignMetrics: { name: string; generated: number; sent: number }[] = campaigns.map((c: Campaign) => {
     const generated = overview?.outreach_generated_by_campaign?.[c.id] ?? 0;
     const sent = overview?.outreach_sent_by_campaign?.[c.id] ?? 0;
-    return {
-      name: c.name,
-      generated,
-      sent,
-    };
+    return { name: c.name, generated, sent };
   });
 
   return (
@@ -159,20 +125,6 @@ export default function MarketingDashboardPage() {
         {isError && (
           <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
             Unable to load metrics from the Augustine backend. Check API availability and auth.
-          </div>
-        )}
-
-        {alerts.length > 0 && (
-          <div className="rounded-xl border border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm">
-            <p className="font-medium mb-1">Alerts from pipeline</p>
-            <ul className="list-disc list-inside space-y-0.5">
-              {alerts.map((a, idx) => (
-                <li key={idx}>
-                  <span className="font-semibold">{a.type}</span> at{' '}
-                  <span>{a.value}</span> (threshold {a.threshold})
-                </li>
-              ))}
-            </ul>
           </div>
         )}
 
@@ -247,14 +199,6 @@ export default function MarketingDashboardPage() {
                 </dd>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <dt className="text-muted-foreground">HubSpot failure rate</dt>
-                <dd className="font-medium">
-                  {system?.error_rates.hubspot_failure_rate != null
-                    ? `${(system.error_rates.hubspot_failure_rate * 100).toFixed(1)}%`
-                    : '—'}
-                </dd>
-              </div>
-              <div className="flex items-center justify-between gap-3">
                 <dt className="text-muted-foreground">Enrichment failure rate</dt>
                 <dd className="font-medium">
                   {system?.error_rates.enrichment_failure_rate != null
@@ -290,56 +234,44 @@ export default function MarketingDashboardPage() {
           <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">
             ROI & capacity
           </h2>
-          {!roi ? (
-            <p className="text-sm text-muted-foreground">
-              ROI metrics are not available yet. Once the backend calculates hours saved and FTE
-              capacity, they will appear here.
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-              {roiCards.map((stat) => (
-                <DashboardCard key={stat.title} {...stat} />
-              ))}
-            </div>
-          )}
-
-          {roi && (
-            <div className="bg-card rounded-2xl border border-border shadow-sm p-6 space-y-3">
-              <h3 className="text-xs font-semibold text-slate-800 dark:text-slate-100 uppercase tracking-wide">
-                ROI assumptions
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                These are the constants the backend uses to convert automation into hours and FTE
-                capacity. Business teams can tune them via environment variables.
-              </p>
-              <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-                <div className="space-y-0.5">
-                  <dt className="text-muted-foreground">Manual minutes per contact</dt>
-                  <dd className="font-medium">
-                    {roi.assumptions.manual_minutes_per_contact.toFixed(1)} min
-                  </dd>
-                </div>
-                <div className="space-y-0.5">
-                  <dt className="text-muted-foreground">Manual minutes per outreach</dt>
-                  <dd className="font-medium">
-                    {roi.assumptions.manual_minutes_per_outreach.toFixed(1)} min
-                  </dd>
-                </div>
-                <div className="space-y-0.5">
-                  <dt className="text-muted-foreground">FTE hours per week</dt>
-                  <dd className="font-medium">
-                    {roi.assumptions.fte_hours_per_week.toFixed(1)} h
-                  </dd>
-                </div>
-                <div className="space-y-0.5">
-                  <dt className="text-muted-foreground">Recent window</dt>
-                  <dd className="font-medium">
-                    Last {roi.assumptions.recent_days} days (configurable)
-                  </dd>
-                </div>
-              </dl>
-            </div>
-          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <DashboardCard
+              title="Websites scraped"
+              value={jobCostMetrics?.totalUrls ?? 0}
+              subtitle="Institutions processed across all jobs"
+              icon={Database}
+              color="from-blue-100 via-blue-200 to-blue-300"
+            />
+            <DashboardCard
+              title="Enrichment rate"
+              value={enrichmentRate}
+              subtitle="Contacts meeting quality target"
+              icon={Activity}
+              color="from-emerald-100 via-emerald-200 to-emerald-300"
+            />
+            <DashboardCard
+              title="Total scraping cost"
+              value={
+                jobCostMetrics && jobCostMetrics.totalCost > 0
+                  ? formatUsd(jobCostMetrics.totalCost)
+                  : '—'
+              }
+              subtitle="LLM cost across recent jobs"
+              icon={TrendingUp}
+              color="from-amber-100 via-amber-200 to-amber-300"
+            />
+            <DashboardCard
+              title="Avg cost per website"
+              value={
+                jobCostMetrics && jobCostMetrics.avgCostPerSite > 0
+                  ? formatUsd(jobCostMetrics.avgCostPerSite)
+                  : '—'
+              }
+              subtitle="Extraction cost per institution"
+              icon={Clock}
+              color="from-slate-100 via-slate-200 to-slate-300"
+            />
+          </div>
         </section>
 
         <section className="bg-card rounded-2xl border border-border shadow-sm p-6">
