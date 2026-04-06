@@ -35,7 +35,7 @@ export default function ExecutionDashboardNav() {
       className="flex flex-wrap items-center gap-1 p-1.5 rounded-xl border border-border/60 bg-muted/60 dark:bg-muted/30 shadow-sm mb-6"
       aria-label="Execution dashboard sections"
     >
-      {(Object.keys(VIEW_LABELS) as ExecutionView[]).map((view) => {
+      {(Object.keys(VIEW_LABELS) as ExecutionView[]).filter((v) => v !== 'sync-queue').map((view) => {
         const href = VIEW_PATHS[view];
         const isActive = currentView === view;
         return (

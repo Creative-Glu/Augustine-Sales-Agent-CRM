@@ -12,7 +12,6 @@ export const STAFF_TABLE_COLUMNS: TableHeaderColumn[] = [
   { label: 'Parish Role', align: 'left' },
   { label: 'Contact', align: 'left' },
   { label: 'Institution', align: 'left' },
-  { label: 'Status', align: 'left' },
   { label: 'Created', align: 'left' },
 ];
 
@@ -20,7 +19,6 @@ export const INSTITUTION_TABLE_COLUMNS: TableHeaderColumn[] = [
   { label: 'Institution', align: 'left' },
   { label: 'Contact', align: 'left' },
   { label: 'Address', align: 'left' },
-  { label: 'Status', align: 'left' },
   { label: 'Created', align: 'left' },
 ];
 

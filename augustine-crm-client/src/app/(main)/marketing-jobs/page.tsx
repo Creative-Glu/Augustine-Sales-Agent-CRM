@@ -396,8 +396,11 @@ export default function MarketingJobsPage() {
     urlsTotal > 0 ? Math.round((urlsProcessed / urlsTotal) * 100) : 0;
 
   const visibleEvents = useMemo(() => {
-    if (!showOnlyErrors) return progressEvents;
-    return progressEvents.filter(
+    const nonHubspot = progressEvents.filter(
+      (e) => !(typeof e.stage === 'string' && e.stage.startsWith('hubspot'))
+    );
+    if (!showOnlyErrors) return nonHubspot;
+    return nonHubspot.filter(
       (e) =>
         (typeof e.stage === 'string' && e.stage.includes('failed')) ||
         (typeof e.stage === 'string' && e.stage.includes('error')) ||
@@ -757,9 +760,9 @@ export default function MarketingJobsPage() {
                 </div>
 
                 <div className="mb-4 flex items-center justify-between gap-2">
-                  {JOB_STAGES_ORDER.map((stage, idx) => {
+                  {JOB_STAGES_ORDER.filter((s) => s !== 'hubspot_sync').map((stage, idx, arr) => {
                     const state = stepStates[stage];
-                    const isLast = idx === JOB_STAGES_ORDER.length - 1;
+                    const isLast = idx === arr.length - 1;
                     return (
                       <div key={stage} className="flex flex-1 items-center">
                         <div className="flex flex-col items-center gap-1">

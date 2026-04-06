@@ -116,10 +116,7 @@ export default function ExecutionKpiDashboard({
     results.total > 0 ? Math.round((results.success / results.total) * 100) : null;
   const instSync = institutionSync ?? { eligible: 0, synced: 0, failed: 0 };
   const stSync = staffSync ?? { eligible: 0, synced: 0, failed: 0 };
-  const totalSynced = (instSync.synced ?? 0) + (stSync.synced ?? 0);
   const totalSyncFailed = (instSync.failed ?? 0) + (stSync.failed ?? 0);
-  const totalEligible = (instSync.eligible ?? 0) + (stSync.eligible ?? 0);
-  const syncProgressPct = totalEligible > 0 ? Math.round((totalSynced / totalEligible) * 100) : 0;
 
   // Pipeline status: healthy | busy | attention
   const hasFailures = jobs.failed > 0 || websites.failed > 0 || totalSyncFailed > 0 || (results.error ?? 0) > 0;
@@ -250,66 +247,6 @@ export default function ExecutionKpiDashboard({
             </CardContent>
           </Card>
         </div>
-      </div>
-
-      {/* HubSpot sync – progress + cards */}
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <DocumentCheckIcon className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-sm font-semibold text-foreground">HubSpot sync</h2>
-        </div>
-        <p className="text-xs text-muted-foreground mb-3">
-          {totalEligible > 0
-            ? `${totalSynced} of ${totalEligible} eligible record${totalEligible === 1 ? '' : 's'} synced to HubSpot.`
-            : 'Mark institutions or staff as eligible in their tabs, then sync to HubSpot.'}
-        </p>
-        {totalEligible > 0 && (
-          <div className="mb-4">
-            <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-              <span>Sync progress</span>
-              <span className="tabular-nums">{totalSynced} / {totalEligible} · {syncProgressPct}%</span>
-            </div>
-            <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-              <div
-                className="h-full rounded-full bg-primary transition-all duration-500"
-                style={{ width: `${syncProgressPct}%` }}
-              />
-            </div>
-          </div>
-        )}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <KpiCard
-            title="Eligible institutions"
-            value={instSync.eligible}
-            icon={BuildingOffice2Icon}
-            hint="Ready to sync"
-          />
-          <KpiCard
-            title="Eligible staff"
-            value={stSync.eligible}
-            icon={UserGroupIcon}
-            hint="Ready to sync"
-          />
-          <KpiCard
-            title="Synced"
-            value={totalSynced}
-            sub={`${instSync.synced ?? 0} inst · ${stSync.synced ?? 0} staff`}
-            icon={DocumentCheckIcon}
-            hint="In HubSpot"
-          />
-          <KpiCard
-            title="Sync failed"
-            value={totalSyncFailed}
-            sub={totalSyncFailed > 0 ? 'Needs retry' : undefined}
-            icon={ExclamationTriangleIcon}
-            hint={totalSyncFailed > 0 ? 'Check sync status' : undefined}
-          />
-        </div>
-        {totalSyncFailed > 0 && (
-          <p className="text-xs mt-3 text-amber-700 dark:text-amber-400">
-            Tip: Open the Institution or Staff tab, filter by sync status, and retry failed syncs.
-          </p>
-        )}
       </div>
 
       {/* Recent activity log */}

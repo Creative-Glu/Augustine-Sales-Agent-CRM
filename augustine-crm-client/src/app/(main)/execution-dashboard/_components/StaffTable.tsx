@@ -1,13 +1,10 @@
 'use client';
 
-import { useState, Fragment, useEffect, memo } from 'react';
-import { createPortal } from 'react-dom';
+import { Fragment } from 'react';
 import { TableHeader } from '@/components/TableHeader';
 import { Staff } from '@/types/execution';
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
-import { ExecutionStatusPipelinePanel } from './ExecutionStatusPipelinePanel';
 import { Badge } from '@/components/ui/badge';
-import { SmallSyncBadge, QueueBadge } from '@/components/SyncBadges';
 import { formatDateTime, cellValue } from '@/utils/format';
 import { STAFF_TABLE_COLUMNS } from '@/constants/execution';
 
@@ -29,41 +26,6 @@ export default function StaffTable({
   onInstitutionClick?: (institutionId: number) => void;
 }) {
   const colSpan = STAFF_TABLE_COLUMNS.length;
-  const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [panelAnchor, setPanelAnchor] = useState<{ top: number; left: number } | null>(null);
-
-  const PANEL_WIDTH = 280;
-  const PANEL_EST_HEIGHT = 300;
-  const GAP = 4;
-  const MARGIN = 12;
-
-  const openPanel = (staffId: number, event: React.MouseEvent<HTMLButtonElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom - MARGIN;
-    const openAbove = spaceBelow < PANEL_EST_HEIGHT;
-    let top = openAbove
-      ? rect.top - PANEL_EST_HEIGHT - GAP
-      : rect.bottom + GAP;
-    if (openAbove) top = Math.max(8, top);
-    const left = Math.max(8, Math.min(rect.left, window.innerWidth - PANEL_WIDTH - MARGIN));
-    setExpandedId(staffId);
-    setPanelAnchor({ top, left });
-  };
-
-  const closePanel = () => {
-    setExpandedId(null);
-    setPanelAnchor(null);
-  };
-
-  useEffect(() => {
-    if (!expandedId) return;
-    const onScroll = () => closePanel();
-    window.addEventListener('scroll', onScroll, true);
-    return () => window.removeEventListener('scroll', onScroll, true);
-  }, [expandedId]);
-
-  const expandedRow = expandedId != null ? rows.find((r) => r.staff_id === expandedId) : null;
-
   const showOverlay = isFetching && !isLoading && rows.length > 0;
 
   return (
@@ -183,23 +145,6 @@ export default function StaffTable({
                     )}
                   </td>
 
-                  {/* Status – sync + queue badges, click opens panel above or below */}
-                  <td className="py-3 px-4 align-top">
-                    <div className="flex flex-col items-start gap-1.5">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        {<SmallSyncBadge status={row.sync_status ?? null} />}
-                        {<QueueBadge syncStatus={row.sync_status ?? null} syncedToHubspot={row.synced_to_hubspot ?? null} />}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={(e) => (expandedId === row.staff_id ? closePanel() : openPanel(row.staff_id, e))}
-                        className="text-xs text-primary hover:underline underline-offset-2 text-left"
-                      >
-                        {expandedId === row.staff_id ? 'Hide sync pipeline' : 'View sync pipeline'}
-                      </button>
-                    </div>
-                  </td>
-
                   {/* Created */}
                   <td className="py-3 px-4 text-muted-foreground align-top whitespace-nowrap">
                     {formatDateTime(row.created_at)}
@@ -211,32 +156,6 @@ export default function StaffTable({
         </table>
       </div>
     </div>
-    {expandedRow && panelAnchor && typeof document !== 'undefined' && createPortal(
-      <>
-        <div
-          className="fixed inset-0 z-40"
-          aria-hidden
-          onClick={closePanel}
-        />
-        <div
-          className="z-50"
-          style={{ position: 'fixed', top: panelAnchor.top, left: panelAnchor.left }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <ExecutionStatusPipelinePanel
-            entityLabel={expandedRow.name}
-            enrichmentConfidence={expandedRow.enrichment_confidence ?? null}
-            isEligible={expandedRow.is_eligible ?? null}
-            syncedToHubspot={expandedRow.synced_to_hubspot ?? null}
-            syncStatus={expandedRow.sync_status ?? null}
-            webhookStatus={expandedRow.webhook_status ?? null}
-            lastSyncedAt={expandedRow.last_synced_at ?? null}
-            onClose={closePanel}
-          />
-        </div>
-      </>,
-      document.body
-    )}
     </>
   );
 }
