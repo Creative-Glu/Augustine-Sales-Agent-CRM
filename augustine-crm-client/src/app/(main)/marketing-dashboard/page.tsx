@@ -231,21 +231,29 @@ export default function MarketingDashboardPage() {
         </section>
 
         <section>
-          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">
+          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">
             ROI & capacity
           </h2>
+          <p className="text-xs text-muted-foreground mb-3">
+            Based on{' '}
+            {jobCostMetrics?.jobCount
+              ? <><strong className="text-foreground">{jobCostMetrics.jobCount}</strong> scrape jobs run so far</>
+              : 'all scrape jobs run so far'
+            }.
+            {' '}Enrichment rate reflects all contacts in the database.
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <DashboardCard
               title="Websites scraped"
               value={jobCostMetrics?.totalUrls ?? 0}
-              subtitle="Institutions processed across all jobs"
+              subtitle={`Across last ${jobCostMetrics?.jobCount ?? 50} jobs (all-time)`}
               icon={Database}
               color="from-blue-100 via-blue-200 to-blue-300"
             />
             <DashboardCard
               title="Enrichment rate"
               value={enrichmentRate}
-              subtitle="Contacts meeting quality target"
+              subtitle="All-time — enriched / total contacts"
               icon={Activity}
               color="from-emerald-100 via-emerald-200 to-emerald-300"
             />
@@ -256,7 +264,7 @@ export default function MarketingDashboardPage() {
                   ? formatUsd(jobCostMetrics.totalCost)
                   : '—'
               }
-              subtitle="LLM cost across recent jobs"
+              subtitle={`LLM cost — last ${jobCostMetrics?.jobCount ?? 50} jobs`}
               icon={TrendingUp}
               color="from-amber-100 via-amber-200 to-amber-300"
             />
@@ -267,7 +275,7 @@ export default function MarketingDashboardPage() {
                   ? formatUsd(jobCostMetrics.avgCostPerSite)
                   : '—'
               }
-              subtitle="Extraction cost per institution"
+              subtitle="Per institution scraped"
               icon={Clock}
               color="from-slate-100 via-slate-200 to-slate-300"
             />
