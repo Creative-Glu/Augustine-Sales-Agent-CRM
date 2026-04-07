@@ -161,7 +161,6 @@ export async function apiRequest<T>(
         try {
           window.localStorage.removeItem('augustine-access-token');
           window.localStorage.removeItem('augustine-auth-user');
-          document.cookie = 'augustine-auth=; path=/; max-age=0; SameSite=Lax';
           if (!window.location.pathname.startsWith('/login')) {
             window.location.href = '/login';
           }

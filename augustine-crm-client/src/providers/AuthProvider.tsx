@@ -23,8 +23,6 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const STORAGE_KEY_TOKEN = 'augustine-access-token';
 const STORAGE_KEY_USER = 'augustine-auth-user';
-/** Cookie name for middleware auth checks — synced with localStorage token. */
-const AUTH_COOKIE_NAME = 'augustine-auth';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -54,7 +52,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setUser(parsed as AuthUser);
               }
             } catch {
-              // Corrupted stored user — clear and treat as logged out
               window.localStorage.removeItem(STORAGE_KEY_USER);
               window.localStorage.removeItem(STORAGE_KEY_TOKEN);
             }
@@ -67,11 +64,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
 
         if (!res.ok) {
-          // Token invalid or expired — clear everything
           if (typeof window !== 'undefined') {
             window.localStorage.removeItem(STORAGE_KEY_TOKEN);
             window.localStorage.removeItem(STORAGE_KEY_USER);
-            document.cookie = `${AUTH_COOKIE_NAME}=; path=/; max-age=0; SameSite=Lax`;
           }
           setAccessToken(null);
           setUser(null);
@@ -90,11 +85,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(authUser);
         if (typeof window !== 'undefined') {
           window.localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(authUser));
-          // Refresh auth cookie on successful token validation
-          document.cookie = `${AUTH_COOKIE_NAME}=1; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
         }
       } catch {
-        // ignore and treat as logged out
         setAccessToken(null);
         setUser(null);
       } finally {
@@ -111,8 +103,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(STORAGE_KEY_TOKEN);
       window.localStorage.removeItem(STORAGE_KEY_USER);
-      // Clear auth cookie so middleware redirects immediately
-      document.cookie = `${AUTH_COOKIE_NAME}=; path=/; max-age=0; SameSite=Lax`;
     }
   }, []);
 
@@ -155,8 +145,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (typeof window !== 'undefined') {
           window.localStorage.setItem(STORAGE_KEY_TOKEN, token);
           window.localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(authUser));
-          // Set auth cookie for middleware (7-day expiry, SameSite=Lax)
-          document.cookie = `${AUTH_COOKIE_NAME}=1; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
         }
 
         return { success: true };
@@ -191,4 +179,3 @@ export function useAuth(): AuthContextValue {
   }
   return ctx;
 }
-
