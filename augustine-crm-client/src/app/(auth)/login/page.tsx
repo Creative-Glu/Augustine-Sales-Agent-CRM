@@ -118,9 +118,12 @@ export default function LoginPage() {
         </form>
 
         {/* Footer */}
-        <p className="text-center text-xs text-slate-500">
-          © {new Date().getFullYear()} Augustine Institute. All rights reserved.
-        </p>
+        <div className="text-center space-y-1">
+          <p className="text-xs text-slate-500">
+            © {new Date().getFullYear()} Augustine Institute. All rights reserved.
+          </p>
+          <p className="text-[10px] text-slate-600">v0.1.0</p>
+        </div>
       </div>
     </div>
   );

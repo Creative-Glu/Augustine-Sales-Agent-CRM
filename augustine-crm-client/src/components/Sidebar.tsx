@@ -166,6 +166,8 @@ export default function Sidebar() {
           <ArrowRightOnRectangleIcon className="w-4 h-4 transition-colors duration-200 group-hover:text-red-400" />
           Sign out
         </button>
+
+        <p className="text-center text-[10px] text-slate-600 mt-3">v0.1.0</p>
       </div>
     </aside>
   );

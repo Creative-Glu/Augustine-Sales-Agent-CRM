@@ -1,0 +1,52 @@
+# ─── Netlify Configuration ──────────────────────────────────────────────────
+# Docs: https://docs.netlify.com/configure-builds/file-based-configuration/
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+# ─── Deploy Previews (pull request builds) ──────────────────────────────────
+
+[context.deploy-preview]
+  command = "npm run build"
+
+[context.deploy-preview.environment]
+  NEXT_PUBLIC_APP_NAME = "Augustine CRM (Preview)"
+
+# ─── Branch Deploys ─────────────────────────────────────────────────────────
+
+[context.branch-deploy]
+  command = "npm run build"
+
+# ─── Production ─────────────────────────────────────────────────────────────
+
+[context.production]
+  command = "npm run build"
+
+# ─── Next.js Plugin ─────────────────────────────────────────────────────────
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# ─── Headers ────────────────────────────────────────────────────────────────
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# ─── Redirects ──────────────────────────────────────────────────────────────
+# SPA fallback — Next.js handles routing, but this catches edge cases
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  conditions = {Role = ["admin"]}
