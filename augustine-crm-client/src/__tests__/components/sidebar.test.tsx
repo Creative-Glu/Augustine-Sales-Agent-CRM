@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '../test-utils';
 
 import Sidebar from '@/components/Sidebar';
@@ -12,19 +13,24 @@ describe('Sidebar', () => {
 
   it('renders navigation group labels', () => {
     renderWithProviders(<Sidebar />);
-    expect(screen.getByText('Overview')).toBeInTheDocument();
-    expect(screen.getByText('Sales Pipeline')).toBeInTheDocument();
     expect(screen.getByText('Tools')).toBeInTheDocument();
+    expect(screen.getByText('Others')).toBeInTheDocument();
     // "Admin" appears as both nav group label and user role — check both exist
     expect(screen.getAllByText('Admin').length).toBeGreaterThanOrEqual(2);
   });
 
   it('renders key navigation links', () => {
     renderWithProviders(<Sidebar />);
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
-    expect(screen.getByText('Contacts')).toBeInTheDocument();
     expect(screen.getByText('Execution')).toBeInTheDocument();
     expect(screen.getByText('Users')).toBeInTheDocument();
+  });
+
+  it('expands Others section on click and shows disabled links', async () => {
+    renderWithProviders(<Sidebar />);
+    const othersButton = screen.getByRole('button', { name: /others/i });
+    await userEvent.click(othersButton);
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Contacts')).toBeInTheDocument();
   });
 
   it('renders the user info section', () => {
