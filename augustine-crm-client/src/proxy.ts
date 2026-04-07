@@ -25,7 +25,8 @@ export default function proxy(request: NextRequest) {
   }
 
   // If on a protected page and NOT authenticated → redirect to login
-  if (!hasAuthCookie && pathname !== LOGIN_PATH) {
+  // Skip root "/" — page.tsx already handles its own redirect
+  if (!hasAuthCookie && pathname !== LOGIN_PATH && pathname !== '/') {
     const loginUrl = new URL(LOGIN_PATH, request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);

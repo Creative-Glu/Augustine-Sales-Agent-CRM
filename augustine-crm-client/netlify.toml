@@ -3,7 +3,6 @@
 
 [build]
   command = "npm run build"
-  publish = ".next"
 
 [build.environment]
   NODE_VERSION = "22"
@@ -27,7 +26,7 @@
 [context.production]
   command = "npm run build"
 
-# ─── Next.js Plugin ─────────────────────────────────────────────────────────
+# ─── Next.js Plugin (handles publish dir, SSR, ISR automatically) ───────────
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
@@ -41,12 +40,3 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
-
-# ─── Redirects ──────────────────────────────────────────────────────────────
-# SPA fallback — Next.js handles routing, but this catches edge cases
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-  conditions = {Role = ["admin"]}
