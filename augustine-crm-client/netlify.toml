@@ -1,0 +1,26 @@
+# ─── Netlify Configuration ──────────────────────────────────────────────────
+# Base directory should be set in Netlify dashboard → Site settings → Build & deploy
+# Set it to: augustine-crm-client
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+# ─── Next.js Plugin (required for SSR + static asset serving) ───────────────
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# ─── Security Headers ──────────────────────────────────────────────────────
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
