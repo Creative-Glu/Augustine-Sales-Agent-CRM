@@ -61,19 +61,24 @@ npm run build       # production build
 ## Repository Structure
 
 ```
-src/
-├── app/              # Next.js App Router pages
-│   ├── (auth)/       # Login page
-│   ├── (main)/       # All authenticated pages
-│   └── api/          # API route handlers (proxy to backend)
-├── components/       # Shared UI components
-├── constants/        # All static data (columns, options, config)
-├── hooks/            # Custom React hooks
-├── lib/              # API client, Supabase clients, utilities
-├── providers/        # Auth + Query providers
-├── services/         # Data fetching layer (Supabase + API)
-├── types/            # TypeScript type definitions
-├── utils/            # Formatting, URL sanitization, helpers
-├── validations/      # Yup form schemas
-└── __tests__/        # Vitest test suites
+├── src/
+│   ├── app/              # Next.js App Router pages
+│   │   ├── (auth)/       # Login page
+│   │   ├── (main)/       # All authenticated pages
+│   │   └── api/          # API route handlers (proxy to backend)
+│   ├── components/       # Shared UI components
+│   ├── constants/        # All static data (columns, options, config)
+│   ├── hooks/            # Custom React hooks
+│   ├── lib/              # API client, Supabase clients, utilities
+│   ├── providers/        # Auth + Query providers
+│   ├── services/         # Data fetching layer (Supabase + API)
+│   ├── types/            # TypeScript type definitions
+│   ├── utils/            # Formatting, URL sanitization, helpers
+│   ├── validations/      # Yup form schemas
+│   └── __tests__/        # Vitest test suites
+├── docs/                 # Feature documentation & ADRs
+├── SOUL.md               # Project principles & architecture
+├── IDENTITY.md           # Project identity & tech stack
+├── AGENTS.md             # Agent permission boundaries
+└── RETENTION.md          # Data retention policy
 ```

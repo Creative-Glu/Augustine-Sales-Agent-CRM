@@ -1,6 +1,4 @@
 # ─── Netlify Configuration ──────────────────────────────────────────────────
-# Base directory should be set in Netlify dashboard → Site settings → Build & deploy
-# Set it to: augustine-crm-client
 
 [build]
   command = "npm run build"
@@ -14,6 +12,14 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+# ─── Deploy Previews ───────────────────────────────────────────────────────
+
+[context.deploy-preview]
+  command = "npm run build"
+
+[context.branch-deploy]
+  command = "npm run build"
 
 # ─── Security Headers ──────────────────────────────────────────────────────
 

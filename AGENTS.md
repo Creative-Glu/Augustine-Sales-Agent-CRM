@@ -63,3 +63,57 @@ Server-side API routes in `src/app/api/` act as proxies. They do NOT expose back
 | `/api/sync-queue`          | GET    | Allowlisted status/entity_type params, clamped limit       | Proxied to backend |
 | `/api/sync-retry`          | POST   | Validated body shape (queue_id or entity type+id)          | Proxied to backend |
 | `/api/upload-catholic-pdf` | POST   | PDF type check, 25 MB size limit, duplicate filename check | Direct to webhook  |
+
+## AI Agent Boundaries
+
+| Constraint | Policy |
+|-----------|--------|
+| **Allowed actions** | Read data, generate draft emails, suggest role mappings, format CSV exports |
+| **Prohibited actions** | Direct database writes, HubSpot sync execution, user deletion, credential access |
+| **Rate limits** | $500/month budget, 80% alert threshold, max 100 API calls per agent session |
+| **Data access** | Agents only access data through the same RLS-enforced Supabase clients as users |
+| **Output scope** | All agent-generated content (emails, summaries) requires human approval before action |
+
+## Escalation Path
+
+When an agent encounters a situation outside its boundaries, the following escalation path applies:
+
+| Trigger | Action | Escalation Target |
+|---------|--------|-------------------|
+| Agent hits rate limit | Pause execution, log event, notify admin | Admin via dashboard alert |
+| Agent produces low-confidence output | Flag for review, do not auto-approve | Reviewer via outreach approval queue |
+| Agent encounters unknown data format | Stop processing, log error with context | Data team via Slack #augustine-alerts |
+| Agent budget exceeds 80% threshold | Alert sent, non-critical tasks paused | Admin via email + dashboard |
+| Agent budget exceeds 100% | All agent activity halted immediately | Admin — requires manual re-enablement |
+| Security incident (auth failure, data leak) | Immediate halt, all tokens revoked | Admin + Engineering lead — incident response |
+
+### Emergency Kill Switch
+
+To immediately stop all agent activity:
+
+1. **Dashboard**: Admin → Settings → Agent Controls → "Disable All Agents"
+2. **Environment**: Set `AGENT_ENABLED=false` in environment variables and redeploy
+3. **Budget**: Set agent budget to $0 in cost controls
+
+## Output Review Process
+
+All AI agent outputs are subject to review before they affect production data or reach end users:
+
+| Output Type | Review Process | Reviewer |
+|------------|---------------|----------|
+| **Outreach emails** | Queued in approval workflow — Reviewer must approve/reject before sending | Reviewer or Admin |
+| **Role mapping suggestions** | Displayed as suggestions in UI — Admin must explicitly apply | Admin only |
+| **CSV export formatting** | Dry Run Tool shows preview — user confirms before download | Any authenticated user |
+| **Data enrichment** | Staged in sync queue — visible in dashboard before HubSpot push | Admin |
+
+### Review Logging
+
+All review decisions are logged to the `governance_events` table:
+
+| Field | Description |
+|-------|------------|
+| `event_type` | `agent_output_approved`, `agent_output_rejected`, `agent_output_modified` |
+| `agent_id` | Identifier of the agent that produced the output |
+| `reviewer_id` | User ID of the reviewer |
+| `timestamp` | ISO 8601 timestamp |
+| `context` | JSON payload with output details and review notes |
