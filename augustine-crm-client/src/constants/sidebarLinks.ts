@@ -34,7 +34,7 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
   {
     title: 'Tools',
     links: [
-      { href: '/execution-dashboard', label: 'Execution', icon: ChartBarSquareIcon },
+      { href: '/execution-dashboard', label: 'Execution Dashboard', icon: ChartBarSquareIcon },
       { href: '/csv-merge', label: 'Dry Run Tool', icon: DocumentDuplicateIcon },
       { href: '/marketing-jobs', label: 'Scrape Jobs', icon: ActivityIcon },
       // { href: '/outreach', label: 'Outreach', icon: MailSearchIcon },
