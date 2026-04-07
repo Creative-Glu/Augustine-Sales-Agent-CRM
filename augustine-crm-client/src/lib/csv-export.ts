@@ -707,31 +707,35 @@ async function fetchPostalCodesByCityState(
   pairs: { city: string; state: string }[]
 ): Promise<Map<string, string>> {
   const result = new Map<string, string>();
-  const uniqueKeys = new Map<string, { city: string; stateAbbr: string }>();
+  try {
+    const uniqueKeys = new Map<string, { city: string; stateAbbr: string }>();
 
-  for (const { city, state } of pairs) {
-    const key = `${city.toLowerCase()}|${state.toLowerCase()}`;
-    if (uniqueKeys.has(key)) continue;
-    uniqueKeys.set(key, { city, stateAbbr: toStateAbbrev(state).toLowerCase() });
-  }
+    for (const { city, state } of pairs) {
+      const key = `${city.toLowerCase()}|${state.toLowerCase()}`;
+      if (uniqueKeys.has(key)) continue;
+      uniqueKeys.set(key, { city, stateAbbr: toStateAbbrev(state).toLowerCase() });
+    }
 
-  const entries = Array.from(uniqueKeys.entries());
-  const BATCH = 10;
-  for (let i = 0; i < entries.length; i += BATCH) {
-    const batch = entries.slice(i, i + BATCH);
-    await Promise.all(
-      batch.map(async ([key, { city, stateAbbr }]) => {
-        try {
-          const url = `https://api.zippopotam.us/us/${encodeURIComponent(stateAbbr)}/${encodeURIComponent(city)}`;
-          const res = await fetch(url);
-          if (!res.ok) return;
-          const json = await res.json();
-          if (Array.isArray(json?.places) && json.places.length > 0) {
-            result.set(key, json.places[0]['post code'] ?? '');
-          }
-        } catch { /* skip */ }
-      })
-    );
+    const entries = Array.from(uniqueKeys.entries());
+    const BATCH = 10;
+    for (let i = 0; i < entries.length; i += BATCH) {
+      const batch = entries.slice(i, i + BATCH);
+      await Promise.all(
+        batch.map(async ([key, { city, stateAbbr }]) => {
+          try {
+            const url = `https://api.zippopotam.us/us/${encodeURIComponent(stateAbbr)}/${encodeURIComponent(city)}`;
+            const res = await fetch(url);
+            if (!res.ok) return;
+            const json = await res.json();
+            if (Array.isArray(json?.places) && json.places.length > 0) {
+              result.set(key, json.places[0]['post code'] ?? '');
+            }
+          } catch { /* skip individual lookup */ }
+        })
+      );
+    }
+  } catch {
+    // Return whatever we resolved so far — partial results are better than none
   }
   return result;
 }
@@ -770,6 +774,7 @@ export async function resolveLocationData(
   websitesUrlMap: Map<string, WebsitesUrl>
 ): Promise<Map<number, ResolvedRow>> {
   const result = new Map<number, ResolvedRow>();
+  try {
   const needsLookup: { staffId: number; city: string; state: string }[] = [];
 
   for (const r of rows) {
@@ -814,7 +819,9 @@ export async function resolveLocationData(
       }
     }
   }
-
+  } catch {
+    // Return whatever we resolved so far — partial location data is better than none
+  }
   return result;
 }
 
@@ -852,6 +859,7 @@ export async function staffToCsv(
   rows: Staff[],
   websitesUrlMap: Map<string, WebsitesUrl>
 ): Promise<string> {
+  try {
   const locationData = await resolveLocationData(rows, websitesUrlMap);
 
   const body: string[] = [];
@@ -896,6 +904,10 @@ export async function staffToCsv(
   }
 
   return [CSV_HEADER, ...body].join('\r\n');
+  } catch {
+    // Return header-only CSV on failure so the export doesn't silently produce nothing
+    return CSV_HEADER;
+  }
 }
 
 export function downloadCsv(csv: string, filename: string) {

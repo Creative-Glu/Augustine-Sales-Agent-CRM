@@ -12,21 +12,13 @@
 
 | Feature                                         | Viewer | Reviewer | Admin |
 | ----------------------------------------------- | ------ | -------- | ----- |
-| View dashboards (KPI, Marketing, Execution)     | Yes    | Yes      | Yes   |
-| View contacts, products, ICPs, campaigns        | Yes    | Yes      | Yes   |
 | View execution data (staff, institutions, jobs) | Yes    | Yes      | Yes   |
 | Export CSV                                      | Yes    | Yes      | Yes   |
 | Use Dry Run Tool (CSV merge preview)            | Yes    | Yes      | Yes   |
 | Submit scrape jobs                              | No     | Yes      | Yes   |
 | Approve/reject outreach emails                  | No     | Yes      | Yes   |
 | Edit outreach content                           | No     | Yes      | Yes   |
-| Create/edit contacts, products, ICPs, campaigns | No     | No       | Yes   |
-| Create/edit parish roles and role mappings      | No     | No       | Yes   |
 | Apply role mappings to staff database           | No     | No       | Yes   |
-| Toggle HubSpot sync on/off                      | No     | No       | Yes   |
-| Run batch HubSpot sync                          | No     | No       | Yes   |
-| Retry failed sync queue jobs                    | No     | No       | Yes   |
-| Trigger single-entity HubSpot sync              | No     | No       | Yes   |
 | Manage users (create, edit, delete)             | No     | No       | Yes   |
 
 ## Authentication Boundaries
