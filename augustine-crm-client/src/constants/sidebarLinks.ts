@@ -15,7 +15,9 @@ import { TreePine, ActivityIcon, MailSearchIcon } from 'lucide-react';
 export interface SidebarLink {
   href: string;
   label: string;
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement>> | React.ComponentType<{ className?: string }>;
+  icon:
+    | React.ComponentType<React.SVGProps<SVGSVGElement>>
+    | React.ComponentType<{ className?: string }>;
   disabled?: boolean;
 }
 
@@ -23,7 +25,9 @@ export interface SidebarGroup {
   title: string;
   links: SidebarLink[];
   collapsible?: boolean;
-  collapsibleIcon?: React.ComponentType<React.SVGProps<SVGSVGElement>> | React.ComponentType<{ className?: string }>;
+  collapsibleIcon?:
+    | React.ComponentType<React.SVGProps<SVGSVGElement>>
+    | React.ComponentType<{ className?: string }>;
 }
 
 export const SIDEBAR_GROUPS: SidebarGroup[] = [
@@ -33,7 +37,7 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
       { href: '/execution-dashboard', label: 'Execution', icon: ChartBarSquareIcon },
       { href: '/csv-merge', label: 'Dry Run Tool', icon: DocumentDuplicateIcon },
       { href: '/marketing-jobs', label: 'Scrape Jobs', icon: ActivityIcon },
-      { href: '/outreach', label: 'Outreach', icon: MailSearchIcon },
+      // { href: '/outreach', label: 'Outreach', icon: MailSearchIcon },
     ],
   },
   {
