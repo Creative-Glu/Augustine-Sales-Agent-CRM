@@ -3,19 +3,24 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { SIDEBAR_GROUPS } from '../constants/sidebarLinks';
-import { ArrowRightOnRectangleIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
-import { motion } from 'framer-motion';
+import { ArrowRightOnRectangleIcon, ChevronRightIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/providers/AuthProvider';
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
+  const [openCollapsibles, setOpenCollapsibles] = useState<Record<string, boolean>>({});
 
   /** Check if a link is active — exact match or starts-with for nested routes. */
   const isActive = (href: string) =>
     pathname === href || (href !== '/dashboard' && pathname?.startsWith(href + '/'));
+
+  const toggleCollapsible = (title: string) =>
+    setOpenCollapsibles((prev) => ({ ...prev, [title]: !prev[title] }));
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-gradient-to-b from-slate-950 to-gray-950 text-white flex flex-col border-r border-slate-700/40 shadow-2xl">
@@ -39,47 +44,96 @@ export default function Sidebar() {
       <nav className="flex-1 overflow-y-auto px-3 pt-6 pb-2 custom-scrollbar">
         {SIDEBAR_GROUPS.map((group, gi) => (
           <div key={group.title} className={gi > 0 ? 'mt-6' : ''}>
-            <p className="px-3 mb-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-500 select-none opacity-70">
-              {group.title}
-            </p>
-            <div className="space-y-1">
-              {group.links.map(({ href, label, icon: Icon }) => {
-                const active = isActive(href);
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    className={`group relative flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
-                      ${
-                        active
-                          ? 'bg-gradient-to-r from-blue-600/25 to-blue-600/10 text-blue-300 shadow-lg shadow-blue-500/10'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/40'
-                      }`}
-                  >
-                    {/* Active indicator bar */}
-                    {active && (
-                      <motion.div
-                        layoutId="sidebar-active"
-                        className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-gradient-to-b from-blue-400 to-blue-500 shadow-lg shadow-blue-500/50"
-                        transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-                      />
-                    )}
+            {group.collapsible ? (
+              /* ── Collapsible "Others" group ── */
+              <>
+                <button
+                  type="button"
+                  onClick={() => toggleCollapsible(group.title)}
+                  className="group relative flex w-full items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/40 transition-all duration-200"
+                >
+                  {group.collapsibleIcon && (
+                    <group.collapsibleIcon className="w-5 h-5 shrink-0 text-slate-500 group-hover:text-slate-300 transition-all duration-200" />
+                  )}
+                  <span className="truncate flex-1 text-left">{group.title}</span>
+                  {openCollapsibles[group.title] ? (
+                    <ChevronDownIcon className="w-4 h-4 text-slate-500 transition-all duration-200" />
+                  ) : (
+                    <ChevronRightIcon className="w-4 h-4 text-slate-500 transition-all duration-200" />
+                  )}
+                </button>
 
-                    <Icon
-                      className={`w-5 h-5 shrink-0 transition-all duration-200 ${
-                        active ? 'text-blue-300' : 'text-slate-500 group-hover:text-slate-300'
-                      }`}
-                    />
-                    <span className="truncate flex-1">{label}</span>
+                <AnimatePresence initial={false}>
+                  {openCollapsibles[group.title] && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2, ease: 'easeInOut' }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-1 ml-3 pl-3 space-y-1">
+                        {group.links.map(({ href, label, icon: Icon }) => (
+                          <div
+                            key={href}
+                            title="Deprecated"
+                            className="relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 cursor-not-allowed select-none opacity-50"
+                          >
+                            <Icon className="w-4 h-4 shrink-0 text-slate-600" />
+                            <span className="truncate flex-1">{label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </>
+            ) : (
+              /* ── Regular group ── */
+              <>
+                <p className="px-3 mb-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-500 select-none opacity-70">
+                  {group.title}
+                </p>
+                <div className="space-y-1">
+                  {group.links.map(({ href, label, icon: Icon }) => {
+                    const active = isActive(href);
+                    return (
+                      <Link
+                        key={href}
+                        href={href}
+                        className={`group relative flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                          ${
+                            active
+                              ? 'bg-gradient-to-r from-blue-600/25 to-blue-600/10 text-blue-300 shadow-lg shadow-blue-500/10'
+                              : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/40'
+                          }`}
+                      >
+                        {/* Active indicator bar */}
+                        {active && (
+                          <motion.div
+                            layoutId="sidebar-active"
+                            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-gradient-to-b from-blue-400 to-blue-500 shadow-lg shadow-blue-500/50"
+                            transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                          />
+                        )}
 
-                    {/* Animated arrow on hover */}
-                    {!active && (
-                      <ChevronRightIcon className="w-4 h-4 text-slate-600 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" />
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
+                        <Icon
+                          className={`w-5 h-5 shrink-0 transition-all duration-200 ${
+                            active ? 'text-blue-300' : 'text-slate-500 group-hover:text-slate-300'
+                          }`}
+                        />
+                        <span className="truncate flex-1">{label}</span>
+
+                        {/* Animated arrow on hover */}
+                        {!active && (
+                          <ChevronRightIcon className="w-4 h-4 text-slate-600 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" />
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </div>
         ))}
       </nav>
