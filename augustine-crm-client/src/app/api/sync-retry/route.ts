@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createRateLimiter } from '@/lib/rate-limit';
+
+const limiter = createRateLimiter({ windowMs: 60_000, max: 10 });
 
 /**
  * POST /api/sync-retry
@@ -7,6 +10,8 @@ import { NextRequest, NextResponse } from 'next/server';
  * Forwards to SYNC_RETRY_WEBHOOK_URL. Backend expects type='queue' and queue_id.
  */
 export async function POST(request: NextRequest) {
+  const blocked = limiter(request);
+  if (blocked) return blocked;
   try {
     const body = await request.json();
     const { type, queue_id, id } = body;

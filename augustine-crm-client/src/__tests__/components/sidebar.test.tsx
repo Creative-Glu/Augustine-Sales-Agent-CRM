@@ -21,7 +21,7 @@ describe('Sidebar', () => {
 
   it('renders key navigation links', () => {
     renderWithProviders(<Sidebar />);
-    expect(screen.getByText('Execution')).toBeInTheDocument();
+    expect(screen.getByText('Execution Dashboard')).toBeInTheDocument();
     expect(screen.getByText('Users')).toBeInTheDocument();
   });
 

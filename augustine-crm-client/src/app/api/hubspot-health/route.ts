@@ -1,11 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { createRateLimiter } from '@/lib/rate-limit';
+
+const limiter = createRateLimiter({ windowMs: 60_000, max: 20 });
 
 /**
  * GET /api/hubspot-health
  * Proxies to backend. HubSpot config and health are monitored on the backend; no token in frontend.
  * Backend should return: { enabled: boolean, worker_running: boolean }
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const blocked = limiter(request);
+  if (blocked) return blocked;
   try {
     const base = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '');
     if (!base) {

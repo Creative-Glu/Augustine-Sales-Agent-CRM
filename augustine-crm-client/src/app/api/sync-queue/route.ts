@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createRateLimiter } from '@/lib/rate-limit';
+
+const limiter = createRateLimiter({ windowMs: 60_000, max: 30 });
 
 /**
  * GET /api/sync-queue?status=&entity_type=&limit=
@@ -6,6 +9,8 @@ import { NextRequest, NextResponse } from 'next/server';
  * Backend may be implemented elsewhere; this stub returns empty data so the UI works.
  */
 export async function GET(request: NextRequest) {
+  const blocked = limiter(request);
+  if (blocked) return blocked;
   try {
     const { searchParams } = new URL(request.url);
     const ALLOWED_STATUSES = ['', 'pending', 'processing', 'success', 'failed'];

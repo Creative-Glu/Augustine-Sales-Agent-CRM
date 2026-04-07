@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { createRateLimiter } from '@/lib/rate-limit';
+
+const limiter = createRateLimiter({ windowMs: 60_000, max: 5 });
 
 const WEBHOOK_URL = process.env.NEXT_PUBLIC_PDF_UPLOAD_WEBHOOK_URL!;
 const FILE_UPLOAD_SUPABASE_URL = process.env.NEXT_PUBLIC_FILE_UPLOAD_SUPABASE_URL!;
@@ -21,6 +24,9 @@ const MAX_FILE_SIZE = 25 * 1024 * 1024;
 const WEBHOOK_TIMEOUT_MS = 60_000;
 
 export async function POST(request: NextRequest) {
+  const blocked = limiter(request);
+  if (blocked) return blocked;
+
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
