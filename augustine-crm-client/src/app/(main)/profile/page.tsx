@@ -1,36 +1,58 @@
-import { UserProfile } from '@clerk/nextjs';
+'use client';
 
-const APP_NAME = 'Ausgutin Sales CRM';
+import { useAuth } from '@/providers/AuthProvider';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { UserIcon, EnvelopeIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 
-const UserProfilePage = () => {
+export default function UserProfilePage() {
+  const { user } = useAuth();
+
+  if (!user) return null;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6 md:p-8">
-      <div className=" ">
-        {/* Header Section */}
-        <div className="space-y-2">
-          <h1 className="text-2xl md:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            User Profile & Settings
-          </h1>
-          <p className="text-slate-600 text-lg">
-            Manage your account details and security preferences for {APP_NAME}.
-          </p>
-        </div>
-
-        {/* UserProfile Component Container */}
-        <div className="flex justify-center py-8">
-          {/* Clerk's UserProfile component is rendered here */}
-          <UserProfile
-            appearance={{
-              elements: {
-                rootBox: 'shadow-2xl rounded-2xl border border-slate-200/50',
-                card: 'shadow-none border-none',
-              },
-            }}
-          />
-        </div>
+    <div className="max-w-2xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-xl font-semibold text-foreground">Profile</h1>
+        <p className="text-sm text-muted-foreground mt-1">Your account details.</p>
       </div>
+
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-linear-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-xl font-bold text-white shrink-0">
+              {(user.full_name || user.email || 'U').charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <CardTitle className="text-lg">{user.full_name || 'User'}</CardTitle>
+              <Badge variant="outline" className="mt-1">{user.role}</Badge>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4 border-t border-border/60 pt-4">
+          <div className="flex items-center gap-3">
+            <UserIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+            <div>
+              <p className="text-xs text-muted-foreground">Full Name</p>
+              <p className="text-sm font-medium text-foreground">{user.full_name || '—'}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <EnvelopeIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+            <div>
+              <p className="text-xs text-muted-foreground">Email</p>
+              <p className="text-sm font-medium text-foreground">{user.email}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <ShieldCheckIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+            <div>
+              <p className="text-xs text-muted-foreground">Role</p>
+              <p className="text-sm font-medium text-foreground">{user.role}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-export default UserProfilePage;
+}

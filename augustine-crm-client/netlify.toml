@@ -2,7 +2,9 @@
 # Docs: https://docs.netlify.com/configure-builds/file-based-configuration/
 
 [build]
-  command = "npm run build"
+  base = "augustine-crm-client"
+  command = "npm install && npm run build"
+  publish = ".next"
 
 [build.environment]
   NODE_VERSION = "22"
@@ -11,7 +13,7 @@
 # ─── Deploy Previews (pull request builds) ──────────────────────────────────
 
 [context.deploy-preview]
-  command = "npm run build"
+  command = "npm install && npm run build"
 
 [context.deploy-preview.environment]
   NEXT_PUBLIC_APP_NAME = "Augustine CRM (Preview)"
@@ -19,14 +21,14 @@
 # ─── Branch Deploys ─────────────────────────────────────────────────────────
 
 [context.branch-deploy]
-  command = "npm run build"
+  command = "npm install && npm run build"
 
 # ─── Production ─────────────────────────────────────────────────────────────
 
 [context.production]
-  command = "npm run build"
+  command = "npm install && npm run build"
 
-# ─── Next.js Plugin (handles publish dir, SSR, ISR automatically) ───────────
+# ─── Next.js Plugin (handles SSR, ISR, edge functions) ──────────────────────
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
