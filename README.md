@@ -1,6 +1,6 @@
-# Augustine Sales Agent Pilot
+# Augustine Sales Agent CRM
 
-A comprehensive CRM and sales automation platform built for the Augustine Sales Agent Pilot project.
+A comprehensive CRM and sales automation platform built for the Augustine Institute.
 
 ## 🎯 Project Overview
 
