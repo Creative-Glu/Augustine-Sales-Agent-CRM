@@ -2,8 +2,9 @@ import { supabase } from '@/lib/supabaseClient';
 import { ProductOffer } from '@/types/product-offer';
 
 export async function getProductOffers(): Promise<any> {
-  const { data, error } = await supabase.from('product_offers').select(
-    `
+  try {
+    const { data, error } = await supabase.from('product_offers').select(
+      `
       *,
       icp:icp_id (
         icp_id,
@@ -22,38 +23,53 @@ export async function getProductOffers(): Promise<any> {
         product_name
       )
     `
-  );
+    );
 
-  if (error) throw new Error(`Error fetching products: ${error.message}`);
-  return data ?? [];
+    if (error) throw new Error(`Error fetching products: ${error.message}`);
+    return data ?? [];
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('getProductOffers failed');
+  }
 }
 export async function deleteProductOffers(id: string | number) {
-  const { error } = await supabase.from('product_offers').delete().eq('offer_id', id);
-  if (error) throw new Error(`Error deleting product: ${error.message}`);
+  try {
+    const { error } = await supabase.from('product_offers').delete().eq('offer_id', id);
+    if (error) throw new Error(`Error deleting product: ${error.message}`);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('deleteProductOffers failed');
+  }
 }
 
 export async function createProductOffer(productOffer: ProductOffer): Promise<ProductOffer> {
-  const { data, error } = await supabase
-    .from('product_offers')
-    .insert([productOffer])
-    .select()
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('product_offers')
+      .insert([productOffer])
+      .select()
+      .single();
 
-  if (error) throw new Error(`Error creating product: ${error.message}`);
-  return data;
+    if (error) throw new Error(`Error creating product: ${error.message}`);
+    return data;
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('createProductOffer failed');
+  }
 }
 
 export async function updateProductOffer(
   id: string,
   updates: Partial<ProductOffer>
 ): Promise<ProductOffer> {
-  const { data, error } = await supabase
-    .from('product_offers')
-    .update(updates)
-    .eq('offer_id', id)
-    .select()
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('product_offers')
+      .update(updates)
+      .eq('offer_id', id)
+      .select()
+      .single();
 
-  if (error) throw new Error(`Error updating product offer: ${error.message}`);
-  return data;
+    if (error) throw new Error(`Error updating product offer: ${error.message}`);
+    return data;
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('updateProductOffer failed');
+  }
 }

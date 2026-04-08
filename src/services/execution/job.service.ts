@@ -20,26 +20,30 @@ export async function getJobsPaginated({
   limit,
   status = 'all',
 }: JobsPaginatedParams): Promise<JobsPaginatedResponse> {
-  let query = executionSupabase
-    .from('jobs')
-    .select('*', { count: 'exact', head: false });
+  try {
+    let query = executionSupabase
+      .from('jobs')
+      .select('*', { count: 'exact', head: false });
 
-  if (status !== 'all') {
-    query = query.eq('status', status);
+    if (status !== 'all') {
+      query = query.eq('status', status);
+    }
+
+    query = query.order('updated_at', { ascending: false }).range(offset, offset + limit - 1);
+
+    const { data, error, count } = await query;
+
+    if (error) throw new Error(`Error fetching jobs: ${error.message}`);
+
+    const total = count ?? 0;
+    const hasMore = offset + (data?.length ?? 0) < total;
+
+    return {
+      data: (data ?? []) as Job[],
+      total,
+      hasMore,
+    };
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('getJobsPaginated failed');
   }
-
-  query = query.order('updated_at', { ascending: false }).range(offset, offset + limit - 1);
-
-  const { data, error, count } = await query;
-
-  if (error) throw new Error(`Error fetching jobs: ${error.message}`);
-
-  const total = count ?? 0;
-  const hasMore = offset + (data?.length ?? 0) < total;
-
-  return {
-    data: (data ?? []) as Job[],
-    total,
-    hasMore,
-  };
 }

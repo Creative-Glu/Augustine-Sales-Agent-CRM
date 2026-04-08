@@ -16,24 +16,44 @@ export interface CreateRoleInput {
 export type UpdateRoleInput = Partial<CreateRoleInput>;
 
 export async function listRoles(): Promise<Role[]> {
-  const raw = await apiGet<Role[] | { items: Role[]; count: number }>('/api/roles');
-  if (Array.isArray(raw)) return raw;
-  if (raw && Array.isArray((raw as any).items)) return (raw as any).items as Role[];
-  return [];
+  try {
+    const raw = await apiGet<Role[] | { items: Role[]; count: number }>('/api/roles');
+    if (Array.isArray(raw)) return raw;
+    if (raw && Array.isArray((raw as any).items)) return (raw as any).items as Role[];
+    return [];
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('listRoles failed');
+  }
 }
 
 export async function getRole(id: number): Promise<Role> {
-  return apiGet<Role>(`/api/roles/${id}`);
+  try {
+    return apiGet<Role>(`/api/roles/${id}`);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('getRole failed');
+  }
 }
 
 export async function createRole(payload: CreateRoleInput): Promise<Role> {
-  return apiPost<Role, CreateRoleInput>('/api/roles', payload);
+  try {
+    return apiPost<Role, CreateRoleInput>('/api/roles', payload);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('createRole failed');
+  }
 }
 
 export async function updateRole(id: number, updates: UpdateRoleInput): Promise<Role> {
-  return apiPut<Role, UpdateRoleInput>(`/api/roles/${id}`, updates);
+  try {
+    return apiPut<Role, UpdateRoleInput>(`/api/roles/${id}`, updates);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('updateRole failed');
+  }
 }
 
 export async function deleteRole(id: number): Promise<void> {
-  await apiDelete<unknown>(`/api/roles/${id}`);
+  try {
+    await apiDelete<unknown>(`/api/roles/${id}`);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('deleteRole failed');
+  }
 }

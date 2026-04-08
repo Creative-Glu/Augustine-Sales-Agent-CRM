@@ -14,40 +14,58 @@ export interface HubspotExtendedHealth {
 export type HubspotEntityType = 'staff' | 'institution';
 
 export async function getHubspotSyncConfig(): Promise<HubspotSyncConfig> {
-  return apiGet<HubspotSyncConfig>('/api/hubspot-sync/config');
+  try {
+    return apiGet<HubspotSyncConfig>('/api/hubspot-sync/config');
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('getHubspotSyncConfig failed');
+  }
 }
 
 export async function updateHubspotSyncConfig(
   enabled: boolean
 ): Promise<HubspotSyncConfig> {
-  return apiPost<HubspotSyncConfig, { enabled: boolean }>(
-    '/api/hubspot-sync/config',
-    { enabled }
-  );
+  try {
+    return apiPost<HubspotSyncConfig, { enabled: boolean }>(
+      '/api/hubspot-sync/config',
+      { enabled }
+    );
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('updateHubspotSyncConfig failed');
+  }
 }
 
 export async function getHubspotExtendedHealth(): Promise<HubspotExtendedHealth> {
-  return apiGet<HubspotExtendedHealth>('/api/hubspot-health');
+  try {
+    return apiGet<HubspotExtendedHealth>('/api/hubspot-health');
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('getHubspotExtendedHealth failed');
+  }
 }
 
 export async function runHubspotSingleSync(
   entity_type: HubspotEntityType,
   entity_id: number
 ): Promise<HubspotSyncConfig> {
-  return apiPost<HubspotSyncConfig, { entity_type: HubspotEntityType; entity_id: number }>(
-    '/api/hubspot-sync/run',
-    { entity_type, entity_id }
-  );
+  try {
+    return apiPost<HubspotSyncConfig, { entity_type: HubspotEntityType; entity_id: number }>(
+      '/api/hubspot-sync/run',
+      { entity_type, entity_id }
+    );
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('runHubspotSingleSync failed');
+  }
 }
 
 export async function runHubspotBatchSync(
   entity_type: HubspotEntityType | null,
   limit: number
 ): Promise<HubspotSyncConfig> {
-  return apiPost<HubspotSyncConfig, { entity_type: HubspotEntityType | null; limit: number }>(
-    '/api/hubspot-sync/run-batch',
-    { entity_type, limit }
-  );
+  try {
+    return apiPost<HubspotSyncConfig, { entity_type: HubspotEntityType | null; limit: number }>(
+      '/api/hubspot-sync/run-batch',
+      { entity_type, limit }
+    );
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('runHubspotBatchSync failed');
+  }
 }
-
-

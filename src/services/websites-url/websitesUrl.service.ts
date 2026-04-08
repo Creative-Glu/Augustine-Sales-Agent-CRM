@@ -20,10 +20,14 @@ export function getStateValue(row: WebsitesUrl): string {
 }
 
 export async function getWebsitesUrl(): Promise<WebsitesUrl[]> {
-  const { data, error } = await executionSupabase.from('websites_url').select('*');
+  try {
+    const { data, error } = await executionSupabase.from('websites_url').select('*');
 
-  if (error) throw new Error(`Error fetching websites URL: ${error.message}`);
-  return (data ?? []) as WebsitesUrl[];
+    if (error) throw new Error(`Error fetching websites URL: ${error.message}`);
+    return (data ?? []) as WebsitesUrl[];
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('getWebsitesUrl failed');
+  }
 }
 
 /** Known US states + DC + Canada present in the websites_url table. Hardcoded for instant dropdown load. */
@@ -41,7 +45,11 @@ const KNOWN_STATES = [
 
 /** Return known state list instantly (no DB round-trip needed). */
 export async function getDistinctStates(): Promise<string[]> {
-  return KNOWN_STATES;
+  try {
+    return KNOWN_STATES;
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('getDistinctStates failed');
+  }
 }
 
 /** Normalize a URL to its bare domain. e.g. "https://saintliz.org/staff" → "saintliz.org" */
@@ -75,45 +83,57 @@ const ALL_WEBSITES_URL_TTL = 5 * 60 * 1000;
 
 /** Fetch all websites_url rows with pagination (Supabase caps at 1000 per request). Cached for 5 min. */
 async function fetchAllWebsitesUrl(): Promise<WebsitesUrl[]> {
-  if (allWebsitesUrlCache && Date.now() - allWebsitesUrlCache.ts < ALL_WEBSITES_URL_TTL) {
-    return allWebsitesUrlCache.rows;
+  try {
+    if (allWebsitesUrlCache && Date.now() - allWebsitesUrlCache.ts < ALL_WEBSITES_URL_TTL) {
+      return allWebsitesUrlCache.rows;
+    }
+
+    const PAGE = 1000;
+    const allRows: WebsitesUrl[] = [];
+    let offset = 0;
+
+    while (true) {
+      const { data, error } = await executionSupabase
+        .from('websites_url')
+        .select('*')
+        .range(offset, offset + PAGE - 1);
+
+      if (error) throw new Error(`Error fetching websites URL: ${error.message}`);
+      const rows = (data ?? []) as WebsitesUrl[];
+      allRows.push(...rows);
+      if (rows.length < PAGE) break;
+      offset += PAGE;
+    }
+
+    allWebsitesUrlCache = { rows: allRows, ts: Date.now() };
+    return allRows;
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('fetchAllWebsitesUrl failed');
   }
-
-  const PAGE = 1000;
-  const allRows: WebsitesUrl[] = [];
-  let offset = 0;
-
-  while (true) {
-    const { data, error } = await executionSupabase
-      .from('websites_url')
-      .select('*')
-      .range(offset, offset + PAGE - 1);
-
-    if (error) throw new Error(`Error fetching websites URL: ${error.message}`);
-    const rows = (data ?? []) as WebsitesUrl[];
-    allRows.push(...rows);
-    if (rows.length < PAGE) break;
-    offset += PAGE;
-  }
-
-  allWebsitesUrlCache = { rows: allRows, ts: Date.now() };
-  return allRows;
 }
 
 /** Fetch websites_url records filtered by state. Returns a multi-key Map for flexible lookup. */
 export async function getWebsitesUrlByState(state: string): Promise<Map<string, WebsitesUrl>> {
-  // Fetch all and filter client-side because PostgREST can't filter on columns with spaces/parens
-  const allRows = await fetchAllWebsitesUrl();
-  const filtered = allRows.filter(
-    (r) => getStateValue(r).toLowerCase() === state.toLowerCase()
-  );
-  return buildWebsitesUrlMap(filtered);
+  try {
+    // Fetch all and filter client-side because PostgREST can't filter on columns with spaces/parens
+    const allRows = await fetchAllWebsitesUrl();
+    const filtered = allRows.filter(
+      (r) => getStateValue(r).toLowerCase() === state.toLowerCase()
+    );
+    return buildWebsitesUrlMap(filtered);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('getWebsitesUrlByState failed');
+  }
 }
 
 /** Fetch all websites_url records as a multi-key Map for flexible lookup. */
 export async function getWebsitesUrlMap(): Promise<Map<string, WebsitesUrl>> {
-  const allRows = await fetchAllWebsitesUrl();
-  return buildWebsitesUrlMap(allRows);
+  try {
+    const allRows = await fetchAllWebsitesUrl();
+    return buildWebsitesUrlMap(allRows);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('getWebsitesUrlMap failed');
+  }
 }
 
 export async function getWebsitesUrlPaginated({
@@ -122,30 +142,34 @@ export async function getWebsitesUrlPaginated({
   status,
   company_search,
 }: WebsitesUrlPaginatedParams): Promise<WebsitesUrlPaginatedResponse> {
-  let query = executionSupabase
-    .from('websites_url')
-    .select('*', { count: 'exact', head: false });
+  try {
+    let query = executionSupabase
+      .from('websites_url')
+      .select('*', { count: 'exact', head: false });
 
-  // Match status case-insensitively so "Failed" in DB matches filter value "failed"
-  if (status?.trim()) query = query.ilike('Status', status.trim());
-  if (company_search?.trim())
-    query = query.ilike('Company name', `%${company_search.trim()}%`);
+    // Match status case-insensitively so "Failed" in DB matches filter value "failed"
+    if (status?.trim()) query = query.ilike('Status', status.trim());
+    if (company_search?.trim())
+      query = query.ilike('Company name', `%${company_search.trim()}%`);
 
-  // Sort by most recently updated first; place nulls last so older/empty rows don't appear on top
-  query = query
-    .order('updated_at', { ascending: false, nullsFirst: false })
-    .range(offset, offset + limit - 1);
+    // Sort by most recently updated first; place nulls last so older/empty rows don't appear on top
+    query = query
+      .order('updated_at', { ascending: false, nullsFirst: false })
+      .range(offset, offset + limit - 1);
 
-  const { data, error, count } = await query;
+    const { data, error, count } = await query;
 
-  if (error) throw new Error(`Error fetching websites URL: ${error.message}`);
+    if (error) throw new Error(`Error fetching websites URL: ${error.message}`);
 
-  const total = count ?? 0;
-  const hasMore = offset + (data?.length ?? 0) < total;
+    const total = count ?? 0;
+    const hasMore = offset + (data?.length ?? 0) < total;
 
-  return {
-    data: (data ?? []) as WebsitesUrl[],
-    total,
-    hasMore,
-  };
+    return {
+      data: (data ?? []) as WebsitesUrl[],
+      total,
+      hasMore,
+    };
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('getWebsitesUrlPaginated failed');
+  }
 }

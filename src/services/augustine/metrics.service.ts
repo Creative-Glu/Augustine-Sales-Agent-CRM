@@ -8,22 +8,41 @@ import type {
 } from '@/types/augustine';
 
 export async function getMetricsOverview(): Promise<MetricsOverview> {
-  return apiGet<MetricsOverview>('/api/metrics/overview');
+  try {
+    return apiGet<MetricsOverview>('/api/metrics/overview');
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('getMetricsOverview failed');
+  }
 }
 
 export async function getMetricsSystem(): Promise<MetricsSystem> {
-  return apiGet<MetricsSystem>('/api/metrics/system');
+  try {
+    return apiGet<MetricsSystem>('/api/metrics/system');
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('getMetricsSystem failed');
+  }
 }
 
 export async function getMetricsRoi(): Promise<MetricsRoi> {
-  return apiGet<MetricsRoi>('/api/metrics/roi');
+  try {
+    return apiGet<MetricsRoi>('/api/metrics/roi');
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('getMetricsRoi failed');
+  }
 }
 
 export async function getCampaigns(): Promise<Campaign[]> {
-  return apiGet<Campaign[]>('/api/campaigns');
+  try {
+    return apiGet<Campaign[]>('/api/campaigns');
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('getCampaigns failed');
+  }
 }
 
 export async function getCampaignStats(id: number | string): Promise<CampaignStats> {
-  return apiGet<CampaignStats>(`/api/campaigns/${id}/stats`);
+  try {
+    return apiGet<CampaignStats>(`/api/campaigns/${id}/stats`);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('getCampaignStats failed');
+  }
 }
-

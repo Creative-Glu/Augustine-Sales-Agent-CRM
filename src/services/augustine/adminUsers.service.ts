@@ -10,7 +10,11 @@ export interface AdminUser {
 }
 
 export async function listAdminUsers(): Promise<AdminUser[]> {
-  return apiGet<AdminUser[]>('/api/admin/users');
+  try {
+    return apiGet<AdminUser[]>('/api/admin/users');
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('listAdminUsers failed');
+  }
 }
 
 export interface CreateAdminUserInput {
@@ -21,7 +25,11 @@ export interface CreateAdminUserInput {
 }
 
 export async function createAdminUser(payload: CreateAdminUserInput): Promise<AdminUser> {
-  return apiPost<AdminUser, CreateAdminUserInput>('/api/admin/users', payload);
+  try {
+    return apiPost<AdminUser, CreateAdminUserInput>('/api/admin/users', payload);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('createAdminUser failed');
+  }
 }
 
 export type UpdateAdminUserInput = Partial<{
@@ -35,10 +43,17 @@ export async function updateAdminUser(
   id: number,
   payload: UpdateAdminUserInput
 ): Promise<AdminUser> {
-  return apiPut<AdminUser, UpdateAdminUserInput>(`/api/admin/users/${id}`, payload);
+  try {
+    return apiPut<AdminUser, UpdateAdminUserInput>(`/api/admin/users/${id}`, payload);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('updateAdminUser failed');
+  }
 }
 
 export async function deleteAdminUser(id: number): Promise<void> {
-  await apiDelete<unknown>(`/api/admin/users/${id}`);
+  try {
+    await apiDelete<unknown>(`/api/admin/users/${id}`);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('deleteAdminUser failed');
+  }
 }
-

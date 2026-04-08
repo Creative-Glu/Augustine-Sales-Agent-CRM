@@ -95,18 +95,22 @@ export async function getFileNameCountsPaginated(
   offset: number = 0,
   limit: number = 10
 ): Promise<FileNameCountsResponse> {
-  // Get all file counts first (we need to group and sort)
-  const allCounts = await getFileNameCounts();
-  
-  const total = allCounts.length;
-  const totalRecords = allCounts.reduce((sum, item) => sum + item.count, 0);
-  const paginatedCounts = allCounts.slice(offset, offset + limit);
-  const hasMore = offset + limit < total;
+  try {
+    // Get all file counts first (we need to group and sort)
+    const allCounts = await getFileNameCounts();
 
-  return {
-    fileCounts: paginatedCounts,
-    total,
-    totalRecords,
-    hasMore,
-  };
+    const total = allCounts.length;
+    const totalRecords = allCounts.reduce((sum, item) => sum + item.count, 0);
+    const paginatedCounts = allCounts.slice(offset, offset + limit);
+    const hasMore = offset + limit < total;
+
+    return {
+      fileCounts: paginatedCounts,
+      total,
+      totalRecords,
+      hasMore,
+    };
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('getFileNameCountsPaginated failed');
+  }
 }

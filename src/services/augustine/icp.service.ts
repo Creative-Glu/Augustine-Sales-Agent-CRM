@@ -2,10 +2,14 @@ import { apiDelete, apiGet, apiPost, apiPut } from '@/lib/augustineApiClient';
 import type { Icp } from '@/types/augustine';
 
 export async function listIcps(): Promise<Icp[]> {
-  const raw = await apiGet<Icp[] | { items: Icp[] }>('/api/icp');
-  if (Array.isArray(raw)) return raw;
-  if (raw && Array.isArray((raw as any).items)) return (raw as any).items as Icp[];
-  return [];
+  try {
+    const raw = await apiGet<Icp[] | { items: Icp[] }>('/api/icp');
+    if (Array.isArray(raw)) return raw;
+    if (raw && Array.isArray((raw as any).items)) return (raw as any).items as Icp[];
+    return [];
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('listIcps failed');
+  }
 }
 
 export interface CreateIcpInput {
@@ -16,20 +20,35 @@ export interface CreateIcpInput {
 }
 
 export async function createIcp(payload: CreateIcpInput): Promise<Icp> {
-  return apiPost<Icp, CreateIcpInput>('/api/icp', payload);
+  try {
+    return apiPost<Icp, CreateIcpInput>('/api/icp', payload);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('createIcp failed');
+  }
 }
 
 export async function getIcp(id: string | number): Promise<Icp> {
-  return apiGet<Icp>(`/api/icp/${id}`);
+  try {
+    return apiGet<Icp>(`/api/icp/${id}`);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('getIcp failed');
+  }
 }
 
 export type UpdateIcpInput = Partial<CreateIcpInput>;
 
 export async function updateIcp(id: string | number, updates: UpdateIcpInput): Promise<Icp> {
-  return apiPut<Icp, UpdateIcpInput>(`/api/icp/${id}`, updates);
+  try {
+    return apiPut<Icp, UpdateIcpInput>(`/api/icp/${id}`, updates);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('updateIcp failed');
+  }
 }
 
 export async function deleteIcp(id: string | number): Promise<void> {
-  await apiDelete<unknown>(`/api/icp/${id}`);
+  try {
+    await apiDelete<unknown>(`/api/icp/${id}`);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('deleteIcp failed');
+  }
 }
-

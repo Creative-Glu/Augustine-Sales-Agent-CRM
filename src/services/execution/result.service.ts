@@ -25,26 +25,30 @@ export async function getResultsPaginated({
   status = 'all',
   source = 'all',
 }: ResultsPaginatedParams): Promise<ResultsPaginatedResponse> {
-  let query = executionSupabase
-    .from('results')
-    .select('*', { count: 'exact', head: false });
+  try {
+    let query = executionSupabase
+      .from('results')
+      .select('*', { count: 'exact', head: false });
 
-  if (job_id) query = query.eq('job_id', job_id);
-  if (status !== 'all') query = query.eq('status', status);
-  if (source !== 'all') query = query.eq('source', source);
+    if (job_id) query = query.eq('job_id', job_id);
+    if (status !== 'all') query = query.eq('status', status);
+    if (source !== 'all') query = query.eq('source', source);
 
-  query = query.order('processed_at', { ascending: false }).range(offset, offset + limit - 1);
+    query = query.order('processed_at', { ascending: false }).range(offset, offset + limit - 1);
 
-  const { data, error, count } = await query;
+    const { data, error, count } = await query;
 
-  if (error) throw new Error(`Error fetching results: ${error.message}`);
+    if (error) throw new Error(`Error fetching results: ${error.message}`);
 
-  const total = count ?? 0;
-  const hasMore = offset + (data?.length ?? 0) < total;
+    const total = count ?? 0;
+    const hasMore = offset + (data?.length ?? 0) < total;
 
-  return {
-    data: (data ?? []) as Result[],
-    total,
-    hasMore,
-  };
+    return {
+      data: (data ?? []) as Result[],
+      total,
+      hasMore,
+    };
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('getResultsPaginated failed');
+  }
 }

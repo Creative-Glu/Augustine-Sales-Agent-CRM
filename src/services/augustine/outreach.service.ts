@@ -11,23 +11,35 @@ export interface OutreachListParams {
 }
 
 export async function listOutreach(params: OutreachListParams = {}): Promise<OutreachListResponse> {
-  const sp = new URLSearchParams();
-  if (params.limit != null) sp.set('limit', String(params.limit));
-  if (params.statuses) sp.set('statuses', params.statuses);
-  const qs = sp.toString();
-  const path = qs ? `/api/outreach?${qs}` : '/api/outreach';
-  return apiGet<OutreachListResponse>(path);
+  try {
+    const sp = new URLSearchParams();
+    if (params.limit != null) sp.set('limit', String(params.limit));
+    if (params.statuses) sp.set('statuses', params.statuses);
+    const qs = sp.toString();
+    const path = qs ? `/api/outreach?${qs}` : '/api/outreach';
+    return apiGet<OutreachListResponse>(path);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('listOutreach failed');
+  }
 }
 
 export async function listPendingOutreach(limit = 50): Promise<OutreachListResponse> {
-  const sp = new URLSearchParams();
-  sp.set('limit', String(limit));
-  const path = `/api/outreach/pending?${sp.toString()}`;
-  return apiGet<OutreachListResponse>(path);
+  try {
+    const sp = new URLSearchParams();
+    sp.set('limit', String(limit));
+    const path = `/api/outreach/pending?${sp.toString()}`;
+    return apiGet<OutreachListResponse>(path);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('listPendingOutreach failed');
+  }
 }
 
 export async function getOutreach(id: number | string): Promise<OutreachItem> {
-  return apiGet<OutreachItem>(`/api/outreach/${id}`);
+  try {
+    return apiGet<OutreachItem>(`/api/outreach/${id}`);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('getOutreach failed');
+  }
 }
 
 export interface EditOutreachInput {
@@ -39,34 +51,54 @@ export async function editOutreach(
   id: number | string,
   payload: EditOutreachInput
 ): Promise<OutreachItem> {
-  return apiPut<OutreachItem, EditOutreachInput>(`/api/outreach/${id}/edit`, payload);
+  try {
+    return apiPut<OutreachItem, EditOutreachInput>(`/api/outreach/${id}/edit`, payload);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('editOutreach failed');
+  }
 }
 
 export async function approveOutreach(
   id: number | string,
   approvedBy: string
 ): Promise<OutreachItem> {
-  return apiPost<OutreachItem, { approved_by: string }>(`/api/outreach/${id}/approve`, {
-    approved_by: approvedBy,
-  });
+  try {
+    return apiPost<OutreachItem, { approved_by: string }>(`/api/outreach/${id}/approve`, {
+      approved_by: approvedBy,
+    });
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('approveOutreach failed');
+  }
 }
 
 export async function rejectOutreach(
   id: number | string,
   rejectionReason?: string
 ): Promise<OutreachItem> {
-  return apiPost<OutreachItem, { rejection_reason?: string }>(
-    `/api/outreach/${id}/reject`,
-    rejectionReason ? { rejection_reason: rejectionReason } : {}
-  );
+  try {
+    return apiPost<OutreachItem, { rejection_reason?: string }>(
+      `/api/outreach/${id}/reject`,
+      rejectionReason ? { rejection_reason: rejectionReason } : {}
+    );
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('rejectOutreach failed');
+  }
 }
 
 export async function regenerateOutreach(id: number | string): Promise<OutreachItem> {
-  return apiPost<OutreachItem, Record<string, never>>(`/api/outreach/${id}/regenerate`, {});
+  try {
+    return apiPost<OutreachItem, Record<string, never>>(`/api/outreach/${id}/regenerate`, {});
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('regenerateOutreach failed');
+  }
 }
 
 export async function sendOutreach(id: number | string): Promise<OutreachItem> {
-  return apiPost<OutreachItem, Record<string, never>>(`/api/outreach/${id}/send`, {});
+  try {
+    return apiPost<OutreachItem, Record<string, never>>(`/api/outreach/${id}/send`, {});
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('sendOutreach failed');
+  }
 }
 
 export interface OutreachGenerateInput {
@@ -78,7 +110,11 @@ export interface OutreachGenerateInput {
 export async function generateOutreach(
   payload: OutreachGenerateInput
 ): Promise<OutreachItem> {
-  return apiPost<OutreachItem, OutreachGenerateInput>('/api/outreach/generate', payload);
+  try {
+    return apiPost<OutreachItem, OutreachGenerateInput>('/api/outreach/generate', payload);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('generateOutreach failed');
+  }
 }
 
 export interface OutreachBulkGenerateInput {
@@ -88,10 +124,14 @@ export interface OutreachBulkGenerateInput {
 export async function bulkGenerateOutreach(
   payload: OutreachBulkGenerateInput
 ): Promise<OutreachBulkGenerateResponse> {
-  return apiPost<OutreachBulkGenerateResponse, OutreachBulkGenerateInput>(
-    '/api/outreach/generate/bulk',
-    payload
-  );
+  try {
+    return apiPost<OutreachBulkGenerateResponse, OutreachBulkGenerateInput>(
+      '/api/outreach/generate/bulk',
+      payload
+    );
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('bulkGenerateOutreach failed');
+  }
 }
 
 /** Campaign-driven generate: creates drafts for the given campaign only. Campaign must be active and have an ICP. */
@@ -103,9 +143,12 @@ export interface OutreachGenerateForCampaignInput {
 export async function generateOutreachForCampaign(
   payload: OutreachGenerateForCampaignInput
 ): Promise<OutreachBulkGenerateResponse> {
-  return apiPost<OutreachBulkGenerateResponse, OutreachGenerateForCampaignInput>(
-    '/api/outreach/generate',
-    payload
-  );
+  try {
+    return apiPost<OutreachBulkGenerateResponse, OutreachGenerateForCampaignInput>(
+      '/api/outreach/generate',
+      payload
+    );
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('generateOutreachForCampaign failed');
+  }
 }
-
