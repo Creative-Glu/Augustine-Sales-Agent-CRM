@@ -12,6 +12,6 @@ export const campaignValidationSchema = Yup.object().shape({
     .min(10, 'Instructions must be at least 10 characters'),
 
   campaign_status: Yup.string()
-    .oneOf(['Running', 'Draft'], 'Invalid campaign status')
+    .oneOf(['Running', 'Active', 'Draft', 'Stopped'], 'Invalid campaign status')
     .required('Campaign status is required'),
 });

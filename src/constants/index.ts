@@ -19,7 +19,8 @@ export const PRODUCT_OFFER_COLUMNS: TableHeaderColumn[] = [
   { label: 'Offer Name' },
   { label: 'ICP' },
   { label: 'Products' },
-  { label: 'Actions' },
+  { label: 'Created At' },
+  { label: 'Actions', align: 'center' },
 ];
 
 export const CAMPAIGN_COLUMNS: TableHeaderColumn[] = [
@@ -42,13 +43,13 @@ export const CAMPAIGN_COLUMNS: TableHeaderColumn[] = [
     label: 'Actions',
   },
 ];
-export const CAMPAIGN_STATUS_OPTIONS = ['draft', 'active', 'paused', 'completed'] as const;
+export const CAMPAIGN_STATUS_OPTIONS = ['Running', 'Active', 'Draft', 'Stopped'] as const;
 
 export const CONTACTS_TABLE_COLUMNS: TableHeaderColumn[] = [
   { label: 'Parish Name', align: 'left' },
   { label: 'Email', align: 'left' },
   { label: 'Phone', align: 'left' },
   { label: 'Institution Type', align: 'left' },
-  { label: 'ICPs', align: 'left' },
+  { label: 'ICP', align: 'left' },
   { label: 'Actions', align: 'center' },
 ];

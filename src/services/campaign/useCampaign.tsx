@@ -18,16 +18,24 @@ export const useGetCompaign = () => {
 };
 
 export const useCreateCompaign = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ['create-compaign'],
     mutationFn: createCompaign,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['compaign'] });
+    },
   });
 };
 
 export const useDeleteCompaign = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ['delete-compaign'],
     mutationFn: deleteCompaign,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['compaign'] });
+    },
   });
 };
 export const useUpdateCampaignStatus = () => {

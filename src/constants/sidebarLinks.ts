@@ -49,17 +49,24 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
   },
   {
     title: 'Others',
-    collapsible: true,
+    collapsible: false,
     collapsibleIcon: EllipsisHorizontalCircleIcon,
     links: [
       { href: '/dashboard', label: 'Dashboard', icon: HomeIcon, disabled: true },
-      { href: '/kpi-dashboard', label: 'KPI Dashboard', icon: ChartBarIcon, disabled: true },
-      { href: '/marketing-dashboard', label: 'Marketing', icon: ChartBarIcon, disabled: true },
-      { href: '/products', label: 'Products', icon: CubeIcon, disabled: true },
-      { href: '/icp', label: 'ICP', icon: Squares2X2Icon, disabled: true },
-      { href: '/product-offers', label: 'Offers', icon: TagIcon, disabled: true },
+
+      // Analytics
+      // { href: '/kpi-dashboard', label: 'KPI Dashboard', icon: ChartBarIcon, disabled: true },
       { href: '/campaigns', label: 'Campaigns', icon: ChartBarIcon, disabled: true },
+
+      // Product Management
+      { href: '/products', label: 'Products', icon: CubeIcon, disabled: true },
+      { href: '/product-offers', label: 'Offers', icon: TagIcon, disabled: true },
+      { href: '/icp', label: 'ICP', icon: Squares2X2Icon, disabled: true },
+
+      // CRM
       { href: '/contacts', label: 'Contacts', icon: UserGroupIcon, disabled: true },
+
+      // Journey / Automation
       { href: '/journey', label: 'Journey', icon: TreePine, disabled: true },
     ],
   },

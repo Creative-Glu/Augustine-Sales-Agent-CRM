@@ -15,7 +15,7 @@ export interface Contact {
   'Liturgical Language(s)'?: string | null;
   'Technology Readiness'?: string | null;
   Classification?: string | null;
-  icps?: any | null;
+  icp_id?: string | null;
   'Email Thread'?: string | null;
   created_at?: string;
 }
@@ -36,7 +36,7 @@ export interface ContactFormValues {
   'Liturgical Language(s)'?: string | null;
   'Technology Readiness'?: string | null;
   Classification?: string | null;
-  icps?: any | null;
+  icp_id?: string | null;
   'Email Thread'?: string | null;
 }
 

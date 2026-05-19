@@ -13,11 +13,18 @@ import {
 import { useDashboardAnalytics } from '@/services/analytics/useDashboardAnalytics';
 import { Skeleton } from '@/components/Skeleton';
 import { motion } from 'framer-motion';
-import { ArrowDownRightIcon, ArrowUpRightIcon } from '@heroicons/react/24/outline';
+import { STAGE_COLORS } from '@/constants/journey';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-export default function JourneyFunnelChart({ counts }: { counts?: number[] }) {
+const FUNNEL_STAGES = ['Outreached', 'Engaged', 'MQL', 'SAL', 'SQL', 'Closed-Won'] as const;
+
+function rate(numerator: number, denominator: number): string {
+  if (denominator <= 0) return '0';
+  return ((numerator / denominator) * 100).toFixed(1);
+}
+
+export default function JourneyFunnelChart() {
   const { data, isLoading } = useDashboardAnalytics();
 
   if (isLoading) {
@@ -25,7 +32,7 @@ export default function JourneyFunnelChart({ counts }: { counts?: number[] }) {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className=" dark:bg-slate-900  duration-300"
+        className="dark:bg-slate-900 duration-300"
       >
         <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">
           Journey Funnel Analysis
@@ -41,43 +48,30 @@ export default function JourneyFunnelChart({ counts }: { counts?: number[] }) {
   }
 
   const totalJourneys = data?.journeys ?? 0;
+  const stageCounts = data?.stageCounts ?? {};
 
-  let outreached = 0;
-  let engaged = 0;
-  let mql = 0;
+  const funnelData = FUNNEL_STAGES.map((stage) => ({
+    stage,
+    count: stageCounts[stage] ?? 0,
+  }));
 
-  if (counts && counts.length >= 3) {
-    [outreached, engaged, mql] = counts;
-  } else if (totalJourneys > 0) {
-    outreached = Math.round(totalJourneys * 0.6);
-    engaged = Math.round(totalJourneys * 0.3);
-    mql = Math.max(0, totalJourneys - outreached - engaged);
-  } else {
-    outreached = 120;
-    engaged = 45;
-    mql = 12;
-  }
+  const wonCount = stageCounts['Closed-Won'] ?? 0;
+  const lostCount = stageCounts['Closed-Lost'] ?? 0;
+  const disqualifiedCount = stageCounts['Disqualified'] ?? 0;
 
-  // Calculate conversion rates
-  const outreachedToEngagedRate = outreached > 0 ? ((engaged / outreached) * 100).toFixed(1) : 0;
-  const engagedToMQLRate = engaged > 0 ? ((mql / engaged) * 100).toFixed(1) : 0;
-
-  const labels = ['Outreached', 'Engaged', 'MQL'];
-
-  const primary = '#3b82f6'; // Blue
-  const chart2 = '#06b6d4'; // Cyan
-  const success = '#10b981'; // Green
+  const overallConversionRate = rate(wonCount, totalJourneys);
+  const closedTotal = wonCount + lostCount;
+  const winRate = rate(wonCount, closedTotal);
 
   const dataChart = {
-    labels,
+    labels: FUNNEL_STAGES as unknown as string[],
     datasets: [
       {
-        label: 'Count',
-        data: [outreached, engaged, mql],
-        backgroundColor: [primary, chart2, success],
+        label: 'Journeys',
+        data: funnelData.map((s) => s.count),
+        backgroundColor: FUNNEL_STAGES.map((s) => STAGE_COLORS[s] ?? '#94a3b8'),
         borderRadius: 8,
         borderSkipped: false,
-        hoverBackgroundColor: ['#2563eb', '#0891b2', '#059669'],
       },
     ],
   };
@@ -87,7 +81,7 @@ export default function JourneyFunnelChart({ counts }: { counts?: number[] }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className=" dark:bg-slate-900  duration-300 "
+      className="dark:bg-slate-900 duration-300"
     >
       {/* Header */}
       <motion.div
@@ -100,140 +94,127 @@ export default function JourneyFunnelChart({ counts }: { counts?: number[] }) {
           Journey Funnel Analysis
         </h2>
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Track conversion rates across your sales funnel stages
+          Live conversion across funnel stages — counts pulled directly from the journeys table
         </p>
         <div className="h-1 w-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full mt-4" />
       </motion.div>
 
-      {/* Stats Cards */}
+      {/* Stage tiles — one per funnel stage */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="grid grid-cols-3 gap-4 mb-8"
+        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8"
       >
-        {[
-          {
-            label: 'Total Outreached',
-            value: outreached,
-            color: 'blue',
-            icon: ArrowDownRightIcon,
-          },
-          {
-            label: 'Engaged',
-            value: engaged,
-            color: 'cyan',
-            icon: ArrowUpRightIcon,
-          },
-          {
-            label: 'MQL',
-            value: mql,
-            color: 'green',
-            icon: ArrowUpRightIcon,
-          },
-        ].map((stat, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 + index * 0.1 }}
-            className={`p-4 rounded-xl bg-gradient-to-br ${
-              stat.color === 'blue'
-                ? 'from-blue-50 to-cyan-50 dark:from-blue-950 dark:to-cyan-950'
-                : stat.color === 'cyan'
-                  ? 'from-cyan-50 to-blue-50 dark:from-cyan-950 dark:to-blue-950'
-                  : 'from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950'
-            } border ${
-              stat.color === 'blue'
-                ? 'border-blue-200 dark:border-blue-800'
-                : stat.color === 'cyan'
-                  ? 'border-cyan-200 dark:border-cyan-800'
-                  : 'border-green-200 dark:border-green-800'
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wide">
-                {stat.label}
-              </p>
-              <stat.icon
-                className={`w-4 h-4 ${
-                  stat.color === 'blue'
-                    ? 'text-blue-600 dark:text-blue-400'
-                    : stat.color === 'cyan'
-                      ? 'text-cyan-600 dark:text-cyan-400'
-                      : 'text-green-600 dark:text-green-400'
-                }`}
-              />
-            </div>
-            <p
-              className={`text-2xl font-bold ${
-                stat.color === 'blue'
-                  ? 'text-blue-600 dark:text-blue-400'
-                  : stat.color === 'cyan'
-                    ? 'text-cyan-600 dark:text-cyan-400'
-                    : 'text-green-600 dark:text-green-400'
-              }`}
+        {funnelData.map((s, index) => {
+          const color = STAGE_COLORS[s.stage] ?? '#94a3b8';
+          const share = totalJourneys > 0 ? ((s.count / totalJourneys) * 100).toFixed(0) : '0';
+          return (
+            <motion.div
+              key={s.stage}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.25 + index * 0.05 }}
+              className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4"
             >
-              {stat.value}
-            </p>
-          </motion.div>
-        ))}
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wide">
+                  {s.stage}
+                </p>
+                <span
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: color }}
+                />
+              </div>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{s.count}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{share}% of total</p>
+            </motion.div>
+          );
+        })}
       </motion.div>
 
-      {/* Conversion Rates */}
+      {/* Adjacent-stage conversion rates */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="grid grid-cols-2 gap-4 mb-8"
+        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-8"
       >
-        {[
-          {
-            label: 'Outreached → Engaged',
-            rate: outreachedToEngagedRate,
-          },
-          {
-            label: 'Engaged → MQL',
-            rate: engagedToMQLRate,
-          },
-        ].map((conversion, index) => (
-          <div
-            key={index}
-            className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
-          >
-            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-2">
-              {conversion.label}
-            </p>
-            <p className="text-xl font-bold text-slate-900 dark:text-white">{conversion.rate}%</p>
-          </div>
-        ))}
+        {FUNNEL_STAGES.slice(0, -1).map((from, i) => {
+          const to = FUNNEL_STAGES[i + 1];
+          const fromCount = stageCounts[from] ?? 0;
+          const toCount = stageCounts[to] ?? 0;
+          return (
+            <div
+              key={`${from}->${to}`}
+              className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+            >
+              <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">
+                {from} → {to}
+              </p>
+              <p className="text-lg font-bold text-slate-900 dark:text-white">
+                {rate(toCount, fromCount)}%
+              </p>
+            </div>
+          );
+        })}
       </motion.div>
 
+      {/* Bar chart */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.5 }}
-        className="bg-gradient-to-br  from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-700"
+        className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-700"
       >
         <div style={{ height: '350px' }}>
-          <Bar data={dataChart} />
+          <Bar
+            data={dataChart}
+            options={{
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+            }}
+          />
         </div>
       </motion.div>
 
+      {/* Summary footer */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6 }}
-        className="mt-6 p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/50"
+        className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3"
       >
-        <p className="text-xs text-blue-900 dark:text-blue-200 font-medium">
-          💡{' '}
-          <span className="ml-2">
-            Total funnel conversion:{' '}
-            {totalJourneys > 0 ? ((mql / totalJourneys) * 100).toFixed(1) : 0}% of total journeys
-            reached MQL stage
-          </span>
-        </p>
+        <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/50">
+          <p className="text-[10px] font-medium text-blue-700 dark:text-blue-300 uppercase tracking-wide mb-1">
+            Overall conversion
+          </p>
+          <p className="text-lg font-bold text-blue-900 dark:text-blue-100">
+            {overallConversionRate}%
+          </p>
+          <p className="text-xs text-blue-700 dark:text-blue-300 mt-0.5">
+            {wonCount} Closed-Won / {totalJourneys} journeys
+          </p>
+        </div>
+        <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800/50">
+          <p className="text-[10px] font-medium text-green-700 dark:text-green-300 uppercase tracking-wide mb-1">
+            Win rate (of closed)
+          </p>
+          <p className="text-lg font-bold text-green-900 dark:text-green-100">{winRate}%</p>
+          <p className="text-xs text-green-700 dark:text-green-300 mt-0.5">
+            {wonCount} won vs {lostCount} lost
+          </p>
+        </div>
+        <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+          <p className="text-[10px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-1">
+            Disqualified
+          </p>
+          <p className="text-lg font-bold text-slate-900 dark:text-white">{disqualifiedCount}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+            {rate(disqualifiedCount, totalJourneys)}% of total
+          </p>
+        </div>
       </motion.div>
     </motion.div>
   );

@@ -35,13 +35,9 @@ export default function ContactsTable({
 
   const { mutateAsync: deleteContact } = useDeleteContact();
 
-  // Helper function to get ICP names from contact
-  const getICPNames = (contact: Contact): string[] => {
-    if (!contact.icps || !icpsData) return [];
-    const icpIds = Array.isArray(contact.icps) ? contact.icps : [];
-    return icpIds
-      .map((id) => icpsData.find((icp) => icp.icp_id === id)?.icp_name)
-      .filter((name): name is string => !!name);
+  const getICPName = (contact: Contact): string | null => {
+    if (!contact.icp_id || !icpsData) return null;
+    return icpsData.find((icp) => icp.icp_id === contact.icp_id)?.icp_name ?? null;
   };
 
   const openDeleteDialog = (contactId: number) => {
@@ -125,22 +121,13 @@ export default function ContactsTable({
                   </td>
 
                   <td className="py-4 px-4">
-                    <div className="flex flex-wrap gap-1">
-                      {getICPNames(contact).length > 0 ? (
-                        getICPNames(contact).slice(0, 2).map((name, idx) => (
-                          <Badge key={idx} variant="secondary" className="text-xs">
-                            {name}
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="text-sm text-muted-foreground">-</span>
-                      )}
-                      {getICPNames(contact).length > 2 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{getICPNames(contact).length - 2}
-                        </Badge>
-                      )}
-                    </div>
+                    {getICPName(contact) ? (
+                      <Badge variant="secondary" className="text-xs">
+                        {getICPName(contact)}
+                      </Badge>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">-</span>
+                    )}
                   </td>
 
                   <td className="py-4 px-4 flex items-center justify-center gap-2">

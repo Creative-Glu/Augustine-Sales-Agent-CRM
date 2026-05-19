@@ -1,9 +1,11 @@
+export type CampaignStatus = 'Running' | 'Active' | 'Draft' | 'Stopped';
+
 export interface CampaignValues {
   campaign_id: number;
   campaign_name: string;
   offer_id: string;
   instructions: string;
-  campaign_status: 'Running' | 'Draft';
+  campaign_status: CampaignStatus;
 }
 
 export interface Campaign {

@@ -27,6 +27,11 @@ export const PRODUCT_PRICING_TYPE: ProductPricingTypeOption[] = [
     label: 'Custom',
     value: 'custom',
   },
+  {
+    id: 4,
+    label: 'Subscription',
+    value: 'subscription',
+  },
 ] as const;
 
 export const pricingTypeConfig: Record<string, { color: string; icon: React.ReactNode }> = {

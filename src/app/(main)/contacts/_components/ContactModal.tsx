@@ -12,8 +12,8 @@ import { useToastHelpers } from '@/lib/toast';
 import { FormFooterActions } from '@/components/FormFooterActions';
 import { supabase } from '@/lib/supabaseClient';
 import { useGetICPs } from '@/services/icps/useICPs';
-import { MultiSelect } from '@/components/MultiSelect';
-import { useEffect, useState } from 'react';
+import { CustomeSelect } from '@/components/CustomeSelect';
+import { mapToSelectOptions } from '@/utils/mapToSelectOptions';
 
 interface ContactModalProps {
   open: boolean;
@@ -29,24 +29,8 @@ export default function ContactModal({ open, onClose, onCreated, contact }: Cont
   const { data: icpsData, isLoading: isICPLoading } = useGetICPs();
 
   const isEditMode = !!contact;
-  
-  // Parse ICPs from contact - handle both array and other formats
-  const getInitialICPs = (): string[] => {
-    if (!contact?.icps) return [];
-    if (Array.isArray(contact.icps)) return contact.icps;
-    return [];
-  };
 
-  const [selectedICPs, setSelectedICPs] = useState<string[]>(getInitialICPs());
-
-  // Update selected ICPs when contact changes
-  useEffect(() => {
-    if (contact) {
-      setSelectedICPs(getInitialICPs());
-    } else {
-      setSelectedICPs([]);
-    }
-  }, [contact]);
+  const icpOptions = mapToSelectOptions(icpsData, 'icp_name', 'icp_id');
 
   const formik = useFormik<ContactFormValues>({
     initialValues: {
@@ -65,7 +49,7 @@ export default function ContactModal({ open, onClose, onCreated, contact }: Cont
       'Liturgical Language(s)': contact?.['Liturgical Language(s)'] || '',
       'Technology Readiness': contact?.['Technology Readiness'] || '',
       Classification: contact?.Classification || '',
-      icps: contact?.icps || null,
+      icp_id: contact?.icp_id || '',
       'Email Thread': contact?.['Email Thread'] || '',
     },
     validationSchema: contactValidationSchema,
@@ -74,19 +58,12 @@ export default function ContactModal({ open, onClose, onCreated, contact }: Cont
     enableReinitialize: true,
     onSubmit: async (values, { setSubmitting }) => {
       try {
-        // Clean up empty strings to null
         const cleanedValues = Object.fromEntries(
           Object.entries(values).map(([key, value]) => [key, value === '' ? null : value])
         );
 
-        // Add selected ICPs to the values
-        const valuesWithICPs = {
-          ...cleanedValues,
-          icps: selectedICPs.length > 0 ? selectedICPs : null,
-        };
-
         if (isEditMode && contact) {
-          await updateContactMutation({ id: contact.id, updates: valuesWithICPs });
+          await updateContactMutation({ id: contact.id, updates: cleanedValues });
           successToast('Contact updated successfully');
         } else {
           const { data: newId, error: idGenerationError } = await supabase.rpc(
@@ -97,13 +74,13 @@ export default function ContactModal({ open, onClose, onCreated, contact }: Cont
             throw new Error(idGenerationError?.message || 'Failed to generate contact id');
           }
 
-          await createNewContactMutation({ ...valuesWithICPs, id: newId });
+          await createNewContactMutation({ ...cleanedValues, id: newId });
           successToast('Contact created successfully');
         }
 
         onCreated?.();
         onClose();
-      } catch (err) {
+      } catch {
         errorToast(isEditMode ? 'Error updating contact' : 'Error creating contact');
       } finally {
         setSubmitting(false);
@@ -111,7 +88,8 @@ export default function ContactModal({ open, onClose, onCreated, contact }: Cont
     },
   });
 
-  const { values, errors, touched, handleChange, handleSubmit, isSubmitting } = formik;
+  const { values, errors, touched, handleChange, handleSubmit, setFieldValue, isSubmitting } =
+    formik;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -336,22 +314,17 @@ export default function ContactModal({ open, onClose, onCreated, contact }: Cont
             <ErrorText touched={touched.Classification} error={errors.Classification} />
           </div>
 
-          {/* ICPs Selection */}
+          {/* ICP Selection */}
           <div>
-            <MultiSelect
-              label="ICPs (Ideal Customer Profiles)"
-              options={
-                icpsData?.map((icp) => ({
-                  label: icp.icp_name,
-                  value: icp.icp_id,
-                  description: icp.icp_desc || undefined,
-                })) || []
-              }
-              selected={selectedICPs}
-              onChange={setSelectedICPs}
-              placeholder="Select ICPs..."
+            <CustomeSelect
+              label="ICP (Ideal Customer Profile)"
+              value={values.icp_id || ''}
+              onChange={(val: string) => setFieldValue('icp_id', val)}
+              optionsData={icpOptions}
               loading={isICPLoading}
+              placeholder="Select ICP"
             />
+            <ErrorText touched={touched.icp_id} error={errors.icp_id} />
           </div>
 
           {/* Email Thread */}
