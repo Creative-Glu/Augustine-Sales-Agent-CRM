@@ -17,6 +17,7 @@ import {
 } from '@/services/product-offers/useProductOffers';
 import { mapToSelectOptions } from '@/utils/mapToSelectOptions';
 import { FormFooterActions } from '@/components/FormFooterActions';
+import { Info } from 'lucide-react';
 
 interface ProductOfferModalProps {
   open: boolean;
@@ -55,14 +56,20 @@ export default function ProductOfferModal({
     enableReinitialize: true,
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       try {
+        const normalized = {
+          ...values,
+          offer_2: values.offer_2 ? values.offer_2 : null,
+          offer_3: values.offer_3 ? values.offer_3 : null,
+        };
+
         if (isEditMode && offer) {
-          await updateProductOffer({ id: offer.offer_id, updates: values });
+          await updateProductOffer({ id: offer.offer_id, updates: normalized });
           successToast('Offer updated successfully!');
         } else {
           const { data: offerId } = await supabase.rpc('generate_new_offer_id');
 
           const payload = {
-            ...values,
+            ...normalized,
             offer_id: offerId,
           };
 
@@ -73,7 +80,7 @@ export default function ProductOfferModal({
         onCreated?.();
         onClose();
         resetForm();
-      } catch (err) {
+      } catch {
         errorToast(isEditMode ? 'Error updating offer' : 'Error creating offer');
       } finally {
         setSubmitting(false);
@@ -92,6 +99,15 @@ export default function ProductOfferModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-900 leading-relaxed">
+            <Info className="w-3.5 h-3.5 text-blue-600 mt-0.5 shrink-0" />
+            <span>
+              Product 1 is the primary pitch and is required. Products 2 and 3 are optional
+              upsell / cross-sell slots — leave them blank if you only want a single-product
+              offer.
+            </span>
+          </div>
+
           <div>
             <label className="text-sm font-medium">Offer Name</label>
             <Input
@@ -113,35 +129,59 @@ export default function ProductOfferModal({
           />
           <ErrorText touched={touched.icp_id} error={errors.icp_id} />
 
-          <CustomeSelect
-            label="Offer Product 1"
-            value={values.offer_1 || ''}
-            onChange={(val: string) => setFieldValue('offer_1', val)}
-            optionsData={productOptions}
-            loading={isProductsLoading}
-            placeholder="Select product"
-          />
-          <ErrorText touched={touched.offer_1} error={errors.offer_1} />
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm font-medium">Offer Product 1</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-red-600">
+                Required · Primary pitch
+              </span>
+            </div>
+            <CustomeSelect
+              label=""
+              value={values.offer_1 || ''}
+              onChange={(val: string) => setFieldValue('offer_1', val)}
+              optionsData={productOptions}
+              loading={isProductsLoading}
+              placeholder="Select product"
+            />
+            <ErrorText touched={touched.offer_1} error={errors.offer_1} />
+          </div>
 
-          <CustomeSelect
-            label="Offer Product 2"
-            value={values.offer_2 || ''}
-            onChange={(val: string) => setFieldValue('offer_2', val)}
-            optionsData={productOptions}
-            loading={isProductsLoading}
-            placeholder="Select product"
-          />
-          <ErrorText touched={touched.offer_2} error={errors.offer_2} />
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm font-medium">Offer Product 2</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Optional · Upsell
+              </span>
+            </div>
+            <CustomeSelect
+              label=""
+              value={values.offer_2 || ''}
+              onChange={(val: string) => setFieldValue('offer_2', val)}
+              optionsData={productOptions}
+              loading={isProductsLoading}
+              placeholder="Leave blank if not needed"
+            />
+            <ErrorText touched={touched.offer_2} error={errors.offer_2} />
+          </div>
 
-          <CustomeSelect
-            label="Offer Product 3"
-            value={values.offer_3 || ''}
-            onChange={(val: string) => setFieldValue('offer_3', val)}
-            optionsData={productOptions}
-            loading={isProductsLoading}
-            placeholder="Select product"
-          />
-          <ErrorText touched={touched.offer_3} error={errors.offer_3} />
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm font-medium">Offer Product 3</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Optional · Cross-sell
+              </span>
+            </div>
+            <CustomeSelect
+              label=""
+              value={values.offer_3 || ''}
+              onChange={(val: string) => setFieldValue('offer_3', val)}
+              optionsData={productOptions}
+              loading={isProductsLoading}
+              placeholder="Leave blank if not needed"
+            />
+            <ErrorText touched={touched.offer_3} error={errors.offer_3} />
+          </div>
 
           <FormFooterActions
             onCancel={onClose}

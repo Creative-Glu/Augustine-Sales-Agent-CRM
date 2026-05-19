@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
+import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import {
   deleteJob,
   getJob,
@@ -125,6 +126,7 @@ export default function MarketingJobsPage() {
   const [isProgressLoading, setIsProgressLoading] = useState(false);
   const [autoScrollTimeline, setAutoScrollTimeline] = useState(true);
   const [showOnlyErrors, setShowOnlyErrors] = useState(false);
+  const [jobIdPendingDelete, setJobIdPendingDelete] = useState<string | null>(null);
   const timelineRef = useRef<HTMLDivElement | null>(null);
   const { toast } = useToast();
 
@@ -290,6 +292,7 @@ export default function MarketingJobsPage() {
       setJobsPage(1);
       jobsQuery.refetch();
       if (selectedJobId === jobId) setSelectedJobId(null);
+      setJobIdPendingDelete(null);
     },
     onError: (err: unknown) => {
       toast({
@@ -297,6 +300,7 @@ export default function MarketingJobsPage() {
         description: err instanceof Error ? err.message : 'Try again later.',
         variant: 'destructive',
       });
+      setJobIdPendingDelete(null);
     },
   });
 
@@ -643,7 +647,7 @@ export default function MarketingJobsPage() {
                               variant="outline"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                deleteMutation.mutate(job.job_id);
+                                setJobIdPendingDelete(job.job_id);
                               }}
                               className="transition-all duration-150"
                             >
@@ -1168,6 +1172,23 @@ export default function MarketingJobsPage() {
           </section>
         </div>
       </div>
+
+      <ConfirmDeleteDialog
+        open={jobIdPendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setJobIdPendingDelete(null);
+        }}
+        title="Delete job"
+        description={
+          jobIdPendingDelete
+            ? `Delete job ${jobIdPendingDelete.slice(0, 8)}…? This cannot be undone.`
+            : 'Delete this job? This cannot be undone.'
+        }
+        loading={deleteMutation.isPending}
+        onConfirm={() => {
+          if (jobIdPendingDelete) deleteMutation.mutate(jobIdPendingDelete);
+        }}
+      />
     </div>
   );
 }

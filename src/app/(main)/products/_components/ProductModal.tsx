@@ -39,7 +39,7 @@ export default function ProductModal({ open, onClose, onCreated, product }: Prod
     validateOnChange: true,
     validateOnMount: true,
     enableReinitialize: true,
-    onSubmit: async (values, { setSubmitting }) => {
+    onSubmit: async (values, { setSubmitting, resetForm }) => {
       try {
         if (isEditMode && product) {
           const payload = {
@@ -47,6 +47,7 @@ export default function ProductModal({ open, onClose, onCreated, product }: Prod
             product_description: values.product_description,
             pricing_type: values.pricing_type,
             price: values?.pricing_type == 'free' ? 0 : values?.price,
+            created_at: new Date(),
           };
 
           await updateProductMutation({ id: product.product_id, updates: payload });
@@ -58,6 +59,7 @@ export default function ProductModal({ open, onClose, onCreated, product }: Prod
             ...values,
             product_id: data,
             price: values?.pricing_type == 'free' ? 0 : values?.price,
+            created_at: new Date(),
           };
 
           await createNewProductMutation(payload);
@@ -69,6 +71,7 @@ export default function ProductModal({ open, onClose, onCreated, product }: Prod
       } catch (err) {
         errorToast(isEditMode ? 'Error updating product' : 'Error creating product');
       } finally {
+        resetForm();
         setSubmitting(false);
       }
     },
@@ -147,4 +150,3 @@ export default function ProductModal({ open, onClose, onCreated, product }: Prod
     </Dialog>
   );
 }
-

@@ -5,4 +5,5 @@ export interface ProductOffer {
   offer_1: string | null;
   offer_2: string | null;
   offer_3: string | null;
+  created_at?: string;
 }

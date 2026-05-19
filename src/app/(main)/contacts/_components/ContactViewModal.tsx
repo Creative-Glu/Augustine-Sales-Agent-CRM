@@ -14,19 +14,12 @@ interface ContactViewModalProps {
 
 export default function ContactViewModal({ open, onClose, contact }: ContactViewModalProps) {
   const { data: icpsData } = useGetICPs();
-  
+
   if (!contact) return null;
 
-  // Get ICP names from IDs
-  const getICPNames = (): string[] => {
-    if (!contact.icps || !icpsData) return [];
-    const icpIds = Array.isArray(contact.icps) ? contact.icps : [];
-    return icpIds
-      .map((id) => icpsData.find((icp) => icp.icp_id === id)?.icp_name)
-      .filter((name): name is string => !!name);
-  };
-
-  const icpNames = getICPNames();
+  const icpName = contact.icp_id
+    ? (icpsData?.find((icp) => icp.icp_id === contact.icp_id)?.icp_name ?? null)
+    : null;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -172,18 +165,14 @@ export default function ContactViewModal({ open, onClose, contact }: ContactView
             </div>
           </div>
 
-          {/* ICPs */}
+          {/* ICP */}
           <div>
             <label className="text-sm font-medium text-muted-foreground">
-              ICPs (Ideal Customer Profiles)
+              ICP (Ideal Customer Profile)
             </label>
-            <div className="mt-1 flex flex-wrap gap-2">
-              {icpNames.length > 0 ? (
-                icpNames.map((name, index) => (
-                  <Badge key={index} variant="secondary">
-                    {name}
-                  </Badge>
-                ))
+            <div className="mt-1">
+              {icpName ? (
+                <Badge variant="secondary">{icpName}</Badge>
               ) : (
                 <span className="text-sm text-muted-foreground">N/A</span>
               )}

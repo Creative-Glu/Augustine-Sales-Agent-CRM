@@ -4,7 +4,7 @@ export interface Product {
   product_description?: string | null;
   pricing_type: 'custom' | 'service' | 'free' | 'one-time';
   price?: number | null | string;
-  created_at?: string;
+  created_at?: any;
 }
 export interface ProductFormValues {
   product_name: string;

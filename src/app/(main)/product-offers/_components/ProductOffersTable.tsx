@@ -15,6 +15,17 @@ type ProductOfferRow = ProductOffer & {
   offer_3_product?: { product_id: string; product_name: string } | null;
 };
 
+function formatCreatedAt(value?: string | null): string {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
 interface ProductsOfferProps {
   productOffers: ProductOfferRow[];
   isLoading: boolean;
@@ -65,7 +76,7 @@ export default function ProductOfferTable({
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                <td colSpan={5} className="py-8 text-center text-muted-foreground">
                   <div className="animate-pulse text-sm">Loading product offers...</div>
                 </td>
               </tr>
@@ -73,7 +84,7 @@ export default function ProductOfferTable({
 
             {isError && (
               <tr>
-                <td colSpan={6} className="py-8 text-center text-red-500">
+                <td colSpan={5} className="py-8 text-center text-red-500">
                   Failed to load product offers. Please try again.
                 </td>
               </tr>
@@ -81,7 +92,7 @@ export default function ProductOfferTable({
 
             {!isLoading && !isError && productOffers.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                <td colSpan={5} className="py-8 text-center text-muted-foreground">
                   No product offers found.
                 </td>
               </tr>
@@ -109,17 +120,33 @@ export default function ProductOfferTable({
 
                   {/* Products */}
                   <td className="py-4 px-4">
-                    <div className="flex flex-col gap-1 text-sm text-card-foreground">
-                      <span>{offer.offer_1_product?.product_name || '—'}</span>
-                      <span>{offer.offer_2_product?.product_name || '—'}</span>
-                      <span>{offer.offer_3_product?.product_name || '—'}</span>
-                    </div>
+                    <ol className="flex flex-col gap-1.5 text-sm text-card-foreground">
+                      {[
+                        offer.offer_1_product?.product_name,
+                        offer.offer_2_product?.product_name,
+                        offer.offer_3_product?.product_name,
+                      ].map((name, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-muted text-[11px] font-semibold text-muted-foreground shrink-0 mt-0.5">
+                            {i + 1}
+                          </span>
+                          <span className="leading-snug">{name || '—'}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </td>
+
+                  {/* Created At */}
+                  <td className="py-4 px-4 text-sm text-muted-foreground tabular-nums">
+                    {formatCreatedAt(offer.created_at)}
                   </td>
 
                   {/* Actions */}
-                  <td className="py-4 px-4 flex items-center gap-2">
-                    <EditButton onClick={() => onEdit?.(offer)} />
-                    <DeleteButton onDelete={() => openDeleteDialog(offer.offer_id)} />
+                  <td className="py-4 px-4">
+                    <div className="flex items-center justify-center gap-2">
+                      <EditButton onClick={() => onEdit?.(offer)} />
+                      <DeleteButton onDelete={() => openDeleteDialog(offer.offer_id)} />
+                    </div>
                   </td>
                 </tr>
               ))}
