@@ -14,6 +14,8 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { STAGE_COLORS } from '@/constants/journey';
 import { Journey } from '@/types/Journey';
+import { ViewButton } from '@/components/ActionButtons';
+import JourneyViewModal from './JourneyViewModal';
 
 interface JourneyTableProps {
   journeys: Journey[];
@@ -45,6 +47,7 @@ export default function JourneyTable({
   isError,
 }: JourneyTableProps) {
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [viewing, setViewing] = useState<Journey | null>(null);
 
   const toggleExpand = (id: string) => {
     setExpanded((prev) => (prev === id ? null : id));
@@ -75,12 +78,13 @@ export default function JourneyTable({
             <TableHead>Stage</TableHead>
             <TableHead>Institution</TableHead>
             <TableHead>Last Interaction</TableHead>
+            <TableHead className="w-16 text-center">Details</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {isLoading && (
             <TableRow>
-              <TableCell colSpan={6} className="py-6">
+              <TableCell colSpan={7} className="py-6">
                 <div className="space-y-2">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Skeleton key={i} className="h-10 w-full" />
@@ -92,7 +96,7 @@ export default function JourneyTable({
 
           {!isLoading && isError && (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-12 text-rose-500">
+              <TableCell colSpan={7} className="text-center py-12 text-rose-500">
                 Failed to load journeys. Please try again.
               </TableCell>
             </TableRow>
@@ -100,7 +104,7 @@ export default function JourneyTable({
 
           {!isLoading && !isError && journeys.length === 0 && (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-12 text-slate-500">
+              <TableCell colSpan={7} className="text-center py-12 text-slate-500">
                 No journeys match the current filters.
               </TableCell>
             </TableRow>
@@ -162,11 +166,17 @@ export default function JourneyTable({
                     <TableCell className="text-slate-700 text-xs">
                       {formatDate(j.last_interaction)}
                     </TableCell>
+                    <TableCell
+                      className="text-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <ViewButton onClick={() => setViewing(j)} />
+                    </TableCell>
                   </TableRow>
 
                   {isOpen && (
                     <TableRow className="bg-slate-50/40 hover:bg-slate-50/40">
-                      <TableCell colSpan={6} className="p-0">
+                      <TableCell colSpan={7} className="p-0">
                         <div className="p-5 space-y-4">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                             <div className="bg-white rounded-lg border border-slate-200 p-3">
@@ -253,6 +263,12 @@ export default function JourneyTable({
             })}
         </TableBody>
       </Table>
+
+      <JourneyViewModal
+        open={!!viewing}
+        onClose={() => setViewing(null)}
+        journey={viewing}
+      />
     </div>
   );
 }
