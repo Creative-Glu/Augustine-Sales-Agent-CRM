@@ -116,13 +116,34 @@ export default function CampaignModal({
           </div>
 
           <div>
-            <label className="text-sm font-medium">Instructions</label>
+            <div className="flex items-baseline justify-between">
+              <label htmlFor="instructions" className="text-sm font-medium">
+                Instructions
+              </label>
+              <span className="text-[11px] text-muted-foreground">
+                {values.instructions.length} chars
+              </span>
+            </div>
+            <p className="mt-0.5 mb-1.5 text-xs text-muted-foreground leading-relaxed">
+              Tell the agent how to write — tone, audience, what to emphasise, and any alerts on
+              replies. The more specific, the better the outreach.
+            </p>
             <Textarea
+              id="instructions"
               name="instructions"
               value={values.instructions}
               onChange={handleChange}
-              placeholder="Describe the outreach intent, audience, and tone..."
-              className="min-h-[140px]"
+              placeholder={`Example:
+Executive tone, focused on ROI and impact across multiple parishes.
+Mention volume pricing benefits.
+Slack alerts immediately on any reply.
+
+Tips:
+• Audience — who you're writing to (e.g. parish leaders, diocesan staff)
+• Tone — formal, warm, executive, conversational
+• Emphasis — pricing, outcomes, case studies, urgency
+• Reply handling — Slack alerts, escalation, follow-up cadence`}
+              className="min-h-45 font-normal leading-relaxed"
             />
             <ErrorText touched={touched.instructions} error={errors.instructions} />
           </div>

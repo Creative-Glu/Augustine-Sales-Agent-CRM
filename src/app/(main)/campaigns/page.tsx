@@ -20,7 +20,7 @@ import type { Campaign } from '@/types/compaign';
 import { Info, Megaphone, Plus } from 'lucide-react';
 import { CAMPAIGN_STATUS_OPTIONS, CAMPAIGN_COLUMNS } from '@/constants';
 import { TableHeader } from '@/components/TableHeader';
-import { EditButton, DeleteButton } from '@/components/ActionButtons';
+import { EditButton, DeleteButton, ViewButton } from '@/components/ActionButtons';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 import {
   AlertDialog,
@@ -33,6 +33,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import CampaignModal from './_components/CampaignModal';
+import CampaignViewModal from './_components/CampaignViewModal';
 
 type CampaignStatus = (typeof CAMPAIGN_STATUS_OPTIONS)[number];
 
@@ -57,6 +58,7 @@ export default function CampaignsPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Campaign | null>(null);
+  const [viewing, setViewing] = useState<Campaign | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Campaign | null>(null);
   const [statusChange, setStatusChange] = useState<{
     campaign: Campaign;
@@ -246,6 +248,7 @@ export default function CampaignsPage() {
                           </td>
                           <td className="py-3 px-4">
                             <div className="flex items-center justify-center gap-2">
+                              <ViewButton onClick={() => setViewing(c)} />
                               <EditButton onClick={() => openEdit(c)} />
                               <DeleteButton onDelete={() => setDeleteTarget(c)} />
                             </div>
@@ -265,6 +268,12 @@ export default function CampaignsPage() {
         onClose={handleCloseModal}
         onCreated={refetch}
         campaign={editing}
+      />
+
+      <CampaignViewModal
+        open={!!viewing}
+        onClose={() => setViewing(null)}
+        campaign={viewing}
       />
 
       <ConfirmDeleteDialog
