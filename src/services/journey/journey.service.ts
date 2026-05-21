@@ -2,7 +2,11 @@ import { supabase } from '@/lib/supabaseClient';
 import { Journey } from '@/types/Journey';
 
 const LEAD_TABLE = 'Augustine 10';
-const JOURNEY_SELECT = '*, campaigns(*), lead:lead_id!inner(*)';
+// LEFT JOIN (no `!inner`) so journeys with a missing/orphaned lead reference
+// still appear in the list — they'll have `lead: null` in the payload. The
+// alternative (`!inner`) silently dropped these rows, making the journey
+// count smaller than `select count(*) from journeys`.
+const JOURNEY_SELECT = '*, campaigns(*), lead:lead_id(*)';
 
 export interface JourneyFilters {
   search?: string;
@@ -52,6 +56,28 @@ function applyFilters(query: SupabaseSelectQuery, filters: JourneyFilters): Supa
   return q;
 }
 
+/**
+ * The PostgREST embed `lead:lead_id!inner(*)` translates to a SQL JOIN, which
+ * means if the leads table (Augustine 10) has duplicate `id` values, a single
+ * journey row gets multiplied — one row per matching lead. We dedupe by
+ * `journey_id` here as a defensive safeguard so the UI always reflects the
+ * true journey count (which is what `select count(*) from journeys` returns).
+ *
+ * The real fix is to add a UNIQUE constraint on `Augustine 10.id` (it should
+ * be the primary key). Until that's done in the DB, this dedupe keeps the
+ * journey page consistent with the dashboard.
+ */
+function dedupeByJourneyId(rows: { journey_id: string }[]): Journey[] {
+  const seen = new Set<string>();
+  const out: Journey[] = [];
+  for (const row of rows) {
+    if (!row?.journey_id || seen.has(row.journey_id)) continue;
+    seen.add(row.journey_id);
+    out.push(row as unknown as Journey);
+  }
+  return out;
+}
+
 export async function getJourneys(filters: JourneyFilters = {}): Promise<Journey[]> {
   try {
     let query = supabase.from('journeys').select(JOURNEY_SELECT);
@@ -60,7 +86,7 @@ export async function getJourneys(filters: JourneyFilters = {}): Promise<Journey
     const { data, error } = await query.order('last_interaction', { ascending: false });
 
     if (error) throw new Error(`Error fetching journeys: ${error.message}`);
-    return (data ?? []) as unknown as Journey[];
+    return dedupeByJourneyId((data ?? []) as { journey_id: string }[]);
   } catch (error) {
     throw error instanceof Error ? error : new Error('getJourneys failed');
   }
@@ -72,20 +98,42 @@ export async function getJourneysPaginated(
   filters: JourneyFilters = {}
 ): Promise<JourneysResponse> {
   try {
-    let query = supabase.from('journeys').select(JOURNEY_SELECT, { count: 'exact' });
-    query = applyFilters(query, filters);
+    // For the count we run a separate plain count query on `journeys` so the
+    // total reflects actual journey rows, not joined+duplicated rows.
+    let countQuery = supabase.from('journeys').select('journey_id', {
+      count: 'exact',
+      head: true,
+    });
+    countQuery = applyFilters(countQuery, filters);
 
-    const { data, count, error } = await query
-      .order('last_interaction', { ascending: false })
-      .range(offset, offset + limit - 1);
+    let dataQuery = supabase.from('journeys').select(JOURNEY_SELECT);
+    dataQuery = applyFilters(dataQuery, filters);
 
-    if (error) throw new Error(`Error fetching paginated journeys: ${error.message}`);
+    // Over-fetch by 2x to give dedupe headroom when the JOIN inflates rows.
+    // Worst case: every lead has 1 duplicate → fetch 2*limit, dedupe to limit.
+    const fetchUpperBound = offset + limit * 2;
 
-    const total = count ?? 0;
+    const [countResult, dataResult] = await Promise.all([
+      countQuery,
+      dataQuery
+        .order('last_interaction', { ascending: false })
+        .range(offset, fetchUpperBound - 1),
+    ]);
+
+    if (dataResult.error) {
+      throw new Error(`Error fetching paginated journeys: ${dataResult.error.message}`);
+    }
+
+    const deduped = dedupeByJourneyId(
+      (dataResult.data ?? []) as { journey_id: string }[]
+    );
+    const pageRows = deduped.slice(0, limit);
+    const total = countResult.error ? deduped.length : (countResult.count ?? deduped.length);
+
     return {
-      journeys: (data ?? []) as unknown as Journey[],
+      journeys: pageRows,
       total,
-      hasMore: offset + limit < total,
+      hasMore: offset + pageRows.length < total,
     };
   } catch (error) {
     throw error instanceof Error ? error : new Error('getJourneysPaginated failed');
