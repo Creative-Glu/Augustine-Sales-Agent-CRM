@@ -1,11 +1,11 @@
 'use client';
 
 import Sidebar from '@/components/Sidebar';
+import UserBadge from '@/components/UserBadge';
 import '../globals.css';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
-import { ThemeToggle } from '@/components/ThemeToggle';
 
 // Routes that get the "polish" treatment (focus rings, animations, etc.).
 // Admin and Tools routes are intentionally excluded.
@@ -43,11 +43,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <div
         className={`ml-64 min-h-screen bg-purplecrm-50 p-8 ${isOthersRoute ? 'polish-others' : ''}`}
       >
-        {/* {isOthersRoute && (
-          <div className="fixed top-4 right-4 z-40">
-            <ThemeToggle />
-          </div>
-        )} */}
+        {/* Top-right user badge — replaces the user info that used to live
+            in the sidebar footer. Sticky so it stays visible while scrolling. */}
+
         {children}
       </div>
     </>
