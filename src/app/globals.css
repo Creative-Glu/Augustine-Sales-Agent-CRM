@@ -182,6 +182,37 @@ body {
   @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800;
 }
 
+/* ─── Polish: focus rings scoped to "Others" routes ──────────────────
+   Keyboard-only visibility via :focus-visible — mouse users don't see
+   them. Skipped on Tools / Admin routes by scoping to .polish-others. */
+.polish-others a:focus-visible,
+.polish-others button:focus-visible,
+.polish-others [role='button']:focus-visible,
+.polish-others input:focus-visible,
+.polish-others select:focus-visible,
+.polish-others textarea:focus-visible,
+.polish-others [tabindex]:not([tabindex='-1']):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+  transition: outline-offset 120ms ease-out;
+}
+
+/* Slightly tighter ring inside dense table rows so it doesn't clip
+   sibling content. */
+.polish-others tr :focus-visible,
+.polish-others li :focus-visible {
+  outline-offset: 1px;
+}
+
+/* Stronger visible ring for primary CTAs so it reads as "selected". */
+.polish-others button[type='submit']:focus-visible,
+.polish-others [data-primary]:focus-visible {
+  outline-color: var(--primary);
+  outline-width: 2px;
+  outline-offset: 3px;
+}
+
 .status-failed {
   @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800;
 }

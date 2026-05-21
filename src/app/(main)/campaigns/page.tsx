@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,7 +18,7 @@ import {
   useUpdateCampaignStatus,
 } from '@/services/campaign/useCampaign';
 import type { Campaign } from '@/types/compaign';
-import { Info, Megaphone, Plus } from 'lucide-react';
+import { Info, Loader2, Megaphone, Plus } from 'lucide-react';
 import { CAMPAIGN_STATUS_OPTIONS, CAMPAIGN_COLUMNS } from '@/constants';
 import { TableHeader } from '@/components/TableHeader';
 import { EditButton, DeleteButton, ViewButton } from '@/components/ActionButtons';
@@ -191,15 +192,21 @@ export default function CampaignsPage() {
                     </tr>
                   )}
 
-                  {!isLoading &&
-                    campaigns.map((c) => {
+                  {!isLoading && (
+                    <AnimatePresence initial={false}>
+                    {campaigns.map((c) => {
                       const offerLabel = c.offer?.offer_name ?? c.offer_id ?? '—';
                       const createdLabel = c.createdat
                         ? new Date(c.createdat).toLocaleDateString()
                         : '—';
                       return (
-                        <tr
+                        <motion.tr
                           key={c.campaign_id}
+                          layout
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0, x: 32 }}
+                          transition={{ duration: 0.22, ease: 'easeOut' }}
                           className="border-b border-border/40 last:border-0 hover:bg-muted/40 transition-colors"
                         >
                           <td className="py-3 px-4">
@@ -253,9 +260,11 @@ export default function CampaignsPage() {
                               <DeleteButton onDelete={() => setDeleteTarget(c)} />
                             </div>
                           </td>
-                        </tr>
+                        </motion.tr>
                       );
                     })}
+                    </AnimatePresence>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -325,7 +334,12 @@ export default function CampaignsPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isUpdatingStatus}>Cancel</AlertDialogCancel>
-            <AlertDialogAction disabled={isUpdatingStatus} onClick={handleConfirmStatus}>
+            <AlertDialogAction
+              disabled={isUpdatingStatus}
+              onClick={handleConfirmStatus}
+              className="inline-flex items-center gap-2"
+            >
+              {isUpdatingStatus && <Loader2 className="w-4 h-4 animate-spin" />}
               {isUpdatingStatus ? 'Updating…' : 'Confirm'}
             </AlertDialogAction>
           </AlertDialogFooter>
