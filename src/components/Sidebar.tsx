@@ -5,7 +5,11 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { SIDEBAR_GROUPS } from '../constants/sidebarLinks';
-import { ArrowRightOnRectangleIcon, ChevronRightIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import {
+  ArrowRightOnRectangleIcon,
+  ChevronRightIcon,
+  ChevronDownIcon,
+} from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/providers/AuthProvider';
 
@@ -26,24 +30,19 @@ function readPersistedCollapsibles(): Record<string, boolean> {
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout } = useAuth();
-  // Lazy initializer reads localStorage exactly once on mount — no flicker.
-  const [openCollapsibles, setOpenCollapsibles] = useState<Record<string, boolean>>(
-    readPersistedCollapsibles
-  );
+  const { logout } = useAuth();
+  const [openCollapsibles, setOpenCollapsibles] =
+    useState<Record<string, boolean>>(readPersistedCollapsibles);
 
-  // Persist every change. localStorage writes can fail in private browsing —
-  // swallow rather than crash the sidebar.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
       window.localStorage.setItem(SIDEBAR_STATE_KEY, JSON.stringify(openCollapsibles));
     } catch {
-      // ignore quota / disabled storage
+      // ignore
     }
   }, [openCollapsibles]);
 
-  /** Check if a link is active — exact match or starts-with for nested routes. */
   const isActive = (href: string) =>
     pathname === href || (href !== '/dashboard' && pathname?.startsWith(href + '/'));
 
@@ -51,9 +50,9 @@ export default function Sidebar() {
     setOpenCollapsibles((prev) => ({ ...prev, [title]: !prev[title] }));
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-gradient-to-b from-slate-950 to-gray-950 text-white flex flex-col border-r border-slate-700/40 shadow-2xl">
-      {/* ── Brand Section ── */}
-      <div className="px-5 pt-6 pb-5">
+    <aside className="fixed left-0 top-0 h-screen w-64 bg-linear-to-b from-slate-950 via-slate-950 to-slate-900 text-white flex flex-col border-r border-slate-800 shadow-2xl">
+      {/* ── Brand ── */}
+      <div className="px-5 pt-6 pb-4">
         <Link href="/dashboard" className="block">
           <Image
             src="/augustine-logo.png"
@@ -66,28 +65,28 @@ export default function Sidebar() {
         </Link>
       </div>
 
-      <div className="h-px bg-gradient-to-r from-slate-800/0 via-slate-700/40 to-slate-800/0 mx-4" />
+      <div className="h-px bg-linear-to-r from-transparent via-slate-700/50 to-transparent mx-4" />
 
       {/* ── Navigation ── */}
-      <nav className="flex-1 overflow-y-auto px-3 pt-6 pb-2 custom-scrollbar">
+      <nav className="flex-1 overflow-y-auto px-3 pt-5 pb-2 custom-scrollbar">
         {SIDEBAR_GROUPS.map((group, gi) => (
-          <div key={group.title} className={gi > 0 ? 'mt-6' : ''}>
+          <div key={group.title} className={gi > 0 ? 'mt-5' : ''}>
             {group.collapsible ? (
-              /* ── Collapsible "Others" group ── */
+              /* ── Collapsible group (legacy "Others" deprecated) ── */
               <>
                 <button
                   type="button"
                   onClick={() => toggleCollapsible(group.title)}
-                  className="group relative flex w-full items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/40 transition-all duration-200"
+                  className="group relative flex w-full items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:text-white hover:bg-slate-800/60 transition-colors cursor-pointer"
                 >
                   {group.collapsibleIcon && (
-                    <group.collapsibleIcon className="w-5 h-5 shrink-0 text-slate-500 group-hover:text-slate-300 transition-all duration-200" />
+                    <group.collapsibleIcon className="w-5 h-5 shrink-0 text-slate-300 group-hover:text-white transition-colors" />
                   )}
                   <span className="truncate flex-1 text-left">{group.title}</span>
                   {openCollapsibles[group.title] ? (
-                    <ChevronDownIcon className="w-4 h-4 text-slate-500 transition-all duration-200" />
+                    <ChevronDownIcon className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
                   ) : (
-                    <ChevronRightIcon className="w-4 h-4 text-slate-500 transition-all duration-200" />
+                    <ChevronRightIcon className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
                   )}
                 </button>
 
@@ -100,14 +99,14 @@ export default function Sidebar() {
                       transition={{ duration: 0.2, ease: 'easeInOut' }}
                       className="overflow-hidden"
                     >
-                      <div className="mt-1 ml-3 pl-3 space-y-1">
+                      <div className="mt-1 ml-3 pl-3 space-y-1 border-l border-slate-800">
                         {group.links.map(({ href, label, icon: Icon }) => (
                           <div
                             key={href}
                             title="Deprecated"
-                            className="relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 cursor-not-allowed select-none opacity-50"
+                            className="relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 cursor-not-allowed select-none opacity-60"
                           >
-                            <Icon className="w-4 h-4 shrink-0 text-slate-600" />
+                            <Icon className="w-4 h-4 shrink-0 text-slate-500" />
                             <span className="truncate flex-1">{label}</span>
                           </div>
                         ))}
@@ -119,42 +118,37 @@ export default function Sidebar() {
             ) : (
               /* ── Regular group ── */
               <>
-                <p className="px-3 mb-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-500 select-none opacity-70">
+                <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400 select-none">
                   {group.title}
                 </p>
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   {group.links.map(({ href, label, icon: Icon }) => {
                     const active = isActive(href);
                     return (
                       <Link
                         key={href}
                         href={href}
-                        className={`group relative flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
-                          ${
-                            active
-                              ? 'bg-gradient-to-r from-blue-600/25 to-blue-600/10 text-blue-300 shadow-lg shadow-blue-500/10'
-                              : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/40'
-                          }`}
+                        className={`group relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          active
+                            ? 'bg-linear-to-r from-blue-600/30 to-blue-600/10 text-white shadow-sm'
+                            : 'text-slate-200 hover:text-white hover:bg-slate-800/60'
+                        }`}
                       >
-                        {/* Active indicator bar */}
                         {active && (
                           <motion.div
                             layoutId="sidebar-active"
-                            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-gradient-to-b from-blue-400 to-blue-500 shadow-lg shadow-blue-500/50"
+                            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-linear-to-b from-blue-400 to-blue-500 shadow-sm shadow-blue-500/40"
                             transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                           />
                         )}
-
                         <Icon
-                          className={`w-5 h-5 shrink-0 transition-all duration-200 ${
-                            active ? 'text-blue-300' : 'text-slate-500 group-hover:text-slate-300'
+                          className={`w-5 h-5 shrink-0 transition-colors ${
+                            active ? 'text-blue-300' : 'text-slate-300 group-hover:text-white'
                           }`}
                         />
                         <span className="truncate flex-1">{label}</span>
-
-                        {/* Animated arrow on hover */}
                         {!active && (
-                          <ChevronRightIcon className="w-4 h-4 text-slate-600 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" />
+                          <ChevronRightIcon className="w-4 h-4 text-slate-500 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" />
                         )}
                       </Link>
                     );
@@ -166,37 +160,21 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* ── Footer Section ── */}
-      <div className="border-t border-slate-700/40 px-3 py-4 bg-gradient-to-t from-slate-950/50 to-transparent">
-        {user && (
-          <div className="flex items-center gap-3 px-3 mb-4 pb-4 border-b border-slate-700/30">
-            {/* Avatar */}
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-500 flex items-center justify-center text-sm font-bold text-white shrink-0 shadow-lg shadow-blue-500/30">
-              {(user.full_name || user.email || 'U').charAt(0).toUpperCase()}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-slate-100 truncate leading-tight">
-                {user.full_name || 'User'}
-              </p>
-              <p className="text-xs text-white truncate leading-tight">{user.role}</p>
-            </div>
-          </div>
-        )}
-
+      {/* ── Footer ── only sign-out + version ── */}
+      {/* <div className="border-t border-slate-800 px-3 py-3 bg-linear-to-t from-slate-950/60 to-transparent">
         <button
           type="button"
           onClick={() => {
             logout();
             router.push('/login');
           }}
-          className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-slate-700/60 bg-slate-800/30 px-3.5 py-2.5 text-xs font-semibold text-slate-400 hover:text-slate-100 hover:bg-red-500/10 hover:border-red-500/30 transition-all duration-200 cursor-pointer group"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-700/70 bg-slate-800/40 px-3 py-2 text-xs font-semibold text-slate-200 hover:text-white hover:bg-rose-500/15 hover:border-rose-500/40 transition-colors cursor-pointer group"
         >
-          <ArrowRightOnRectangleIcon className="w-4 h-4 transition-colors duration-200 group-hover:text-red-400" />
+          <ArrowRightOnRectangleIcon className="w-4 h-4 transition-colors group-hover:text-rose-300" />
           Sign out
         </button>
-
-        <p className="text-center text-[10px] text-slate-600 mt-3">v0.1.0</p>
-      </div>
+        <p className="text-center text-[10px] text-slate-500 mt-2">v0.1.0</p>
+      </div> */}
     </aside>
   );
 }
