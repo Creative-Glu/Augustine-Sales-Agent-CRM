@@ -91,3 +91,28 @@ export async function getJourneysPaginated(
     throw error instanceof Error ? error : new Error('getJourneysPaginated failed');
   }
 }
+
+export async function deleteJourney(journeyId: string): Promise<void> {
+  try {
+    // Delete dependent log rows first to avoid the FK constraint
+    // `logs_journey_id_fkey`. Long-term fix: add ON DELETE CASCADE to the FK,
+    // or wrap both deletes in a Postgres RPC so they're atomic.
+    const { error: logsError } = await supabase
+      .from('logs')
+      .delete()
+      .eq('journey_id', journeyId);
+
+    if (logsError) {
+      throw new Error(`Error deleting journey logs: ${logsError.message}`);
+    }
+
+    const { error } = await supabase
+      .from('journeys')
+      .delete()
+      .eq('journey_id', journeyId);
+
+    if (error) throw new Error(`Error deleting journey: ${error.message}`);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('deleteJourney failed');
+  }
+}

@@ -2,14 +2,20 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Info, Activity } from 'lucide-react';
 import { useGetICPs } from '@/services/icps/useICPs';
 import { STAGE_COLORS } from '@/constants/journey';
 import type { Journey, JourneyLead } from '@/types/Journey';
+import JourneyLogsTimeline from './JourneyLogsTimeline';
+
+export type JourneyViewTab = 'details' | 'logs';
 
 interface JourneyViewModalProps {
   open: boolean;
   onClose: () => void;
   journey: Journey | null;
+  initialTab?: JourneyViewTab;
 }
 
 function formatDateTime(value: string | null | undefined): string {
@@ -64,7 +70,12 @@ function leadFieldValue(lead: JourneyLead, field: keyof JourneyLead): string {
   return String(v);
 }
 
-export default function JourneyViewModal({ open, onClose, journey }: JourneyViewModalProps) {
+export default function JourneyViewModal({
+  open,
+  onClose,
+  journey,
+  initialTab = 'details',
+}: JourneyViewModalProps) {
   const { data: icpsData } = useGetICPs();
 
   if (!journey) return null;
@@ -83,7 +94,19 @@ export default function JourneyViewModal({ open, onClose, journey }: JourneyView
           <DialogTitle>Journey Details</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-5">
+        <Tabs key={`${journey.journey_id}-${initialTab}`} defaultValue={initialTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="details" className="flex items-center gap-1.5">
+              <Info className="w-3.5 h-3.5" />
+              Details
+            </TabsTrigger>
+            <TabsTrigger value="logs" className="flex items-center gap-1.5">
+              <Activity className="w-3.5 h-3.5" />
+              Activity Logs
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="details" className="mt-4 space-y-5">
           {/* Journey identity */}
           <section className="rounded-xl border border-border bg-card p-4 space-y-3">
             <div className="flex items-start justify-between gap-3">
@@ -205,16 +228,21 @@ export default function JourneyViewModal({ open, onClose, journey }: JourneyView
               <p className="text-sm text-muted-foreground">No campaign data available.</p>
             )}
           </section>
+          </TabsContent>
 
-          <div className="flex justify-end pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Close
-            </button>
-          </div>
+          <TabsContent value="logs" className="mt-4">
+            <JourneyLogsTimeline journeyId={journey.journey_id} />
+          </TabsContent>
+        </Tabs>
+
+        <div className="flex justify-end pt-4 border-t border-border mt-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Close
+          </button>
         </div>
       </DialogContent>
     </Dialog>

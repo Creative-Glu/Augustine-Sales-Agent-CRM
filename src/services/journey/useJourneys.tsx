@@ -1,10 +1,11 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
 import {
   getJourneys,
   getJourneysPaginated,
+  deleteJourney,
   JourneyFilters,
   JourneysResponse,
 } from './journey.service';
@@ -30,5 +31,16 @@ export const useJourneysPaginated = (limit: number = 10, filters: JourneyFilters
     queryKey: ['journeys', 'paginated', offset, limit, filters],
     queryFn: () => getJourneysPaginated(offset, limit, filters),
     staleTime: 30 * 1000,
+  });
+};
+
+export const useDeleteJourney = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ['delete-journey'],
+    mutationFn: (journeyId: string) => deleteJourney(journeyId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['journeys'] });
+    },
   });
 };

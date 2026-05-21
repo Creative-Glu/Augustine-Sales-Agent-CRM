@@ -21,7 +21,7 @@ import { Info, Megaphone, Plus } from 'lucide-react';
 import { CAMPAIGN_STATUS_OPTIONS, CAMPAIGN_COLUMNS } from '@/constants';
 import { TableHeader } from '@/components/TableHeader';
 import { EditButton, DeleteButton, ViewButton } from '@/components/ActionButtons';
-import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
+import HardConfirmDeleteDialog from '@/components/HardConfirmDeleteDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -276,15 +276,32 @@ export default function CampaignsPage() {
         campaign={viewing}
       />
 
-      <ConfirmDeleteDialog
+      <HardConfirmDeleteDialog
         open={!!deleteTarget}
-        onOpenChange={(o) => !o && setDeleteTarget(null)}
+        onOpenChange={(o: boolean) => !o && !isDeleting && setDeleteTarget(null)}
         title="Delete campaign"
         description={
-          deleteTarget
-            ? `Delete "${deleteTarget.campaign_name}"? This cannot be undone.`
-            : 'Delete this campaign?'
+          deleteTarget ? (
+            <>
+              You&apos;re about to permanently delete the campaign{' '}
+              <span className="font-semibold text-slate-900">
+                &ldquo;{deleteTarget.campaign_name}&rdquo;
+              </span>
+              . Because this campaign has dependent records, deleting it will{' '}
+              <span className="font-semibold text-red-700">also remove</span> every
+              journey created under it and every outreach / event log attached to
+              those journeys.
+            </>
+          ) : (
+            'Delete this campaign?'
+          )
         }
+        warningPoints={[
+          'The campaign record itself',
+          'All journeys (lead progress entries) under this campaign',
+          'All outreach logs and event history tied to those journeys',
+        ]}
+        confirmWord="DELETE"
         onConfirm={handleConfirmDelete}
         loading={isDeleting}
       />
