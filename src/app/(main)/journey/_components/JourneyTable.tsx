@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   ChevronDown,
   ChevronRight,
@@ -18,6 +19,7 @@ import { STAGE_COLORS } from '@/constants/journey';
 import { Journey, JourneyCampaign } from '@/types/Journey';
 import { useDeleteJourney } from '@/services/journey/useJourneys';
 import { useToastHelpers } from '@/lib/toast';
+import { LeadHoverCard } from '@/components/LeadHoverCard';
 import JourneyViewModal, { type JourneyViewTab } from './JourneyViewModal';
 
 interface JourneyTableProps {
@@ -307,6 +309,7 @@ export default function JourneyTable({ journeys, isLoading, isError }: JourneyTa
                   </div>
 
                   <ul className="divide-y divide-slate-100">
+                    <AnimatePresence initial={false}>
                     {group.journeys.map((j) => {
                       const stageColor = STAGE_COLORS[j.funnel_stage] || '#94a3b8';
                       const parishName = j.lead?.['Parish Name'] || `Lead #${j.lead_id}`;
@@ -314,15 +317,22 @@ export default function JourneyTable({ journeys, isLoading, isError }: JourneyTa
                       const phone = j.lead?.['Parish Phone'];
 
                       return (
-                        <li
+                        <motion.li
                           key={j.journey_id}
-                          className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_140px_180px_120px] gap-3 md:gap-4 items-center px-5 py-3 hover:bg-white transition-colors"
+                          layout
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, x: 24, height: 0, paddingTop: 0, paddingBottom: 0 }}
+                          transition={{ duration: 0.2, ease: 'easeOut' }}
+                          className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_140px_180px_120px] gap-3 md:gap-4 items-center px-5 py-3 hover:bg-white transition-colors overflow-hidden"
                         >
                           {/* Lead info */}
                           <div className="min-w-0">
-                            <p className="text-sm font-semibold text-slate-900 truncate">
-                              {parishName}
-                            </p>
+                            <LeadHoverCard lead={j.lead}>
+                              <p className="text-sm font-semibold text-slate-900 truncate hover:text-blue-700 transition-colors">
+                                {parishName}
+                              </p>
+                            </LeadHoverCard>
                             <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-500 mt-0.5">
                               {email && (
                                 <span className="inline-flex items-center gap-1 min-w-0 max-w-full">
@@ -369,9 +379,10 @@ export default function JourneyTable({ journeys, isLoading, isError }: JourneyTa
                             <ActivityButton onClick={() => setView({ journey: j, tab: 'logs' })} />
                             <DeleteButton onDelete={() => setDeleteTarget(j)} />
                           </div>
-                        </li>
+                        </motion.li>
                       );
                     })}
+                    </AnimatePresence>
                   </ul>
                 </div>
               )}

@@ -3,17 +3,45 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SIDEBAR_GROUPS } from '../constants/sidebarLinks';
 import { ArrowRightOnRectangleIcon, ChevronRightIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/providers/AuthProvider';
 
+const SIDEBAR_STATE_KEY = 'augustine.sidebar.collapsibles';
+
+function readPersistedCollapsibles(): Record<string, boolean> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage.getItem(SIDEBAR_STATE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
-  const [openCollapsibles, setOpenCollapsibles] = useState<Record<string, boolean>>({});
+  // Lazy initializer reads localStorage exactly once on mount — no flicker.
+  const [openCollapsibles, setOpenCollapsibles] = useState<Record<string, boolean>>(
+    readPersistedCollapsibles
+  );
+
+  // Persist every change. localStorage writes can fail in private browsing —
+  // swallow rather than crash the sidebar.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(SIDEBAR_STATE_KEY, JSON.stringify(openCollapsibles));
+    } catch {
+      // ignore quota / disabled storage
+    }
+  }, [openCollapsibles]);
 
   /** Check if a link is active — exact match or starts-with for nested routes. */
   const isActive = (href: string) =>

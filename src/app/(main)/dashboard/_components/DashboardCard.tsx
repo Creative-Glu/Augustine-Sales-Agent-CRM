@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { ComponentType, SVGProps } from 'react';
+import { AnimatedCounter } from '@/components/AnimatedCounter';
 
 interface CardProps {
   title: string;
@@ -36,7 +37,9 @@ export default function DashboardCard({ title, value, subtitle, icon: Icon, colo
               <Icon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </motion.div>
           </div>
-          <p className="text-3xl font-bold">{value}</p>
+          <p className="text-3xl font-bold tabular-nums">
+            {typeof value === 'number' ? <AnimatedCounter value={value} /> : value}
+          </p>
         </div>
 
         {/* Bottom row: Title + Subtitle */}
