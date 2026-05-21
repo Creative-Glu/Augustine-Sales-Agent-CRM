@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -13,13 +14,15 @@ import {
 } from '@/components/ui/select';
 import { useToastHelpers } from '@/lib/toast';
 import {
-  useGetCompaign,
+  useCampaignsPaginated,
   useDeleteCompaign,
   useUpdateCampaignStatus,
 } from '@/services/campaign/useCampaign';
 import type { Campaign } from '@/types/compaign';
 import { Info, Loader2, Megaphone, Plus } from 'lucide-react';
 import { CAMPAIGN_STATUS_OPTIONS, CAMPAIGN_COLUMNS } from '@/constants';
+import Pagination from '@/components/Pagination';
+import { formatDateTimeShort } from '@/utils/format';
 import { TableHeader } from '@/components/TableHeader';
 import { EditButton, DeleteButton, ViewButton } from '@/components/ActionButtons';
 import HardConfirmDeleteDialog from '@/components/HardConfirmDeleteDialog';
@@ -54,8 +57,15 @@ function statusBadgeClass(status: string): string {
   }
 }
 
+const PAGE_LIMIT = 10;
+
 export default function CampaignsPage() {
   const { successToast, errorToast } = useToastHelpers();
+  const searchParams = useSearchParams();
+
+  const rawOffset = searchParams.get('offset');
+  const parsed = rawOffset ? parseInt(rawOffset, 10) : 0;
+  const offset = Number.isNaN(parsed) || parsed < 0 ? 0 : parsed;
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Campaign | null>(null);
@@ -66,11 +76,15 @@ export default function CampaignsPage() {
     newStatus: CampaignStatus;
   } | null>(null);
 
-  const { data, isLoading, refetch } = useGetCompaign();
+  const { data, isLoading, refetch } = useCampaignsPaginated(PAGE_LIMIT);
   const { mutateAsync: deleteCampaign, isPending: isDeleting } = useDeleteCompaign();
   const { mutateAsync: updateStatus, isPending: isUpdatingStatus } = useUpdateCampaignStatus();
 
-  const campaigns: Campaign[] = data ?? [];
+  const campaigns: Campaign[] = (data?.campaigns as Campaign[]) ?? [];
+  const total = data?.total ?? 0;
+  const hasMore = data?.hasMore ?? false;
+  const currentPage = Math.floor(offset / PAGE_LIMIT) + 1;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_LIMIT));
 
   const openCreate = () => {
     setEditing(null);
@@ -129,7 +143,8 @@ export default function CampaignsPage() {
                 Campaigns
               </h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {campaigns.length} {campaigns.length === 1 ? 'campaign' : 'campaigns'}
+                Showing {campaigns.length} of {total}{' '}
+                {total === 1 ? 'campaign' : 'campaigns'}
               </p>
             </div>
             <Button
@@ -196,9 +211,7 @@ export default function CampaignsPage() {
                     <AnimatePresence initial={false}>
                     {campaigns.map((c) => {
                       const offerLabel = c.offer?.offer_name ?? c.offer_id ?? '—';
-                      const createdLabel = c.createdat
-                        ? new Date(c.createdat).toLocaleDateString()
-                        : '—';
+                      const createdLabel = formatDateTimeShort(c.createdat);
                       return (
                         <motion.tr
                           key={c.campaign_id}
@@ -209,13 +222,15 @@ export default function CampaignsPage() {
                           transition={{ duration: 0.22, ease: 'easeOut' }}
                           className="border-b border-border/40 last:border-0 hover:bg-muted/40 transition-colors"
                         >
-                          <td className="py-3 px-4">
-                            <p className="font-medium text-slate-800 dark:text-slate-100">
+                          <td className="py-2 px-3">
+                            <p className="font-medium text-sm text-slate-800 dark:text-slate-100 truncate">
                               {c.campaign_name}
                             </p>
                           </td>
-                          <td className="py-3 px-4 text-xs text-muted-foreground">{offerLabel}</td>
-                          <td className="py-3 px-4">
+                          <td className="py-2 px-3 text-[11px] text-muted-foreground truncate max-w-50">
+                            {offerLabel}
+                          </td>
+                          <td className="py-2 px-3">
                             <Select
                               value={c.campaign_status}
                               onValueChange={(v) => {
@@ -227,7 +242,7 @@ export default function CampaignsPage() {
                               }}
                             >
                               <SelectTrigger
-                                className="h-8 w-[130px] text-xs"
+                                className="h-7 w-30 text-[11px]"
                                 aria-label={`Change status for ${c.campaign_name}`}
                               >
                                 <SelectValue>
@@ -245,16 +260,16 @@ export default function CampaignsPage() {
                               </SelectContent>
                             </Select>
                           </td>
-                          <td className="py-3 px-4 text-xs text-muted-foreground tabular-nums">
+                          <td className="py-2 px-3 text-[11px] text-muted-foreground tabular-nums whitespace-nowrap">
                             {createdLabel}
                           </td>
-                          <td className="py-3 px-4 text-xs text-muted-foreground">
-                            <p className="truncate max-w-[260px]" title={c.instructions ?? ''}>
+                          <td className="py-2 px-3 text-[11px] text-muted-foreground">
+                            <p className="truncate max-w-65" title={c.instructions ?? ''}>
                               {c.instructions || '—'}
                             </p>
                           </td>
-                          <td className="py-3 px-4">
-                            <div className="flex items-center justify-center gap-2">
+                          <td className="py-2 px-3">
+                            <div className="flex items-center justify-center gap-1.5">
                               <ViewButton onClick={() => setViewing(c)} />
                               <EditButton onClick={() => openEdit(c)} />
                               <DeleteButton onDelete={() => setDeleteTarget(c)} />
@@ -269,6 +284,21 @@ export default function CampaignsPage() {
               </table>
             </div>
           </div>
+
+          {/* Server-side pagination — URL-driven via ?offset= */}
+          {total > PAGE_LIMIT && (
+            <div className="mt-4">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                currentOffset={offset}
+                limit={PAGE_LIMIT}
+                hasMore={hasMore}
+                basePath="/campaigns"
+                queryParamName="offset"
+              />
+            </div>
+          )}
         </section>
       </div>
 

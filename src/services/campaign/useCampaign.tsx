@@ -1,18 +1,58 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createCompaign,
   deleteCompaign,
   getCompaign,
+  getCampaignsPaginated,
   updateCampaignStatus,
   updateCampaign,
+  CampaignsResponse,
 } from './campaign.service';
 import { CampaignValues } from '@/types/compaign';
 import { supabase } from '@/lib/supabaseClient';
 
+export type { CampaignsResponse };
+
 const CAMPAIGN_QUERY_KEY = ['compaign'] as const;
+
+/**
+ * Server-side paginated campaigns. Reads `offset` from the URL query so the
+ * page stays bookmarkable. Realtime subscription invalidates the entire
+ * `['compaign']` cache prefix on any campaign mutation, including this hook.
+ */
+export const useCampaignsPaginated = (limit: number = 10) => {
+  const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const rawOffset = searchParams.get('offset');
+  const parsed = rawOffset ? parseInt(rawOffset, 10) : 0;
+  const offset = Number.isNaN(parsed) || parsed < 0 ? 0 : parsed;
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('campaigns-realtime-paginated')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'campaigns' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: CAMPAIGN_QUERY_KEY });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
+  return useQuery<CampaignsResponse, Error>({
+    queryKey: [...CAMPAIGN_QUERY_KEY, 'paginated', offset, limit],
+    queryFn: () => getCampaignsPaginated(offset, limit),
+    staleTime: 30 * 1000,
+  });
+};
 
 export const useGetCompaign = () => {
   const queryClient = useQueryClient();

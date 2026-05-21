@@ -5,12 +5,16 @@ import { useSearchParams } from 'next/navigation';
 import {
   getProducts,
   getProductsPaginated,
+  getOffersForProduct,
   createProduct,
   updateProduct,
   deleteProduct,
   ProductsResponse,
+  AttachedProductOffer,
 } from './product.service';
 import { Product } from '@/types/product';
+
+export type { AttachedProductOffer };
 
 // Re-export types so components don't need to import from service files
 export type { Product, ProductsResponse };
@@ -50,6 +54,16 @@ export function useUpdateProduct() {
     mutationFn: ({ id, updates }: { id: string; updates: Partial<Product> }) =>
       updateProduct(id, updates),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['products'] }),
+  });
+}
+
+export function useOffersForProduct(productId: string | null) {
+  return useQuery<AttachedProductOffer[], Error>({
+    queryKey: ['products', 'attached-offers', productId],
+    queryFn: () =>
+      productId ? getOffersForProduct(productId) : Promise.resolve([] as AttachedProductOffer[]),
+    enabled: !!productId,
+    staleTime: 60 * 1000,
   });
 }
 

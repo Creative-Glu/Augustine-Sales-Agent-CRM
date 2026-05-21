@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { TrendingUp, BarChart3, Zap } from 'lucide-react';
+import { TrendingUp, BarChart3 } from 'lucide-react';
 import DashboardGrid from './_components/DashboardGrid';
 import DashboardLoader from './_components/DashboardLoader';
 import JourneyFunnelChart from './_components/JourneyFunnelChart';
@@ -27,13 +27,7 @@ export default function DashboardPage() {
                   Key Metrics
                 </h2>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-3">
-                  <div className=" dark:bg-slate-800 rounded-2xl  dark:border-slate-700 overflow-hidden">
-                    <DashboardGrid />
-                  </div>
-                </div>
-              </div>
+              <DashboardGrid />
             </div>
 
             {/* Journey Funnel Chart Section */}
