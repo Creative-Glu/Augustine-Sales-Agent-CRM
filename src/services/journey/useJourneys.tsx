@@ -6,9 +6,14 @@ import {
   getJourneys,
   getJourneysPaginated,
   deleteJourney,
+  markJourneyClosed,
+  ClosedOutcome,
+  MarkClosedOptions,
   JourneyFilters,
   JourneysResponse,
 } from './journey.service';
+
+export type { ClosedOutcome, MarkClosedOptions };
 import { Journey } from '@/types/Journey';
 
 export type { JourneyFilters, JourneysResponse };
@@ -31,6 +36,32 @@ export const useJourneysPaginated = (limit: number = 10, filters: JourneyFilters
     queryKey: ['journeys', 'paginated', offset, limit, filters],
     queryFn: () => getJourneysPaginated(offset, limit, filters),
     staleTime: 30 * 1000,
+  });
+};
+
+interface MarkJourneyClosedArgs {
+  journeyId: string;
+  outcome: ClosedOutcome;
+  options?: MarkClosedOptions;
+}
+
+/**
+ * Mutation hook that manually flips a journey to Closed-Won or Closed-Lost
+ * and writes a log entry. Invalidates both the journeys list and the
+ * activity logs for that journey so the UI updates immediately.
+ */
+export const useMarkJourneyClosed = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ['mark-journey-closed'],
+    mutationFn: ({ journeyId, outcome, options }: MarkJourneyClosedArgs) =>
+      markJourneyClosed(journeyId, outcome, options),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['journeys'] });
+      queryClient.invalidateQueries({
+        queryKey: ['journey-logs', variables.journeyId],
+      });
+    },
   });
 };
 

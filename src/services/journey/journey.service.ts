@@ -92,6 +92,77 @@ export async function getJourneysPaginated(
   }
 }
 
+export type ClosedOutcome = 'Closed-Won' | 'Closed-Lost';
+
+export interface MarkClosedOptions {
+  /** Optional free-text note to append to the log entry. */
+  note?: string;
+  /** For Closed-Lost only — short reason category (used to prefix the log). */
+  lostReason?: string;
+}
+
+/**
+ * Manually mark a journey as Closed-Won or Closed-Lost. Updates the journey's
+ * funnel_stage + last_interaction in one statement, then writes a log entry
+ * describing the manual transition (so the Activity Logs tab and any audit
+ * trail captures who/why).
+ *
+ * Log insertion is best-effort — if it fails the stage change still sticks.
+ */
+export async function markJourneyClosed(
+  journeyId: string,
+  outcome: ClosedOutcome,
+  options?: MarkClosedOptions
+): Promise<void> {
+  try {
+    const nowIso = new Date().toISOString();
+
+    // Build the descriptive note ONCE — written to journeys.notes so that the
+    // existing DB trigger (which auto-logs on journeys.UPDATE by copying the
+    // current notes column into logs) picks it up correctly. Otherwise the
+    // trigger would re-log the stale "Lead clicked booking link" text from
+    // the previous SAL transition, producing a duplicate log entry.
+    const parts: string[] = [];
+    parts.push(
+      outcome === 'Closed-Won'
+        ? 'Journey manually marked as Closed-Won.'
+        : 'Journey manually marked as Closed-Lost.'
+    );
+    if (options?.lostReason?.trim()) {
+      parts.push(`Reason: ${options.lostReason.trim()}`);
+    }
+    if (options?.note?.trim()) {
+      parts.push(`Note: ${options.note.trim()}`);
+    }
+    const closureNote = parts.join(' ');
+
+    const { data: updated, error: updateError } = await supabase
+      .from('journeys')
+      .update({
+        funnel_stage: outcome,
+        last_interaction: nowIso,
+        notes: closureNote,
+      })
+      .eq('journey_id', journeyId)
+      .select('journey_id, lead_id, funnel_stage')
+      .single();
+
+    if (updateError) {
+      throw new Error(`Error updating journey: ${updateError.message}`);
+    }
+    if (!updated) {
+      throw new Error('Journey not found or could not be updated.');
+    }
+
+    // NOTE: we intentionally do NOT manually insert into `logs` here.
+    // The DB trigger on journeys.UPDATE writes a log row using the new
+    // notes value we just set above. A manual insert would create a
+    // duplicate entry with identical text at the same timestamp.
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('markJourneyClosed failed');
+  }
+}
+
 export async function deleteJourney(journeyId: string): Promise<void> {
   try {
     // Delete dependent log rows first to avoid the FK constraint
