@@ -10,7 +10,7 @@ import {
   TagIcon,
   EllipsisHorizontalCircleIcon,
 } from '@heroicons/react/24/outline';
-import { TreePine, ActivityIcon, MailSearchIcon } from 'lucide-react';
+import { TreePine, ActivityIcon, MailSearchIcon, CalendarClock } from 'lucide-react';
 
 export interface SidebarLink {
   href: string;
@@ -68,6 +68,9 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
 
       // Journey / Automation
       { href: '/journey', label: 'Journey', icon: TreePine, disabled: true },
+
+      // Calendly / scheduling — slots booked by leads & contacts
+      { href: '/meetings', label: 'Meetings', icon: CalendarClock },
     ],
   },
 ];
