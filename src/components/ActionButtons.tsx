@@ -6,9 +6,9 @@ export const EditButton = ({ onClick }: { onClick?: () => void }) => {
       type="button"
       onClick={onClick}
       disabled={!onClick}
-      className={`inline-flex items-center justify-center p-2 text-muted-foreground 
-        border border-gray-200 rounded-lg bg-white transition-colors
-        ${onClick ? 'cursor-pointer hover:bg-gray-50' : 'cursor-not-allowed opacity-60'}`}
+      className={`inline-flex items-center justify-center p-2 text-amber-700
+        border border-amber-500 rounded-lg bg-white transition-colors
+        ${onClick ? 'cursor-pointer hover:bg-amber-50' : 'cursor-not-allowed opacity-60'}`}
       title="Edit"
     >
       <PencilSquareIcon className="w-4 h-4" />

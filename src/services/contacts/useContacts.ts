@@ -5,15 +5,27 @@ import { useSearchParams } from 'next/navigation';
 import {
   getContacts,
   getContactsPaginated,
+  getContactDetails,
   createContact,
   updateContact,
   deleteContact,
   ContactsResponse,
+  ContactDetails,
 } from './contact.service';
 import { Contact } from '@/types/contact';
 
 // Re-export types so components don't need to import from service files
-export type { Contact, ContactsResponse };
+export type { Contact, ContactsResponse, ContactDetails };
+
+/** Fetches contact + linked journeys + matching ICP. Disabled until contactId is set. */
+export function useContactDetails(contactId: number | null) {
+  return useQuery<ContactDetails, Error>({
+    queryKey: ['contacts', 'details', contactId],
+    queryFn: () => getContactDetails(contactId!),
+    enabled: !!contactId,
+    staleTime: 30 * 1000,
+  });
+}
 
 export function useContacts() {
   return useQuery<Contact[], Error>({

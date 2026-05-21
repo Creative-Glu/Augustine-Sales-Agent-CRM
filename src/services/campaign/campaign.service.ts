@@ -1,6 +1,45 @@
 import { supabase } from '@/lib/supabaseClient';
 import { CampaignValues } from '@/types/compaign';
 
+export interface CampaignsResponse {
+  campaigns: any[];
+  total: number;
+  hasMore: boolean;
+}
+
+export async function getCampaignsPaginated(
+  offset: number = 0,
+  limit: number = 10
+): Promise<CampaignsResponse> {
+  try {
+    const { data, count, error } = await supabase
+      .from('campaigns')
+      .select(
+        `
+        *,
+        offer:offer_id (
+          offer_id,
+          offer_name
+        )
+      `,
+        { count: 'exact' }
+      )
+      .order('createdat', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) throw new Error(`Error fetching campaigns: ${error.message}`);
+
+    const total = count ?? 0;
+    return {
+      campaigns: data ?? [],
+      total,
+      hasMore: offset + limit < total,
+    };
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('getCampaignsPaginated failed');
+  }
+}
+
 export async function getCompaign(): Promise<any> {
   try {
     const { data, error } = await supabase

@@ -46,10 +46,10 @@ export const CAMPAIGN_COLUMNS: TableHeaderColumn[] = [
 export const CAMPAIGN_STATUS_OPTIONS = ['Running', 'Active', 'Draft', 'Stopped'] as const;
 
 export const CONTACTS_TABLE_COLUMNS: TableHeaderColumn[] = [
-  { label: 'Parish Name', align: 'left' },
-  { label: 'Email', align: 'left' },
-  { label: 'Phone', align: 'left' },
-  { label: 'Institution Type', align: 'left' },
+  { label: 'Parish / Lead', align: 'left' },
+  { label: 'Contact', align: 'left' },
+  { label: 'Institution / Location', align: 'left' },
   { label: 'ICP', align: 'left' },
+  { label: 'Created', align: 'left' },
   { label: 'Actions', align: 'center' },
 ];

@@ -2,27 +2,49 @@
 
 import { CreateButton } from '@/components/CreateButton';
 import { PageHeader } from '@/components/PageHeader';
-import { useProductOffers } from '@/services/product-offers/useProductOffers';
+import { useProductOffersPaginated } from '@/services/product-offers/useProductOffers';
 import ProductOfferTable from './ProductOffersTable';
 import React from 'react';
+import dynamic from 'next/dynamic';
+import { useSearchParams } from 'next/navigation';
+import Pagination from '@/components/Pagination';
 import ProductOfferModal from './ProductOfferModal';
+import type { DetailedProductOffer } from './ProductOfferViewModal';
 import { ProductOffer } from '@/types/product-offer';
 import { Info, PackageOpen } from 'lucide-react';
 
+const ProductOfferViewModal = dynamic(() => import('./ProductOfferViewModal'), {
+  ssr: false,
+});
+
+const PAGE_LIMIT = 10;
+
 const ProductOfferPage = () => {
-  const {
-    data: productOffers,
-    isLoading,
-    isError,
-    refetch: fetchProductOffersList,
-  } = useProductOffers();
+  const searchParams = useSearchParams();
+  const rawOffset = searchParams.get('offset');
+  const parsed = rawOffset ? parseInt(rawOffset, 10) : 0;
+  const offset = Number.isNaN(parsed) || parsed < 0 ? 0 : parsed;
+
+  const { data, isLoading, isError, refetch: fetchProductOffersList } =
+    useProductOffersPaginated(PAGE_LIMIT);
+
+  const productOffers = data?.productOffers ?? [];
+  const total = data?.total ?? 0;
+  const hasMore = data?.hasMore ?? false;
+  const currentPage = Math.floor(offset / PAGE_LIMIT) + 1;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_LIMIT));
 
   const [isProductOfferModalOpen, setProductOfferModalOpen] = React.useState(false);
   const [selectedOffer, setSelectedOffer] = React.useState<ProductOffer | null>(null);
+  const [viewingOffer, setViewingOffer] = React.useState<DetailedProductOffer | null>(null);
 
   const handleEdit = (offer: ProductOffer) => {
     setSelectedOffer(offer);
     setProductOfferModalOpen(true);
+  };
+
+  const handleView = (offer: DetailedProductOffer) => {
+    setViewingOffer(offer);
   };
 
   const handleCloseModal = () => {
@@ -30,8 +52,8 @@ const ProductOfferPage = () => {
     setSelectedOffer(null);
   };
 
-  const count = productOffers?.length ?? 0;
-  const isEmpty = !isLoading && !isError && count === 0;
+  const count = productOffers.length;
+  const isEmpty = !isLoading && !isError && total === 0;
 
   return (
     <div className="space-y-6">
@@ -42,7 +64,7 @@ const ProductOfferPage = () => {
             subtitle={
               isLoading
                 ? 'Loading product offers…'
-                : `${count} ${count === 1 ? 'offer' : 'offers'} configured`
+                : `Showing ${count} of ${total} ${total === 1 ? 'offer' : 'offers'}`
             }
           >
             <CreateButton
@@ -102,16 +124,36 @@ const ProductOfferPage = () => {
               isError={isError}
               fetchProductOffersList={fetchProductOffersList}
               onEdit={handleEdit}
+              onView={handleView}
             />
           )}
         </div>
       </div>
+
+      {/* Server-side pagination — URL-driven via ?offset= */}
+      {total > PAGE_LIMIT && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          currentOffset={offset}
+          limit={PAGE_LIMIT}
+          hasMore={hasMore}
+          basePath="/product-offers"
+          queryParamName="offset"
+        />
+      )}
 
       <ProductOfferModal
         open={isProductOfferModalOpen}
         onClose={handleCloseModal}
         onCreated={fetchProductOffersList}
         offer={selectedOffer}
+      />
+
+      <ProductOfferViewModal
+        open={!!viewingOffer}
+        onClose={() => setViewingOffer(null)}
+        offer={viewingOffer}
       />
     </div>
   );

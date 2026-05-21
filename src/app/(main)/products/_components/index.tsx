@@ -10,6 +10,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { CreateButton } from '@/components/CreateButton';
 
 const ProductModal = dynamic(() => import('./ProductModal'), { ssr: false });
+const ProductViewModal = dynamic(() => import('./ProductViewModal'), { ssr: false });
 
 export default function ProductsPage() {
   const searchParams = useSearchParams();
@@ -25,10 +26,15 @@ export default function ProductsPage() {
 
   const [isProductModalOpen, setProductModalOpen] = React.useState(false);
   const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(null);
+  const [viewingProduct, setViewingProduct] = React.useState<Product | null>(null);
 
   const handleEdit = (product: Product) => {
     setSelectedProduct(product);
     setProductModalOpen(true);
+  };
+
+  const handleView = (product: Product) => {
+    setViewingProduct(product);
   };
 
   const handleCloseModal = () => {
@@ -50,6 +56,7 @@ export default function ProductsPage() {
             isError={isError}
             fetchProductsList={fetchProductsList}
             onEdit={handleEdit}
+            onView={handleView}
           />
         </div>
       </div>
@@ -71,6 +78,12 @@ export default function ProductsPage() {
         onClose={handleCloseModal}
         onCreated={fetchProductsList}
         product={selectedProduct}
+      />
+
+      <ProductViewModal
+        open={!!viewingProduct}
+        onClose={() => setViewingProduct(null)}
+        product={viewingProduct}
       />
     </div>
   );

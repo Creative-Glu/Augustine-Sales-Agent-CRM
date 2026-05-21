@@ -7,6 +7,86 @@ export interface ContactsResponse {
   hasMore: boolean;
 }
 
+export interface LinkedJourneySummary {
+  journey_id: string;
+  campaign_id: number;
+  funnel_stage: string;
+  last_interaction: string;
+  created_at: string;
+  notes?: string | null;
+  campaigns?: {
+    campaign_id: number;
+    campaign_name: string;
+    campaign_status: string;
+  } | null;
+}
+
+export interface LinkedIcpInfo {
+  icp_id: string;
+  icp_name: string;
+  icp_desc?: string | null;
+  created_at?: string | null;
+}
+
+export interface ContactDetails {
+  contact: Contact;
+  icp: LinkedIcpInfo | null;
+  journeys: LinkedJourneySummary[];
+}
+
+export async function getContactDetails(contactId: number): Promise<ContactDetails> {
+  try {
+    const [contactResult, journeysResult] = await Promise.all([
+      supabase.from('Augustine 10').select('*').eq('id', contactId).single(),
+      supabase
+        .from('journeys')
+        .select(
+          `
+          journey_id,
+          campaign_id,
+          funnel_stage,
+          last_interaction,
+          created_at,
+          notes,
+          campaigns:campaign_id (
+            campaign_id,
+            campaign_name,
+            campaign_status
+          )
+        `
+        )
+        .eq('lead_id', contactId)
+        .order('last_interaction', { ascending: false }),
+    ]);
+
+    if (contactResult.error) {
+      throw new Error(`Error fetching contact: ${contactResult.error.message}`);
+    }
+
+    const contact = contactResult.data as Contact;
+    let icp: LinkedIcpInfo | null = null;
+    if (contact?.icp_id) {
+      const { data: icpData, error: icpError } = await supabase
+        .from('icps')
+        .select('icp_id, icp_name, icp_desc, created_at')
+        .eq('icp_id', contact.icp_id)
+        .single();
+      if (!icpError && icpData) {
+        icp = icpData as LinkedIcpInfo;
+      }
+    }
+
+    // Journey errors are non-fatal — show empty section if it fails.
+    const journeys = journeysResult.error
+      ? []
+      : ((journeysResult.data ?? []) as unknown as LinkedJourneySummary[]);
+
+    return { contact, icp, journeys };
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('getContactDetails failed');
+  }
+}
+
 export async function getContacts(): Promise<Contact[]> {
   try {
     const { data, error } = await supabase

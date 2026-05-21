@@ -40,36 +40,49 @@ export default function ProductModal({ open, onClose, onCreated, product }: Prod
     validateOnMount: true,
     enableReinitialize: true,
     onSubmit: async (values, { setSubmitting, resetForm }) => {
+      const productName = values.product_name?.trim() || 'product';
       try {
         if (isEditMode && product) {
+          // NOTE: created_at intentionally omitted on update so we don't
+          // overwrite the original creation timestamp every time someone
+          // edits the product.
           const payload = {
             product_name: values.product_name,
             product_description: values.product_description,
             pricing_type: values.pricing_type,
-            price: values?.pricing_type == 'free' ? 0 : values?.price,
-            created_at: new Date(),
+            price: values?.pricing_type === 'free' ? 0 : values?.price,
           };
 
           await updateProductMutation({ id: product.product_id, updates: payload });
-          successToast('Product updated successfully');
+          successToast(`"${productName}" updated — changes saved.`);
         } else {
-          const { data } = await supabase.rpc('generate_new_product_id');
+          const { data: newId, error: idError } = await supabase.rpc(
+            'generate_new_product_id'
+          );
+          if (idError) {
+            throw new Error(`Couldn't generate a product ID: ${idError.message}`);
+          }
 
           const payload = {
             ...values,
-            product_id: data,
-            price: values?.pricing_type == 'free' ? 0 : values?.price,
+            product_id: newId,
+            price: values?.pricing_type === 'free' ? 0 : values?.price,
             created_at: new Date(),
           };
 
           await createNewProductMutation(payload);
-          successToast('Product created successfully');
+          successToast(`"${productName}" created — ready to bundle into an offer.`);
         }
 
         onCreated?.();
         onClose();
       } catch (err) {
-        errorToast(isEditMode ? 'Error updating product' : 'Error creating product');
+        const detail = err instanceof Error ? err.message : '';
+        errorToast(
+          isEditMode
+            ? `Couldn't update "${productName}"${detail ? ` — ${detail}` : ''}`
+            : `Couldn't create "${productName}"${detail ? ` — ${detail}` : ''}`
+        );
       } finally {
         resetForm();
         setSubmitting(false);
