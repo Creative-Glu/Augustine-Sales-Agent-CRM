@@ -37,8 +37,47 @@ export async function createCompaign(compaign: CampaignValues): Promise<Campaign
 
 export async function deleteCompaign(id: string | number) {
   try {
+    // Cascade chain: logs → journeys → campaigns.
+    // Long-term fix: add ON DELETE CASCADE to journeys_campaign_id_fkey and
+    // logs_journey_id_fkey, then this function collapses back to a single delete.
+
+    // 1. Find all journey_ids for this campaign
+    const { data: journeyRows, error: fetchError } = await supabase
+      .from('journeys')
+      .select('journey_id')
+      .eq('campaign_id', id);
+
+    if (fetchError) {
+      throw new Error(`Error fetching campaign journeys: ${fetchError.message}`);
+    }
+
+    const journeyIds = (journeyRows ?? []).map((j) => j.journey_id as string);
+
+    // 2. Delete dependent logs (if any journeys exist)
+    if (journeyIds.length > 0) {
+      const { error: logsError } = await supabase
+        .from('logs')
+        .delete()
+        .in('journey_id', journeyIds);
+
+      if (logsError) {
+        throw new Error(`Error deleting campaign logs: ${logsError.message}`);
+      }
+
+      // 3. Delete journeys referencing this campaign
+      const { error: journeysError } = await supabase
+        .from('journeys')
+        .delete()
+        .eq('campaign_id', id);
+
+      if (journeysError) {
+        throw new Error(`Error deleting campaign journeys: ${journeysError.message}`);
+      }
+    }
+
+    // 4. Finally, delete the campaign itself
     const { error } = await supabase.from('campaigns').delete().eq('campaign_id', id);
-    if (error) throw new Error(`Error deleting product: ${error.message}`);
+    if (error) throw new Error(`Error deleting campaign: ${error.message}`);
   } catch (error) {
     throw error instanceof Error ? error : new Error('deleteCompaign failed');
   }

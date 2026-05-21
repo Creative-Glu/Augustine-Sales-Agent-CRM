@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createCompaign,
@@ -9,10 +10,32 @@ import {
   updateCampaign,
 } from './campaign.service';
 import { CampaignValues } from '@/types/compaign';
+import { supabase } from '@/lib/supabaseClient';
+
+const CAMPAIGN_QUERY_KEY = ['compaign'] as const;
 
 export const useGetCompaign = () => {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('campaigns-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'campaigns' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: CAMPAIGN_QUERY_KEY });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   return useQuery({
-    queryKey: ['compaign'],
+    queryKey: CAMPAIGN_QUERY_KEY,
     queryFn: getCompaign,
   });
 };

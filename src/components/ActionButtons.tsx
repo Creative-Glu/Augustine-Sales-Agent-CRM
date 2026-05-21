@@ -15,7 +15,7 @@ export const EditButton = ({ onClick }: { onClick?: () => void }) => {
     </button>
   );
 };
-import { TrashIcon, EyeIcon } from 'lucide-react';
+import { TrashIcon, EyeIcon, Activity } from 'lucide-react';
 
 export const ViewButton = ({ onClick }: { onClick?: () => void }) => {
   return (
@@ -29,6 +29,22 @@ export const ViewButton = ({ onClick }: { onClick?: () => void }) => {
       title="View"
     >
       <EyeIcon className="w-4 h-4" />
+    </button>
+  );
+};
+
+export const ActivityButton = ({ onClick }: { onClick?: () => void }) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={!onClick}
+      className={`inline-flex items-center justify-center p-2 text-emerald-700
+        border border-emerald-500 rounded-lg bg-white transition-colors
+        ${onClick ? 'cursor-pointer hover:bg-emerald-50' : 'cursor-not-allowed opacity-60'}`}
+      title="Activity logs"
+    >
+      <Activity className="w-4 h-4" />
     </button>
   );
 };
