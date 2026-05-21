@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
 import {
@@ -12,28 +13,65 @@ import {
   JourneyFilters,
   JourneysResponse,
 } from './journey.service';
+import { Journey } from '@/types/Journey';
+import { supabase } from '@/lib/supabaseClient';
 
 export type { ClosedOutcome, MarkClosedOptions };
-import { Journey } from '@/types/Journey';
-
 export type { JourneyFilters, JourneysResponse };
 
+const JOURNEY_QUERY_PREFIX = ['journeys'] as const;
+
+/**
+ * Shared realtime hook — subscribes to postgres_changes on the `journeys`
+ * table and invalidates the entire `['journeys']` cache prefix on any
+ * insert/update/delete. Both useGetJourneys and useJourneysPaginated call
+ * this so the UI auto-refreshes when n8n or any other source writes to
+ * the journeys table.
+ *
+ * Channel name is shared because Supabase coalesces same-name subscribers
+ * — multiple components mounting at once won't open redundant sockets.
+ */
+function useJourneysRealtime() {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('journeys-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'journeys' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: JOURNEY_QUERY_PREFIX });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+}
+
 export const useGetJourneys = (filters: JourneyFilters = {}) => {
+  useJourneysRealtime();
+
   return useQuery<Journey[], Error>({
-    queryKey: ['journeys', filters],
+    queryKey: [...JOURNEY_QUERY_PREFIX, filters],
     queryFn: () => getJourneys(filters),
     staleTime: 30 * 1000,
   });
 };
 
 export const useJourneysPaginated = (limit: number = 10, filters: JourneyFilters = {}) => {
+  useJourneysRealtime();
+
   const searchParams = useSearchParams();
   const rawOffset = searchParams.get('offset');
   const parsed = rawOffset ? parseInt(rawOffset, 10) : 0;
   const offset = Number.isNaN(parsed) || parsed < 0 ? 0 : parsed;
 
   return useQuery<JourneysResponse, Error>({
-    queryKey: ['journeys', 'paginated', offset, limit, filters],
+    queryKey: [...JOURNEY_QUERY_PREFIX, 'paginated', offset, limit, filters],
     queryFn: () => getJourneysPaginated(offset, limit, filters),
     staleTime: 30 * 1000,
   });
