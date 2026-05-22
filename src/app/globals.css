@@ -144,6 +144,21 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* All interactive buttons get a pointer cursor by default — disabled buttons
+   show "not-allowed" so users get clear visual feedback that clicks won't fire.
+   Browser CSS doesn't do this by default; this matches the rest of the design. */
+button:not(:disabled):not([aria-disabled='true']),
+[role='button']:not([aria-disabled='true']),
+a[role='button']:not([aria-disabled='true']) {
+  cursor: pointer;
+}
+
+button:disabled,
+button[aria-disabled='true'],
+[role='button'][aria-disabled='true'] {
+  cursor: not-allowed;
+}
+
 /* Custom Component Classes */
 .btn-primary {
   @apply bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;

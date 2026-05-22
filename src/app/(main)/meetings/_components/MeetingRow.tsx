@@ -1,65 +1,35 @@
 'use client';
 
-import { ChevronRight, Video, X, Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronRight, Video, X } from 'lucide-react';
 import type { Meeting } from '@/types/meeting';
+import { formatRowTime, meetingDotColor } from '@/utils/meetings';
+import { StatusPill } from './StatusPill';
 
 interface MeetingRowProps {
   meeting: Meeting;
   onOpenDetails: (meeting: Meeting) => void;
 }
 
-function formatTime(iso: string): string {
-  const d = new Date(iso);
-  return d
-    .toLocaleTimeString(undefined, {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    })
-    .toLowerCase();
-}
-
-/** Generate a deterministic accent color from the invitee email/name so each
- *  invitee gets a consistent colored dot (similar to Calendly). Falls back to
- *  violet if nothing to hash on. */
-function dotColor(meeting: Meeting): string {
-  const seed = (meeting.invitee_email || meeting.invitee_name || meeting.id) ?? '';
-  const palette = [
-    '#8b5cf6', // violet (Calendly's default)
-    '#3b82f6', // blue
-    '#10b981', // emerald
-    '#f59e0b', // amber
-    '#ec4899', // pink
-    '#06b6d4', // cyan
-    '#6366f1', // indigo
-  ];
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
-  }
-  return palette[hash % palette.length];
-}
-
 export default function MeetingRow({ meeting, onOpenDetails }: MeetingRowProps) {
-  const start = formatTime(meeting.start_at);
-  const end = formatTime(meeting.end_at);
-  const color = dotColor(meeting);
+  const start = formatRowTime(meeting.start_at);
+  const end = formatRowTime(meeting.end_at);
+  const color = meetingDotColor(meeting);
   const isCanceled = meeting.status === 'canceled';
   const isRescheduled = meeting.status === 'rescheduled';
   const isCompleted = meeting.status === 'completed';
   const hasJoinLink = !!meeting.meeting_url && !isCanceled && !isCompleted;
 
-  const handleRowActivate = () => onOpenDetails(meeting);
+  const handleActivate = () => onOpenDetails(meeting);
 
   return (
     <li
       role="button"
       tabIndex={0}
-      onClick={handleRowActivate}
+      onClick={handleActivate}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          handleRowActivate();
+          handleActivate();
         }
       }}
       className="group cursor-pointer hover:bg-slate-50/80 focus:bg-slate-50/80 focus:outline-none transition-colors"
@@ -162,29 +132,5 @@ export default function MeetingRow({ meeting, onOpenDetails }: MeetingRowProps) 
         </div>
       </div>
     </li>
-  );
-}
-
-/* ─── Helpers ──────────────────────────────────────────────────── */
-
-interface StatusPillProps {
-  tone: 'rose' | 'amber' | 'slate';
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}
-
-function StatusPill({ tone, icon, children }: StatusPillProps) {
-  const map = {
-    rose: 'bg-rose-100 text-rose-800 border-rose-200',
-    amber: 'bg-amber-100 text-amber-800 border-amber-200',
-    slate: 'bg-slate-100 text-slate-700 border-slate-200',
-  };
-  return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${map[tone]}`}
-    >
-      {icon}
-      {children}
-    </span>
   );
 }
