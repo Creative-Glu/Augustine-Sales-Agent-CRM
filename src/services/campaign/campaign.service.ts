@@ -9,10 +9,11 @@ export interface CampaignsResponse {
 
 export async function getCampaignsPaginated(
   offset: number = 0,
-  limit: number = 10
+  limit: number = 10,
+  status?: string
 ): Promise<CampaignsResponse> {
   try {
-    const { data, count, error } = await supabase
+    let query = supabase
       .from('campaigns')
       .select(
         `
@@ -24,8 +25,13 @@ export async function getCampaignsPaginated(
       `,
         { count: 'exact' }
       )
-      .order('createdat', { ascending: false })
-      .range(offset, offset + limit - 1);
+      .order('createdat', { ascending: false });
+
+    if (status) {
+      query = query.eq('campaign_status', status);
+    }
+
+    const { data, count, error } = await query.range(offset, offset + limit - 1);
 
     if (error) throw new Error(`Error fetching campaigns: ${error.message}`);
 
