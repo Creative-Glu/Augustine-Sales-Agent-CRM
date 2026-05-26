@@ -10,7 +10,7 @@ interface CreateButtonProps {
 
 export const CreateButton: React.FC<CreateButtonProps> = ({ label, onClick, className = '' }) => {
   return (
-    <Button onClick={onClick} className={`cursor-pointer ${className}`}>
+    <Button onClick={onClick} className={`cursor-pointer ${className}  hover:scale-110`}>
       <PlusCircleIcon className="mr-2 h-4 w-4" />
       {label}
     </Button>

@@ -12,11 +12,11 @@ interface HeaderProps {
 
 const HeaderComponent = ({ title, subtitle = '', icon, showLive = true }: HeaderProps) => {
   return (
-    <div className="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-      <div className="flex items-start justify-between py-2 min-h-[80px]">
+    <div className="sticky p-0 top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+      <div className="flex items-start justify-between py-2 min-h-0px]">
         {/* LEFT SIDE */}
         <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center jus gap-3 ">
             {/* Icon Container */}
             {icon && (
               <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
@@ -24,13 +24,13 @@ const HeaderComponent = ({ title, subtitle = '', icon, showLive = true }: Header
               </div>
             )}
 
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-200 bg-clip-text text-transparent">
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-200 bg-clip-text text-transparent">
               {title}
-            </h1>
+            </h3>
           </div>
 
           {subtitle && (
-            <p className="text-slate-600 dark:text-slate-400 ml-11 font-medium">{subtitle}</p>
+            <span className="text-slate-600 dark:text-slate-400 ml-13 font-normal">{subtitle}</span>
           )}
         </div>
 
