@@ -143,8 +143,7 @@ export default function CampaignsPage() {
                 Campaigns
               </h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Showing {campaigns.length} of {total}{' '}
-                {total === 1 ? 'campaign' : 'campaigns'}
+                Showing {campaigns.length} of {total} {total === 1 ? 'campaign' : 'campaigns'}
               </p>
             </div>
             <Button
@@ -209,75 +208,75 @@ export default function CampaignsPage() {
 
                   {!isLoading && (
                     <AnimatePresence initial={false}>
-                    {campaigns.map((c) => {
-                      const offerLabel = c.offer?.offer_name ?? c.offer_id ?? '—';
-                      const createdLabel = formatDateTimeShort(c.createdat);
-                      return (
-                        <motion.tr
-                          key={c.campaign_id}
-                          layout
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0, x: 32 }}
-                          transition={{ duration: 0.22, ease: 'easeOut' }}
-                          className="border-b border-border/40 last:border-0 hover:bg-muted/40 transition-colors"
-                        >
-                          <td className="py-2 px-3">
-                            <p className="font-medium text-sm text-slate-800 dark:text-slate-100 truncate">
-                              {c.campaign_name}
-                            </p>
-                          </td>
-                          <td className="py-2 px-3 text-[11px] text-muted-foreground truncate max-w-50">
-                            {offerLabel}
-                          </td>
-                          <td className="py-2 px-3">
-                            <Select
-                              value={c.campaign_status}
-                              onValueChange={(v) => {
-                                if (v === c.campaign_status) return;
-                                setStatusChange({
-                                  campaign: c,
-                                  newStatus: v as CampaignStatus,
-                                });
-                              }}
-                            >
-                              <SelectTrigger
-                                className="h-7 w-30 text-[11px]"
-                                aria-label={`Change status for ${c.campaign_name}`}
+                      {campaigns.map((c) => {
+                        const offerLabel = c.offer?.offer_name ?? c.offer_id ?? '—';
+                        const createdLabel = formatDateTimeShort(c.createdat);
+                        return (
+                          <motion.tr
+                            key={c.campaign_id}
+                            layout
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0, x: 32 }}
+                            transition={{ duration: 0.22, ease: 'easeOut' }}
+                            className="border-b border-border/40 last:border-0 hover:bg-muted/40 transition-colors"
+                          >
+                            <td className="py-2 px-3">
+                              <p className="font-medium text-sm text-slate-800 dark:text-slate-100 truncate">
+                                {c.campaign_name}
+                              </p>
+                            </td>
+                            <td className="py-2 px-3 text-[11px] text-muted-foreground truncate max-w-50">
+                              {offerLabel}
+                            </td>
+                            <td className="py-2 px-3">
+                              <Select
+                                value={c.campaign_status}
+                                onValueChange={(v) => {
+                                  if (v === c.campaign_status) return;
+                                  setStatusChange({
+                                    campaign: c,
+                                    newStatus: v as CampaignStatus,
+                                  });
+                                }}
                               >
-                                <SelectValue>
-                                  <span className={statusBadgeClass(c.campaign_status)}>
-                                    {c.campaign_status}
-                                  </span>
-                                </SelectValue>
-                              </SelectTrigger>
-                              <SelectContent>
-                                {CAMPAIGN_STATUS_OPTIONS.map((s) => (
-                                  <SelectItem key={s} value={s}>
-                                    {s}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </td>
-                          <td className="py-2 px-3 text-[11px] text-muted-foreground tabular-nums whitespace-nowrap">
-                            {createdLabel}
-                          </td>
-                          <td className="py-2 px-3 text-[11px] text-muted-foreground">
-                            <p className="truncate max-w-65" title={c.instructions ?? ''}>
-                              {c.instructions || '—'}
-                            </p>
-                          </td>
-                          <td className="py-2 px-3">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <ViewButton onClick={() => setViewing(c)} />
-                              <EditButton onClick={() => openEdit(c)} />
-                              <DeleteButton onDelete={() => setDeleteTarget(c)} />
-                            </div>
-                          </td>
-                        </motion.tr>
-                      );
-                    })}
+                                <SelectTrigger
+                                  className="h-7 w-30 text-[11px]"
+                                  aria-label={`Change status for ${c.campaign_name}`}
+                                >
+                                  <SelectValue>
+                                    <span className={statusBadgeClass(c.campaign_status)}>
+                                      {c.campaign_status}
+                                    </span>
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {CAMPAIGN_STATUS_OPTIONS.map((s) => (
+                                    <SelectItem key={s} value={s}>
+                                      {s}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </td>
+                            <td className="py-2 px-3 text-[11px] text-muted-foreground tabular-nums whitespace-nowrap">
+                              {createdLabel}
+                            </td>
+                            <td className="py-2 px-3 text-[11px] text-muted-foreground">
+                              <p className="truncate max-w-65" title={c.instructions ?? ''}>
+                                {c.instructions || '—'}
+                              </p>
+                            </td>
+                            <td className="py-2 px-3">
+                              <div className="flex items-center justify-center gap-1.5">
+                                <ViewButton onClick={() => setViewing(c)} />
+                                <EditButton onClick={() => openEdit(c)} />
+                                <DeleteButton onDelete={() => setDeleteTarget(c)} />
+                              </div>
+                            </td>
+                          </motion.tr>
+                        );
+                      })}
                     </AnimatePresence>
                   )}
                 </tbody>
@@ -309,11 +308,7 @@ export default function CampaignsPage() {
         campaign={editing}
       />
 
-      <CampaignViewModal
-        open={!!viewing}
-        onClose={() => setViewing(null)}
-        campaign={viewing}
-      />
+      <CampaignViewModal open={!!viewing} onClose={() => setViewing(null)} campaign={viewing} />
 
       <HardConfirmDeleteDialog
         open={!!deleteTarget}
@@ -327,9 +322,8 @@ export default function CampaignsPage() {
                 &ldquo;{deleteTarget.campaign_name}&rdquo;
               </span>
               . Because this campaign has dependent records, deleting it will{' '}
-              <span className="font-semibold text-red-700">also remove</span> every
-              journey created under it and every outreach / event log attached to
-              those journeys.
+              <span className="font-semibold text-red-700">also remove</span> every journey created
+              under it and every outreach / event log attached to those journeys.
             </>
           ) : (
             'Delete this campaign?'

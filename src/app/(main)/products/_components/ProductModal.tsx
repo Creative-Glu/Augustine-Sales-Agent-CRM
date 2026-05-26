@@ -67,7 +67,6 @@ export default function ProductModal({ open, onClose, onCreated, product }: Prod
             ...values,
             product_id: newId,
             price: values?.pricing_type === 'free' ? 0 : values?.price,
-            created_at: new Date(),
           };
 
           await createNewProductMutation(payload);

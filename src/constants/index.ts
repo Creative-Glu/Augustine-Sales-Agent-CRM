@@ -39,9 +39,7 @@ export const CAMPAIGN_COLUMNS: TableHeaderColumn[] = [
   {
     label: 'Instruction',
   },
-  {
-    label: 'Actions',
-  },
+  { label: 'Actions', align: 'center' },
 ];
 export const CAMPAIGN_STATUS_OPTIONS = ['Running', 'Active', 'Draft', 'Stopped'] as const;
 
