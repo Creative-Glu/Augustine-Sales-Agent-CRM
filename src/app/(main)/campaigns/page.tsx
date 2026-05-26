@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -62,10 +62,25 @@ const PAGE_LIMIT = 10;
 export default function CampaignsPage() {
   const { successToast, errorToast } = useToastHelpers();
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const rawOffset = searchParams.get('offset');
   const parsed = rawOffset ? parseInt(rawOffset, 10) : 0;
   const offset = Number.isNaN(parsed) || parsed < 0 ? 0 : parsed;
+  const statusFilter = searchParams.get('status') ?? 'all';
+
+  const handleStatusFilterChange = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === 'all') {
+      params.delete('status');
+    } else {
+      params.set('status', value);
+    }
+    params.delete('offset');
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Campaign | null>(null);
@@ -137,7 +152,7 @@ export default function CampaignsPage() {
 
       <div className="px-6 py-8">
         <section className="bg-card rounded-2xl border border-border shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 gap-3">
             <div>
               <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
                 Campaigns
@@ -146,15 +161,33 @@ export default function CampaignsPage() {
                 Showing {campaigns.length} of {total} {total === 1 ? 'campaign' : 'campaigns'}
               </p>
             </div>
-            <Button
-              className="cursor-pointer hover:scale-110 "
-              type="button"
-              size="sm"
-              onClick={openCreate}
-            >
-              <Plus className="w-4 h-4" />
-              New campaign
-            </Button>
+            <div className="flex items-center gap-2">
+              <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
+                <SelectTrigger
+                  className="h-8 w-36 text-xs"
+                  aria-label="Filter campaigns by status"
+                >
+                  <SelectValue placeholder="All statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  {CAMPAIGN_STATUS_OPTIONS.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                className="cursor-pointer hover:scale-110 "
+                type="button"
+                size="sm"
+                onClick={openCreate}
+              >
+                <Plus className="w-4 h-4" />
+                New campaign
+              </Button>
+            </div>
           </div>
 
           <div className="mb-4 flex items-start gap-3 rounded-lg border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/40 px-4 py-3">

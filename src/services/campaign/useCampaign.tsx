@@ -30,6 +30,7 @@ export const useCampaignsPaginated = (limit: number = 10) => {
   const rawOffset = searchParams.get('offset');
   const parsed = rawOffset ? parseInt(rawOffset, 10) : 0;
   const offset = Number.isNaN(parsed) || parsed < 0 ? 0 : parsed;
+  const status = searchParams.get('status') ?? '';
 
   useEffect(() => {
     const channel = supabase
@@ -48,8 +49,8 @@ export const useCampaignsPaginated = (limit: number = 10) => {
   }, [queryClient]);
 
   return useQuery<CampaignsResponse, Error>({
-    queryKey: [...CAMPAIGN_QUERY_KEY, 'paginated', offset, limit],
-    queryFn: () => getCampaignsPaginated(offset, limit),
+    queryKey: [...CAMPAIGN_QUERY_KEY, 'paginated', offset, limit, status],
+    queryFn: () => getCampaignsPaginated(offset, limit, status || undefined),
     staleTime: 30 * 1000,
   });
 };
