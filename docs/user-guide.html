@@ -1,0 +1,833 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Augustine CRM — User Guide</title>
+    <style>
+      /* ─── Page setup (Chrome headless --print-to-pdf reads @page) ─── */
+      @page {
+        size: A4;
+        margin: 18mm 16mm 22mm 16mm;
+      }
+
+      /* ─── Base ─── */
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          'Helvetica Neue', Arial, sans-serif;
+        color: #0f172a;
+        font-size: 11pt;
+        line-height: 1.55;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      h1, h2, h3, h4 {
+        margin: 0;
+        font-weight: 700;
+        color: #0f172a;
+      }
+      h1 { font-size: 26pt; letter-spacing: -0.02em; }
+      h2 { font-size: 18pt; letter-spacing: -0.01em; }
+      h3 { font-size: 13pt; }
+      h4 { font-size: 11pt; }
+
+      p { margin: 0 0 8pt 0; }
+      ul, ol { margin: 0 0 8pt 18pt; padding: 0; }
+      li { margin-bottom: 3pt; }
+      strong { color: #0f172a; font-weight: 600; }
+      em { color: #475569; }
+
+      /* ─── Cover ─── */
+      .cover {
+        page-break-after: always;
+        height: 257mm; /* A4 height minus margins */
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 12mm 4mm;
+        background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 55%, #2563eb 100%);
+        color: white;
+        margin: -18mm -16mm -22mm -16mm;
+        padding: 30mm 24mm;
+      }
+      .cover .badge {
+        display: inline-block;
+        padding: 4pt 10pt;
+        font-size: 9pt;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 999px;
+        color: white;
+      }
+      .cover h1 {
+        color: white;
+        font-size: 40pt;
+        line-height: 1.05;
+        margin-top: 16pt;
+      }
+      .cover .sub {
+        font-size: 13pt;
+        color: rgba(255, 255, 255, 0.88);
+        margin-top: 14pt;
+        max-width: 110mm;
+        line-height: 1.5;
+      }
+      .cover .footer-meta {
+        font-size: 9.5pt;
+        color: rgba(255, 255, 255, 0.75);
+        border-top: 1px solid rgba(255, 255, 255, 0.25);
+        padding-top: 10pt;
+      }
+      .cover .footer-meta div { margin-bottom: 2pt; }
+
+      /* ─── Section header ─── */
+      .section-head {
+        page-break-before: always;
+        display: flex;
+        align-items: center;
+        gap: 14pt;
+        padding-bottom: 10pt;
+        border-bottom: 2px solid #e2e8f0;
+        margin-bottom: 18pt;
+      }
+      .section-head .num {
+        flex: 0 0 auto;
+        width: 36pt;
+        height: 36pt;
+        border-radius: 10pt;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: white;
+        font-weight: 700;
+        font-size: 16pt;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .section-head .titles h2 { margin: 0; }
+      .section-head .titles .sub {
+        font-size: 10.5pt;
+        color: #64748b;
+        margin-top: 2pt;
+      }
+
+      /* First section keeps page-break-before from cover only */
+      .section-head.first { page-break-before: avoid; }
+
+      /* ─── Step blocks ─── */
+      .step {
+        display: flex;
+        gap: 10pt;
+        margin-bottom: 12pt;
+        page-break-inside: avoid;
+      }
+      .step .step-num {
+        flex: 0 0 22pt;
+        height: 22pt;
+        border-radius: 999px;
+        background: #dbeafe;
+        color: #1d4ed8;
+        font-size: 10pt;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .step .step-body {
+        flex: 1;
+      }
+      .step .step-body h4 {
+        margin: 0 0 4pt 0;
+        font-size: 11.5pt;
+        color: #0f172a;
+      }
+      .step .step-body p,
+      .step .step-body ul {
+        margin-bottom: 4pt;
+        color: #334155;
+      }
+      .step .step-body p:last-child,
+      .step .step-body ul:last-child { margin-bottom: 0; }
+
+      /* ─── Callouts ─── */
+      .callout {
+        border-radius: 8pt;
+        padding: 10pt 12pt;
+        margin: 10pt 0;
+        font-size: 10pt;
+        line-height: 1.5;
+        page-break-inside: avoid;
+      }
+      .callout .label {
+        font-weight: 700;
+        font-size: 9pt;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 3pt;
+        display: block;
+      }
+      .callout p { margin: 0; }
+      .callout p + p { margin-top: 5pt; }
+      .callout ul { margin: 4pt 0 0 16pt; }
+
+      .callout.note  { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; }
+      .callout.note .label { color: #1d4ed8; }
+
+      .callout.tip   { background: #ecfdf5; border: 1px solid #a7f3d0; color: #064e3b; }
+      .callout.tip .label { color: #047857; }
+
+      .callout.warn  { background: #fffbeb; border: 1px solid #fde68a; color: #78350f; }
+      .callout.warn .label { color: #b45309; }
+
+      /* ─── Pipeline diagram ─── */
+      .pipeline {
+        display: flex;
+        gap: 6pt;
+        align-items: stretch;
+        margin: 10pt 0 16pt 0;
+        page-break-inside: avoid;
+      }
+      .pipeline .stage {
+        flex: 1;
+        text-align: center;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8pt;
+        padding: 8pt 4pt;
+        font-size: 9pt;
+        color: #475569;
+        position: relative;
+      }
+      .pipeline .stage strong {
+        display: block;
+        font-size: 10pt;
+        color: #0f172a;
+        margin-bottom: 2pt;
+      }
+      .pipeline .stage::after {
+        content: '›';
+        position: absolute;
+        right: -7pt;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 14pt;
+        color: #94a3b8;
+        z-index: 1;
+      }
+      .pipeline .stage:last-child::after { display: none; }
+
+      /* Coloured pipeline (campaign status) */
+      .pipeline.status .stage.draft   { background: #f1f5f9; border-color: #cbd5e1; }
+      .pipeline.status .stage.active  { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
+      .pipeline.status .stage.active strong { color: #1d4ed8; }
+      .pipeline.status .stage.running { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
+      .pipeline.status .stage.running strong { color: #047857; }
+      .pipeline.status .stage.stopped { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+      .pipeline.status .stage.stopped strong { color: #b91c1c; }
+
+      /* ─── KPI cards on dashboard page ─── */
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8pt;
+        margin: 10pt 0;
+      }
+      .kpi {
+        border: 1px solid #e2e8f0;
+        border-radius: 8pt;
+        padding: 8pt 10pt;
+        background: #ffffff;
+      }
+      .kpi .v { font-size: 16pt; font-weight: 700; color: #0f172a; }
+      .kpi .k { font-size: 9pt; font-weight: 600; color: #0f172a; margin-top: 2pt; }
+      .kpi .s { font-size: 8.5pt; color: #64748b; }
+
+      /* ─── Order-of-operations card on intro page ─── */
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8pt;
+        margin: 12pt 0;
+      }
+      .flow .card {
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        border-radius: 8pt;
+        padding: 10pt 12pt;
+        page-break-inside: avoid;
+      }
+      .flow .card .n {
+        font-size: 8.5pt;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #2563eb;
+      }
+      .flow .card h4 { margin: 4pt 0 4pt 0; color: #0f172a; }
+      .flow .card p  { margin: 0; font-size: 10pt; color: #475569; }
+
+      /* ─── Table ─── */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 8pt 0 12pt 0;
+        font-size: 10pt;
+      }
+      th, td {
+        text-align: left;
+        padding: 6pt 8pt;
+        border-bottom: 1px solid #e2e8f0;
+        vertical-align: top;
+      }
+      th {
+        background: #f8fafc;
+        font-weight: 600;
+        font-size: 9pt;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #475569;
+      }
+
+      .muted { color: #64748b; font-size: 10pt; }
+      .breadcrumb {
+        display: inline-block;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 4pt;
+        padding: 1pt 6pt;
+        font-size: 9pt;
+        color: #334155;
+        font-family: 'SFMono-Regular', Menlo, Consolas, monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ════════════════════════════════════════════════════════════
+         COVER
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="cover">
+      <div>
+        <span class="badge">User Guide · v1</span>
+        <h1>Augustine CRM</h1>
+        <p class="sub">
+          A simple, step-by-step walkthrough of the day-to-day features —
+          Dashboard, ICP, Products, Offers, Contacts, Campaigns, Journey, and
+          Meetings.
+        </p>
+      </div>
+      <div class="footer-meta">
+        <div><strong>Audience:</strong> Sales &amp; ops team</div>
+        <div><strong>Scope:</strong> All features under the “Others” tab</div>
+        <div><strong>Last updated:</strong> May 2026</div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════
+         OVERVIEW
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="section-head first">
+      <div class="num">0</div>
+      <div class="titles">
+        <h2>Getting started</h2>
+        <div class="sub">
+          The big picture — what each feature is for, and the order to use them.
+        </div>
+      </div>
+    </div>
+
+    <p>
+      The CRM is built around a single repeatable flow. Once you understand the
+      order, every other screen is just a step in the chain.
+    </p>
+
+    <div class="flow">
+      <div class="card">
+        <div class="n">Step 1 · Audience</div>
+        <h4>Define your ICP</h4>
+        <p>Who are you actually trying to reach? Create an Ideal Customer Profile.</p>
+      </div>
+      <div class="card">
+        <div class="n">Step 2 · Catalogue</div>
+        <h4>Add Products &amp; Offers</h4>
+        <p>What you sell, and how you bundle it for a specific ICP.</p>
+      </div>
+      <div class="card">
+        <div class="n">Step 3 · Leads</div>
+        <h4>Import Contacts</h4>
+        <p>Upload your list. Each contact is tagged with the right ICP.</p>
+      </div>
+      <div class="card">
+        <div class="n">Step 4 · Launch</div>
+        <h4>Run a Campaign</h4>
+        <p>The system handles outreach, replies, and tracking automatically.</p>
+      </div>
+    </div>
+
+    <div class="callout note">
+      <span class="label">Watch it work</span>
+      <p>
+        Once a campaign is live, the <strong>Dashboard</strong> shows live
+        metrics and the <strong>Journey</strong> page shows every lead’s
+        timeline. You don’t need to do anything manual after launch.
+      </p>
+    </div>
+
+    <h3 style="margin-top: 14pt;">Where everything lives</h3>
+    <table>
+      <thead>
+        <tr><th>Feature</th><th>What it’s for</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Dashboard</strong></td><td>Live snapshot of every active campaign.</td></tr>
+        <tr><td><strong>ICP</strong></td><td>Define the audiences you target.</td></tr>
+        <tr><td><strong>Products</strong></td><td>What you sell.</td></tr>
+        <tr><td><strong>Offers</strong></td><td>A Product bundled for a specific ICP.</td></tr>
+        <tr><td><strong>Contacts</strong></td><td>The leads you’re reaching out to.</td></tr>
+        <tr><td><strong>Campaigns</strong></td><td>Automated outreach to a list of contacts.</td></tr>
+        <tr><td><strong>Journey</strong></td><td>Per-lead history of every email &amp; reply.</td></tr>
+        <tr><td><strong>Meetings</strong></td><td>Slots that leads booked via the outreach link.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ════════════════════════════════════════════════════════════
+         DASHBOARD
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="section-head">
+      <div class="num">1</div>
+      <div class="titles">
+        <h2>Dashboard</h2>
+        <div class="sub">Your home screen — a live snapshot of pipeline health.</div>
+      </div>
+    </div>
+
+    <p>
+      Open the dashboard from the sidebar:
+      <span class="breadcrumb">Others › Dashboard</span>. It’s the page that
+      loads by default when you sign in.
+    </p>
+
+    <h3 style="margin-top: 14pt;">Key Metrics — the four headline tiles</h3>
+    <p class="muted">
+      The top row gives an instant read on what’s in the system.
+    </p>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="v">60</div><div class="k">Products</div><div class="s">Active SKUs</div></div>
+      <div class="kpi"><div class="v">144</div><div class="k">Journeys</div><div class="s">Total leads in flight</div></div>
+      <div class="kpi"><div class="v">11</div><div class="k">ICPs</div><div class="s">Ideal profiles</div></div>
+      <div class="kpi"><div class="v">42</div><div class="k">Campaigns</div><div class="s">Live campaigns</div></div>
+    </div>
+
+    <h3 style="margin-top: 14pt;">Customer Journey funnel</h3>
+    <p class="muted">
+      The funnel shows how many leads have reached each stage. Counts are pulled
+      live from the journeys table.
+    </p>
+
+    <div class="pipeline">
+      <div class="stage"><strong>Outreached</strong>First email sent</div>
+      <div class="stage"><strong>Engaged</strong>Opened / replied</div>
+      <div class="stage"><strong>MQL</strong>Marketing qualified</div>
+      <div class="stage"><strong>SAL</strong>Sales accepted</div>
+      <div class="stage"><strong>SQL</strong>Sales qualified</div>
+      <div class="stage"><strong>Closed-Won</strong>Deal closed</div>
+    </div>
+
+    <p>
+      Below the funnel you’ll see the <strong>stage-to-stage conversion
+      rates</strong> (e.g. <em>Outreached → Engaged</em>), an
+      <strong>Overall Conversion</strong> %, a <strong>Win Rate</strong>, and a
+      <strong>Disqualified</strong> count.
+    </p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Glance at the four KPI tiles</h4>
+        <p>Are the campaign and journey counts where you expect them to be? If a number looks way off, something is wrong upstream.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Read the funnel left to right</h4>
+        <p>A healthy funnel narrows smoothly. A huge drop between two stages (e.g. <em>Engaged → MQL</em>) tells you where to look first.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Click any tile or stage to drill in</h4>
+        <p>Tiles deep-link to the underlying page; funnel segments jump straight into the <strong>Journey</strong> screen filtered to that stage.</p>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="label">Tip</span>
+      <p>The Dashboard is read-only. To change anything (status, leads, settings) you go into the dedicated feature page.</p>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════
+         ICP
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="section-head">
+      <div class="num">2</div>
+      <div class="titles">
+        <h2>ICP — Ideal Customer Profile</h2>
+        <div class="sub">Define <em>who</em> you’re selling to. Every campaign needs at least one ICP.</div>
+      </div>
+    </div>
+
+    <p>Open it from the sidebar: <span class="breadcrumb">Others › ICP</span>.</p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Click “New ICP”</h4>
+        <p>Top-right corner of the ICP page. A modal opens.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Name and describe the audience</h4>
+        <p>Give it a clear, short name (e.g. <em>“Mid-sized US parishes”</em>) and a description explaining who fits.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Save</h4>
+        <p>The ICP shows up in the table immediately and is ready to attach to an Offer.</p>
+      </div>
+    </div>
+
+    <div class="callout note">
+      <span class="label">Think of it this way</span>
+      <p>An ICP is a <strong>label for an audience</strong>. You can have many ICPs and reuse them across multiple Offers.</p>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════
+         PRODUCTS
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="section-head">
+      <div class="num">3</div>
+      <div class="titles">
+        <h2>Products</h2>
+        <div class="sub">Your catalogue — what you actually sell.</div>
+      </div>
+    </div>
+
+    <p>Open it from the sidebar: <span class="breadcrumb">Others › Products</span>.</p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Click “New Product”</h4>
+        <p>Top-right of the Products page.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Fill in the product details</h4>
+        <p>Enter the product name, choose a <strong>pricing type</strong>, and set the price.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Save</h4>
+        <p>The product joins your catalogue and is selectable from any Offer.</p>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="label">Tip</span>
+      <p>Keep product names short and consistent — they appear in lots of other screens (Offers, Campaigns, Journey detail).</p>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════
+         OFFERS
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="section-head">
+      <div class="num">4</div>
+      <div class="titles">
+        <h2>Offers</h2>
+        <div class="sub">An Offer ties one or more Products to an ICP — it’s the “pitch” a campaign uses.</div>
+      </div>
+    </div>
+
+    <p>Open it from the sidebar: <span class="breadcrumb">Others › Offers</span>.</p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Click “New Offer”</h4>
+        <p>Top-right of the Offers page.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Choose the ICP</h4>
+        <p>Pick the audience this offer is aimed at. You can only pick from ICPs you’ve already created.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Attach one or more Products</h4>
+        <p>Bundle whatever combination makes sense for that ICP.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>Save</h4>
+        <p>The Offer is now available when creating a Campaign.</p>
+      </div>
+    </div>
+
+    <div class="callout note">
+      <span class="label">Natural order</span>
+      <p>You can’t launch a campaign without an Offer. The order is always: <strong>ICP → Product → Offer → Campaign</strong>.</p>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════
+         CONTACTS
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="section-head">
+      <div class="num">5</div>
+      <div class="titles">
+        <h2>Contacts</h2>
+        <div class="sub">The leads you’ll be reaching out to — imported once, used by every campaign.</div>
+      </div>
+    </div>
+
+    <p>Open it from the sidebar: <span class="breadcrumb">Others › Contacts</span>.</p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Add or import contacts</h4>
+        <p>Use the upload or new-contact button to bring leads into the system.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Tag each contact with the right ICP</h4>
+        <p>Campaigns target by ICP — an untagged contact will never be reached.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Spot-check before you launch</h4>
+        <p>Scan the table: name, email, institution, ICP. Catching a typo here saves a wasted outreach later.</p>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="label">Heads up</span>
+      <p>Bad data in = bad outreach out. A bad email address means a bounce, and a wrong ICP means the wrong pitch. Always spot-check before launching a campaign.</p>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════
+         CAMPAIGNS
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="section-head">
+      <div class="num">6</div>
+      <div class="titles">
+        <h2>Campaigns</h2>
+        <div class="sub">Where everything comes together. A campaign automates outreach to your contacts.</div>
+      </div>
+    </div>
+
+    <p>Open it from the sidebar: <span class="breadcrumb">Others › Campaigns</span>.</p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Click “New campaign”</h4>
+        <p>Top-right of the Campaigns page.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Configure the campaign</h4>
+        <p>Give it a name, pick the Offer, set template / tone / send limits, and add any specific instructions you want the outreach agent to follow.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Save as Draft</h4>
+        <p>New campaigns always start as <strong>Draft</strong>. Nothing is sent. This is your final review window.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>Set status to “Active” to go live</h4>
+        <p>On the campaign row, change the status dropdown from <strong>Draft</strong> to <strong>Active</strong> and confirm the prompt. That queues the campaign.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h4>Wait ~10 minutes — it goes live automatically</h4>
+        <p>Within roughly ten minutes, the outreach agent picks the campaign up and sends the first email. The status flips from <strong>Active</strong> to <strong>Running</strong> automatically as soon as that happens.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <h4>Stop a campaign any time</h4>
+        <p>Change status to <strong>Stopped</strong> to halt all further sends for that campaign immediately.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 12pt;">Status lifecycle</h3>
+    <div class="pipeline status">
+      <div class="stage draft"><strong>Draft</strong>Inactive — nothing sent</div>
+      <div class="stage active"><strong>Active</strong>Queued — pickup in ~10 min</div>
+      <div class="stage running"><strong>Running</strong>Auto-set after first send</div>
+      <div class="stage stopped"><strong>Stopped</strong>Halted manually</div>
+    </div>
+
+    <div class="callout note">
+      <span class="label">How campaign status works</span>
+      <ul>
+        <li>Setting status to <strong>Active</strong> queues the campaign — it will <strong>auto-run within ~10 minutes</strong>.</li>
+        <li>Status flips to <strong>Running</strong> automatically once the first email outreach is dropped.</li>
+        <li>Use the <strong>status filter</strong> at the top of the table to narrow down to just Running or Active campaigns when you have many in flight.</li>
+      </ul>
+    </div>
+
+    <div class="callout warn">
+      <span class="label">Deleting a campaign is permanent</span>
+      <p>Deleting also removes every journey under that campaign and every outreach / event log attached to those journeys. The system will ask you to confirm with the word <strong>DELETE</strong> — that pause is intentional.</p>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════
+         JOURNEY
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="section-head">
+      <div class="num">7</div>
+      <div class="titles">
+        <h2>Journey</h2>
+        <div class="sub">The story of every individual lead — what was sent, when, and how they replied.</div>
+      </div>
+    </div>
+
+    <p>Open it from the sidebar: <span class="breadcrumb">Others › Journey</span>.</p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Use the filters at the top</h4>
+        <p>Narrow the list by campaign, stage, institution type, or date range. The search box matches parish, diocese, or email.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Read the funnel stages</h4>
+        <p>Every lead is in one of these stages — moving left to right as they engage.</p>
+      </div>
+    </div>
+
+    <div class="pipeline">
+      <div class="stage"><strong>Outreached</strong>First email sent</div>
+      <div class="stage"><strong>Engaged</strong>Opened / replied</div>
+      <div class="stage"><strong>MQL</strong>Marketing qualified</div>
+      <div class="stage"><strong>SAL</strong>Sales accepted</div>
+      <div class="stage"><strong>SQL</strong>Sales qualified</div>
+      <div class="stage"><strong>Closed-Won</strong>Deal closed</div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Click a lead to see their full timeline</h4>
+        <p>Opens a detail view showing every email sent, every reply, and every status change for that lead.</p>
+      </div>
+    </div>
+
+    <div class="callout note">
+      <span class="label">Journeys are read-only</span>
+      <p>The outreach agent writes to journeys automatically. You don’t edit a journey by hand — to change anything about how a lead is being reached, you edit the campaign or the contact.</p>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════
+         MEETINGS
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="section-head">
+      <div class="num">8</div>
+      <div class="titles">
+        <h2>Meetings</h2>
+        <div class="sub">Calendar slots that leads have booked through the outreach flow.</div>
+      </div>
+    </div>
+
+    <p>Open it from the sidebar: <span class="breadcrumb">Others › Meetings</span>.</p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Browse upcoming bookings</h4>
+        <p>See every meeting that’s been scheduled, with the lead’s name, time, and which campaign drove the booking.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Prep using the lead’s journey</h4>
+        <p>Click any meeting to jump to that lead’s timeline. Use it to prep talking points based on what they’ve already engaged with.</p>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="label">Bookings are automatic</span>
+      <p>Calendly slots flow into this page on their own — no manual entry needed. If a meeting is missing, check the lead actually booked via the link in the outreach email.</p>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════
+         CHEAT SHEET
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="section-head">
+      <div class="num">9</div>
+      <div class="titles">
+        <h2>Cheat sheet</h2>
+        <div class="sub">The quickest path from zero to a live campaign.</div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th style="width: 40pt;">Step</th><th>Action</th><th>Where</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>1</strong></td><td>Create an ICP</td><td>Others › ICP</td></tr>
+        <tr><td><strong>2</strong></td><td>Create one or more Products</td><td>Others › Products</td></tr>
+        <tr><td><strong>3</strong></td><td>Create an Offer (ICP + Products)</td><td>Others › Offers</td></tr>
+        <tr><td><strong>4</strong></td><td>Import Contacts and tag each with an ICP</td><td>Others › Contacts</td></tr>
+        <tr><td><strong>5</strong></td><td>Create a Campaign, attach the Offer, save as Draft</td><td>Others › Campaigns</td></tr>
+        <tr><td><strong>6</strong></td><td>Flip status to <strong>Active</strong> — wait ~10 min</td><td>Others › Campaigns</td></tr>
+        <tr><td><strong>7</strong></td><td>Watch progress live</td><td>Others › Dashboard / Journey</td></tr>
+        <tr><td><strong>8</strong></td><td>Follow up on booked meetings</td><td>Others › Meetings</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip" style="margin-top: 16pt;">
+      <span class="label">That’s it</span>
+      <p>Everything after launch is automatic. The system sends, tracks, and classifies replies on its own — you just watch the Dashboard and follow up on Meetings.</p>
+    </div>
+  </body>
+</html>

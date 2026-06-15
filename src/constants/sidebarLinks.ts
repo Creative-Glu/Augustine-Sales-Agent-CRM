@@ -9,6 +9,7 @@ import {
   ShieldCheckIcon,
   TagIcon,
   EllipsisHorizontalCircleIcon,
+  BookOpenIcon,
 } from '@heroicons/react/24/outline';
 import { TreePine, ActivityIcon, MailSearchIcon, CalendarClock } from 'lucide-react';
 
@@ -71,6 +72,9 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
 
       // Calendly / scheduling — slots booked by leads & contacts
       { href: '/meetings', label: 'Meetings', icon: CalendarClock },
+
+      // Help / onboarding
+      { href: '/user-guide', label: 'User Guide', icon: BookOpenIcon },
     ],
   },
 ];
