@@ -8,9 +8,9 @@ import { FunnelChartData, FunnelStage } from '@/types/kpi';
 export const KPIDashboard = () => {
   const { data, isLoading, error } = useKPIDashboard();
 
-  if (isLoading) return <div className="text-black p-6">Loading KPI dashboard...</div>;
-  if (error) return <div className="text-black p-6">Error loading KPI data</div>;
-  if (!data) return <div className="text-black p-6">No KPI data available</div>;
+  if (isLoading) return <div className="text-black dark:text-slate-100 p-6">Loading KPI dashboard...</div>;
+  if (error) return <div className="text-black dark:text-slate-100 p-6">Error loading KPI data</div>;
+  if (!data) return <div className="text-black dark:text-slate-100 p-6">No KPI data available</div>;
 
   const {
     funnel_stage_data = [],

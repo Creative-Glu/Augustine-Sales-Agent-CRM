@@ -69,7 +69,7 @@ export default function ContactsTable({
 
   return (
     <div className="w-full">
-      <div className="overflow-x-auto rounded-lg border border-slate-200">
+      <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">
           <TableHeader columns={CONTACTS_TABLE_COLUMNS} />
 
@@ -78,7 +78,7 @@ export default function ContactsTable({
             {isLoading && (
               <>
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <tr key={i} className="border-b border-slate-100 last:border-0">
+                  <tr key={i} className="border-b border-border last:border-0">
                     <td colSpan={6} className="py-2 px-3">
                       <Skeleton className="h-10 w-full" />
                     </td>
@@ -93,13 +93,13 @@ export default function ContactsTable({
                 <td colSpan={6} className="py-8">
                   <div className="flex flex-col items-center text-center gap-1.5">
                     <AlertCircle className="w-5 h-5 text-rose-500" />
-                    <p className="text-sm font-medium text-rose-700">
+                    <p className="text-sm font-medium text-rose-700 dark:text-rose-400">
                       Failed to load contacts
                     </p>
                     <button
                       type="button"
                       onClick={fetchContactsList}
-                      className="text-xs font-medium text-rose-600 hover:text-rose-800 underline"
+                      className="text-xs font-medium text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 underline"
                     >
                       Try again
                     </button>
@@ -113,10 +113,10 @@ export default function ContactsTable({
               <tr>
                 <td colSpan={6} className="py-8">
                   <div className="flex flex-col items-center text-center gap-1.5">
-                    <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100">
-                      <UserCircle2 className="w-4 h-4 text-slate-400" />
+                    <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-muted">
+                      <UserCircle2 className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                     </div>
-                    <p className="text-xs font-medium text-slate-700">No contacts found</p>
+                    <p className="text-xs font-medium text-slate-700 dark:text-slate-300">No contacts found</p>
                   </div>
                 </td>
               </tr>
@@ -130,17 +130,17 @@ export default function ContactsTable({
                 return (
                   <tr
                     key={contact.id}
-                    className="border-b border-slate-100 last:border-0 hover:bg-slate-50/60 transition-colors"
+                    className="border-b border-border last:border-0 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors"
                   >
                     {/* Parish / Lead — name + lead ID */}
                     <td className="py-2 px-3 min-w-0">
                       <p
-                        className="text-sm font-medium text-slate-900 truncate max-w-50"
+                        className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate max-w-50"
                         title={contact['Parish Name'] ?? `Lead #${contact.id}`}
                       >
                         {contact['Parish Name'] || `Lead #${contact.id}`}
                       </p>
-                      <p className="text-[10px] font-mono text-slate-500 truncate">
+                      <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate">
                         #{contact.id}
                       </p>
                     </td>
@@ -149,23 +149,23 @@ export default function ContactsTable({
                     <td className="py-2 px-3 min-w-0">
                       {contact['Parish Contact Email'] && (
                         <p
-                          className="text-[11px] text-slate-700 flex items-center gap-1 truncate max-w-50"
+                          className="text-[11px] text-slate-700 dark:text-slate-300 flex items-center gap-1 truncate max-w-50"
                           title={contact['Parish Contact Email']}
                         >
-                          <Mail className="w-3 h-3 text-slate-400 shrink-0" />
+                          <Mail className="w-3 h-3 text-slate-400 dark:text-slate-500 shrink-0" />
                           <span className="truncate">
                             {contact['Parish Contact Email']}
                           </span>
                         </p>
                       )}
                       {contact['Parish Phone'] && (
-                        <p className="text-[11px] text-slate-600 flex items-center gap-1 mt-0.5 whitespace-nowrap">
-                          <Phone className="w-3 h-3 text-slate-400 shrink-0" />
+                        <p className="text-[11px] text-slate-600 dark:text-slate-400 flex items-center gap-1 mt-0.5 whitespace-nowrap">
+                          <Phone className="w-3 h-3 text-slate-400 dark:text-slate-500 shrink-0" />
                           {contact['Parish Phone']}
                         </p>
                       )}
                       {!contact['Parish Contact Email'] && !contact['Parish Phone'] && (
-                        <span className="text-[11px] text-slate-400 italic">
+                        <span className="text-[11px] text-slate-400 dark:text-slate-500 italic">
                           No contact info
                         </span>
                       )}
@@ -174,18 +174,18 @@ export default function ContactsTable({
                     {/* Institution / Location */}
                     <td className="py-2 px-3 min-w-0">
                       {contact['Institution Type'] ? (
-                        <span className="inline-flex items-center gap-1 rounded-md border border-indigo-200 bg-indigo-50 px-1.5 py-0.5 text-[10px] font-medium text-indigo-800">
+                        <span className="inline-flex items-center gap-1 rounded-md border border-indigo-200 bg-indigo-50 px-1.5 py-0.5 text-[10px] font-medium text-indigo-800 dark:border-indigo-500/30 dark:bg-indigo-500/15 dark:text-indigo-300">
                           <Building2 className="w-3 h-3" />
                           {contact['Institution Type']}
                         </span>
                       ) : (
-                        <span className="text-[11px] text-slate-400 italic">
+                        <span className="text-[11px] text-slate-400 dark:text-slate-500 italic">
                           No institution
                         </span>
                       )}
                       {contact['Diocese/Archdiocese Name'] && (
                         <p
-                          className="text-[11px] text-slate-500 flex items-center gap-1 truncate max-w-40 mt-0.5"
+                          className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 truncate max-w-40 mt-0.5"
                           title={contact['Diocese/Archdiocese Name']}
                         >
                           <MapPin className="w-3 h-3 shrink-0" />
@@ -198,18 +198,18 @@ export default function ContactsTable({
                     <td className="py-2 px-3">
                       {icpName ? (
                         <span
-                          className="inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 max-w-40 truncate"
+                          className="inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/15 dark:text-amber-300 max-w-40 truncate"
                           title={icpName}
                         >
                           {icpName}
                         </span>
                       ) : (
-                        <span className="text-[11px] text-slate-400 italic">No ICP</span>
+                        <span className="text-[11px] text-slate-400 dark:text-slate-500 italic">No ICP</span>
                       )}
                     </td>
 
                     {/* Created date + time */}
-                    <td className="py-2 px-3 text-[11px] text-slate-500 tabular-nums whitespace-nowrap">
+                    <td className="py-2 px-3 text-[11px] text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">
                       {formatDateTimeShort(contact.created_at)}
                     </td>
 

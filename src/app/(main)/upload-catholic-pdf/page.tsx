@@ -14,7 +14,7 @@ export default function UploadCatholicPDFPage() {
       />
 
       <div className="px-6 py-8">
-        <Suspense fallback={<div className="text-gray-500">Loading upload form...</div>}>
+        <Suspense fallback={<div className="text-gray-500 dark:text-slate-400">Loading upload form...</div>}>
           <UploadCatholicPDF />
         </Suspense>
       </div>

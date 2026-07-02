@@ -39,8 +39,8 @@ const ATTR_GROUPS: {
   {
     title: 'Classification',
     icon: <Sparkles className="w-3.5 h-3.5" />,
-    accentBg: 'from-violet-50 to-violet-50/30',
-    accentIcon: 'bg-violet-100 text-violet-600',
+    accentBg: 'from-violet-50 to-violet-50/30 dark:from-violet-950/40 dark:to-violet-950/40',
+    accentIcon: 'bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300',
     fields: [
       { key: 'Institution Type', label: 'Institution Type' },
       { key: 'Classification', label: 'Classification' },
@@ -51,8 +51,8 @@ const ATTR_GROUPS: {
   {
     title: 'Location',
     icon: <MapPin className="w-3.5 h-3.5" />,
-    accentBg: 'from-blue-50 to-blue-50/30',
-    accentIcon: 'bg-blue-100 text-blue-600',
+    accentBg: 'from-blue-50 to-blue-50/30 dark:from-blue-950/40 dark:to-blue-950/40',
+    accentIcon: 'bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300',
     fields: [
       { key: 'Diocese/Archdiocese Name', label: 'Diocese' },
       { key: 'Ecclesiastical Province', label: 'Province' },
@@ -63,8 +63,8 @@ const ATTR_GROUPS: {
   {
     title: 'Operations',
     icon: <Wallet className="w-3.5 h-3.5" />,
-    accentBg: 'from-emerald-50 to-emerald-50/30',
-    accentIcon: 'bg-emerald-100 text-emerald-600',
+    accentBg: 'from-emerald-50 to-emerald-50/30 dark:from-emerald-950/40 dark:to-emerald-950/40',
+    accentIcon: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300',
     fields: [
       { key: 'Parish Size/School Enrollmen', label: 'Parish Size' },
       { key: 'Religious Order Affiliation', label: 'Religious Order' },
@@ -100,28 +100,28 @@ export default function ContactViewModal({ open, onClose, contact }: ContactView
 
         <div className="space-y-5">
           {/* ─── Contact header card ────────────────────────────── */}
-          <section className="rounded-xl border border-slate-200 bg-card overflow-hidden shadow-sm">
-            <div className="bg-linear-to-br from-blue-50 via-indigo-50/60 to-violet-50/40 px-5 py-4 border-b border-slate-200 relative">
+          <section className="rounded-xl border border-border bg-card overflow-hidden shadow-sm">
+            <div className="bg-linear-to-br from-blue-50 via-indigo-50/60 to-violet-50/40 dark:from-blue-950/40 dark:via-indigo-950/40 dark:to-violet-950/40 px-5 py-4 border-b border-border relative">
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500" />
               <div className="pl-2">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Contact
                 </p>
-                <h3 className="mt-0.5 text-base font-bold text-slate-900 truncate">
+                <h3 className="mt-0.5 text-base font-bold text-slate-900 dark:text-slate-100 truncate">
                   {fullContact['Parish Name'] || `Lead #${fullContact.id}`}
                 </h3>
                 <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[12px]">
                   {fullContact['Parish Contact Email'] && (
-                    <span className="flex items-center gap-1 text-slate-700">
-                      <Mail className="w-3 h-3 text-slate-400" />
+                    <span className="flex items-center gap-1 text-slate-700 dark:text-slate-200">
+                      <Mail className="w-3 h-3 text-slate-400 dark:text-slate-500" />
                       <span className="truncate max-w-60">
                         {fullContact['Parish Contact Email']}
                       </span>
                     </span>
                   )}
                   {fullContact['Parish Phone'] && (
-                    <span className="flex items-center gap-1 text-slate-700">
-                      <Phone className="w-3 h-3 text-slate-400" />
+                    <span className="flex items-center gap-1 text-slate-700 dark:text-slate-200">
+                      <Phone className="w-3 h-3 text-slate-400 dark:text-slate-500" />
                       {fullContact['Parish Phone']}
                     </span>
                   )}
@@ -129,7 +129,7 @@ export default function ContactViewModal({ open, onClose, contact }: ContactView
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+            <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border">
               <Stat
                 icon={<Tag className="w-4 h-4" />}
                 label="Lead ID"
@@ -157,16 +157,16 @@ export default function ContactViewModal({ open, onClose, contact }: ContactView
           </section>
 
           {/* ─── Matching ICP card ──────────────────────────────── */}
-          <section className="rounded-xl border border-slate-200 bg-card shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between gap-2 px-4 py-2.5 bg-linear-to-r from-amber-50 to-amber-50/30 border-b border-slate-200">
+          <section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between gap-2 px-4 py-2.5 bg-linear-to-r from-amber-50 to-amber-50/30 dark:from-amber-950/40 dark:to-amber-950/40 border-b border-border">
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-amber-100 text-amber-600">
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300">
                   <Target className="w-3.5 h-3.5" />
                 </span>
-                <p className="text-xs font-bold text-slate-900">Matching ICP</p>
+                <p className="text-xs font-bold text-slate-900 dark:text-slate-100">Matching ICP</p>
               </div>
               {isLoading && (
-                <span className="text-[10px] text-slate-500">Loading…</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400">Loading…</span>
               )}
             </div>
             <div className="p-4">
@@ -178,32 +178,32 @@ export default function ContactViewModal({ open, onClose, contact }: ContactView
               )}
               {!isLoading && !isError && !icp && !fullContact.icp_id && (
                 <EmptyBox
-                  icon={<Inbox className="w-5 h-5 text-slate-400" />}
+                  icon={<Inbox className="w-5 h-5 text-slate-400 dark:text-slate-500" />}
                   title="No ICP linked"
                   description="This contact isn't tagged with an Ideal Customer Profile yet."
                 />
               )}
               {!isLoading && !isError && !icp && fullContact.icp_id && (
-                <div className="rounded-lg border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs text-slate-600">
+                <div className="rounded-lg border border-border bg-muted/50 px-3 py-2 text-xs text-slate-600 dark:text-slate-400">
                   ICP linked:{' '}
-                  <span className="font-mono text-slate-800">{fullContact.icp_id}</span>{' '}
-                  <span className="text-slate-400">(details unavailable)</span>
+                  <span className="font-mono text-slate-800 dark:text-slate-200">{fullContact.icp_id}</span>{' '}
+                  <span className="text-slate-400 dark:text-slate-500">(details unavailable)</span>
                 </div>
               )}
               {!isLoading && !isError && icp && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50/40 px-3 py-2.5">
+                <div className="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50/40 dark:bg-amber-500/15 px-3 py-2.5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-bold text-amber-900 truncate">
+                      <p className="text-sm font-bold text-amber-900 dark:text-amber-200 truncate">
                         {icp.icp_name}
                       </p>
                       {icp.icp_desc && (
-                        <p className="mt-0.5 text-[11px] text-amber-900/80 leading-relaxed line-clamp-2">
+                        <p className="mt-0.5 text-[11px] text-amber-900/80 dark:text-amber-200/80 leading-relaxed line-clamp-2">
                           {icp.icp_desc}
                         </p>
                       )}
                     </div>
-                    <span className="font-mono text-[10px] text-amber-700 bg-amber-100 border border-amber-200 rounded px-1.5 py-0.5 shrink-0">
+                    <span className="font-mono text-[10px] text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 rounded px-1.5 py-0.5 shrink-0">
                       {icp.icp_id}
                     </span>
                   </div>
@@ -213,15 +213,15 @@ export default function ContactViewModal({ open, onClose, contact }: ContactView
           </section>
 
           {/* ─── Linked Journeys (campaigns this lead is in) ────── */}
-          <section className="rounded-xl border border-slate-200 bg-card shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between gap-2 px-4 py-2.5 bg-linear-to-r from-emerald-50 to-blue-50/30 border-b border-slate-200">
+          <section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between gap-2 px-4 py-2.5 bg-linear-to-r from-emerald-50 to-blue-50/30 dark:from-emerald-950/40 dark:to-blue-950/40 border-b border-border">
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-emerald-100 text-emerald-600">
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300">
                   <TreePine className="w-3.5 h-3.5" />
                 </span>
                 <div>
-                  <p className="text-xs font-bold text-slate-900">Campaign Journeys</p>
-                  <p className="text-[10px] text-slate-500">
+                  <p className="text-xs font-bold text-slate-900 dark:text-slate-100">Campaign Journeys</p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400">
                     Every campaign this contact is in
                   </p>
                 </div>
@@ -230,8 +230,8 @@ export default function ContactViewModal({ open, onClose, contact }: ContactView
                 <Badge
                   className={`tabular-nums shadow-sm ${
                     journeys.length > 0
-                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                      : 'bg-slate-100 text-slate-600 border border-slate-200'
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30'
+                      : 'bg-muted/60 text-slate-600 dark:text-slate-400 border border-border'
                   }`}
                 >
                   {journeys.length} {journeys.length === 1 ? 'journey' : 'journeys'}
@@ -254,7 +254,7 @@ export default function ContactViewModal({ open, onClose, contact }: ContactView
               )}
               {!isLoading && !isError && journeys.length === 0 && (
                 <EmptyBox
-                  icon={<Inbox className="w-5 h-5 text-slate-400" />}
+                  icon={<Inbox className="w-5 h-5 text-slate-400 dark:text-slate-500" />}
                   title="Not in any campaign yet"
                   description="This contact has no journey records — they haven't been added to a campaign."
                 />
@@ -263,7 +263,7 @@ export default function ContactViewModal({ open, onClose, contact }: ContactView
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-slate-50/60 border-b border-slate-100">
+                      <tr className="bg-muted/50 border-b border-border">
                         <Th>Campaign</Th>
                         <Th className="w-28 text-center">Stage</Th>
                         <Th className="w-36">Last Interaction</Th>
@@ -275,11 +275,11 @@ export default function ContactViewModal({ open, onClose, contact }: ContactView
                         return (
                           <tr
                             key={j.journey_id}
-                            className="border-b border-slate-100 last:border-0 hover:bg-slate-50/60 transition-colors"
+                            className="border-b border-border last:border-0 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors"
                           >
                             <td className="py-2 px-3 min-w-0">
                               <p
-                                className="text-sm font-semibold text-slate-900 truncate max-w-65"
+                                className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate max-w-65"
                                 title={
                                   j.campaigns?.campaign_name ?? `Campaign #${j.campaign_id}`
                                 }
@@ -287,7 +287,7 @@ export default function ContactViewModal({ open, onClose, contact }: ContactView
                                 {j.campaigns?.campaign_name ??
                                   `Campaign #${j.campaign_id}`}
                               </p>
-                              <p className="text-[10px] text-slate-500 mt-0.5">
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                                 {j.campaigns?.campaign_status ?? '—'}
                               </p>
                             </td>
@@ -300,7 +300,7 @@ export default function ContactViewModal({ open, onClose, contact }: ContactView
                                 {j.funnel_stage}
                               </span>
                             </td>
-                            <td className="py-2 px-3 text-[11px] text-slate-600 tabular-nums whitespace-nowrap">
+                            <td className="py-2 px-3 text-[11px] text-slate-600 dark:text-slate-400 tabular-nums whitespace-nowrap">
                               {formatDateTimeShort(j.last_interaction)}
                             </td>
                           </tr>
@@ -319,36 +319,36 @@ export default function ContactViewModal({ open, onClose, contact }: ContactView
             return (
               <section
                 key={group.title}
-                className="rounded-xl border border-slate-200 bg-card shadow-sm overflow-hidden"
+                className="rounded-xl border border-border bg-card shadow-sm overflow-hidden"
               >
                 <div
-                  className={`flex items-center gap-2 px-4 py-2.5 bg-linear-to-r ${group.accentBg} border-b border-slate-200`}
+                  className={`flex items-center gap-2 px-4 py-2.5 bg-linear-to-r ${group.accentBg} border-b border-border`}
                 >
                   <span
                     className={`inline-flex items-center justify-center w-6 h-6 rounded-md ${group.accentIcon}`}
                   >
                     {group.icon}
                   </span>
-                  <p className="text-xs font-bold text-slate-900">{group.title}</p>
+                  <p className="text-xs font-bold text-slate-900 dark:text-slate-100">{group.title}</p>
                 </div>
                 <div className="p-3">
                   {hasAnyValue ? (
                     <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
                       {group.fields.map((field) => (
                         <div key={String(field.key)} className="flex items-baseline gap-2">
-                          <dt className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 w-28 shrink-0">
+                          <dt className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 w-28 shrink-0">
                             {field.label}
                           </dt>
-                          <dd className="text-[12px] text-slate-800 truncate">
+                          <dd className="text-[12px] text-slate-800 dark:text-slate-200 truncate">
                             {(fullContact[field.key] as string) || (
-                              <span className="text-slate-400">—</span>
+                              <span className="text-slate-400 dark:text-slate-500">—</span>
                             )}
                           </dd>
                         </div>
                       ))}
                     </dl>
                   ) : (
-                    <p className="text-[11px] text-slate-400 italic text-center py-2">
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500 italic text-center py-2">
                       No {group.title.toLowerCase()} data recorded.
                     </p>
                   )}
@@ -359,19 +359,19 @@ export default function ContactViewModal({ open, onClose, contact }: ContactView
 
           {/* ─── Email thread ───────────────────────────────────── */}
           {fullContact['Email Thread'] && (
-            <section className="rounded-xl border border-slate-200 bg-card shadow-sm overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-slate-50 to-blue-50/30 border-b border-slate-200">
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-blue-100 text-blue-600">
+            <section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-slate-50 to-blue-50/30 dark:from-slate-800/60 dark:to-blue-950/40 border-b border-border">
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300">
                   <FileText className="w-3.5 h-3.5" />
                 </span>
-                <p className="text-xs font-bold text-slate-900">Email Thread</p>
+                <p className="text-xs font-bold text-slate-900 dark:text-slate-100">Email Thread</p>
               </div>
               <div className="p-4">
                 <div
-                  className="rounded-lg border border-slate-100 bg-slate-50/60 p-3 overflow-y-auto"
+                  className="rounded-lg border border-border bg-muted/50 p-3 overflow-y-auto"
                   style={{ maxHeight: '12rem' }}
                 >
-                  <pre className="whitespace-pre-wrap wrap-break-word font-sans text-[12px] leading-relaxed text-slate-700">
+                  <pre className="whitespace-pre-wrap wrap-break-word font-sans text-[12px] leading-relaxed text-slate-700 dark:text-slate-200">
                     {fullContact['Email Thread']}
                   </pre>
                 </div>
@@ -383,7 +383,7 @@ export default function ContactViewModal({ open, onClose, contact }: ContactView
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-card border border-border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
             >
               Close
             </button>
@@ -406,9 +406,9 @@ interface StatProps {
 
 function Stat({ icon, label, value, tint, mono }: StatProps) {
   const tintMap: Record<StatProps['tint'], { bg: string; text: string }> = {
-    emerald: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
-    indigo: { bg: 'bg-indigo-100', text: 'text-indigo-600' },
-    amber: { bg: 'bg-amber-100', text: 'text-amber-600' },
+    emerald: { bg: 'bg-emerald-100 dark:bg-emerald-500/15', text: 'text-emerald-600 dark:text-emerald-300' },
+    indigo: { bg: 'bg-indigo-100 dark:bg-indigo-500/15', text: 'text-indigo-600 dark:text-indigo-300' },
+    amber: { bg: 'bg-amber-100 dark:bg-amber-500/15', text: 'text-amber-600 dark:text-amber-300' },
   };
   const t = tintMap[tint];
   return (
@@ -419,11 +419,11 @@ function Stat({ icon, label, value, tint, mono }: StatProps) {
         {icon}
       </span>
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           {label}
         </p>
         <p
-          className={`mt-0.5 text-sm font-bold text-slate-900 truncate ${
+          className={`mt-0.5 text-sm font-bold text-slate-900 dark:text-slate-100 truncate ${
             mono ? 'font-mono text-xs' : ''
           }`}
         >
@@ -443,7 +443,7 @@ function Th({
 }) {
   return (
     <th
-      className={`text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500 ${
+      className={`text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 ${
         className ?? ''
       }`}
     >
@@ -460,13 +460,13 @@ function ErrorBox({
   onRetry: () => void;
 }) {
   return (
-    <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-3 text-center">
-      <AlertCircle className="w-4 h-4 text-rose-600 mx-auto mb-1" />
-      <p className="text-[12px] font-medium text-rose-800">{children}</p>
+    <div className="rounded-lg border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/15 px-3 py-3 text-center">
+      <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 mx-auto mb-1" />
+      <p className="text-[12px] font-medium text-rose-800 dark:text-rose-400">{children}</p>
       <button
         type="button"
         onClick={onRetry}
-        className="mt-1 text-[11px] font-medium text-rose-700 hover:text-rose-900 underline"
+        className="mt-1 text-[11px] font-medium text-rose-700 dark:text-rose-400 hover:text-rose-900 dark:hover:text-rose-200 underline"
       >
         Try again
       </button>
@@ -484,13 +484,13 @@ function EmptyBox({
   description: string;
 }) {
   return (
-    <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50/60 px-4 py-6 text-center">
-      <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 mb-2">
+    <div className="rounded-lg border border-dashed border-border bg-muted/50 px-4 py-6 text-center">
+      <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-muted/60 mb-2">
         {icon}
       </div>
-      <p className="text-[12px] font-semibold text-slate-700">{title}</p>
+      <p className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">{title}</p>
       <p
-        className="text-[11px] text-slate-500 mt-0.5 mx-auto leading-relaxed"
+        className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 mx-auto leading-relaxed"
         style={{ maxWidth: '20rem' }}
       >
         {description}

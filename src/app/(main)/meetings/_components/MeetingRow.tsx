@@ -62,7 +62,7 @@ export default function MeetingRow({ meeting, onOpenDetails }: MeetingRowProps) 
           handleRowActivate();
         }
       }}
-      className="group cursor-pointer hover:bg-slate-50/80 focus:bg-slate-50/80 focus:outline-none transition-colors"
+      className="group cursor-pointer hover:bg-slate-50/80 focus:bg-slate-50/80 dark:hover:bg-slate-800/40 dark:focus:bg-slate-800/40 focus:outline-none transition-colors"
     >
       <div className="grid grid-cols-1 md:grid-cols-[minmax(140px,180px)_minmax(0,1fr)_auto_auto_auto] gap-3 md:gap-4 items-center px-5 py-3">
         {/* Time + colored dot */}
@@ -74,7 +74,7 @@ export default function MeetingRow({ meeting, onOpenDetails }: MeetingRowProps) 
           />
           <span
             className={`text-sm tabular-nums whitespace-nowrap ${
-              isCanceled ? 'text-slate-400 line-through' : 'text-slate-700'
+              isCanceled ? 'text-slate-400 line-through dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'
             }`}
           >
             {start} – {end}
@@ -86,7 +86,7 @@ export default function MeetingRow({ meeting, onOpenDetails }: MeetingRowProps) 
           <div className="flex flex-wrap items-center gap-2">
             <p
               className={`text-sm font-semibold truncate max-w-65 ${
-                isCanceled ? 'text-slate-500' : 'text-slate-900'
+                isCanceled ? 'text-slate-500 dark:text-slate-400' : 'text-slate-900 dark:text-slate-100'
               }`}
               title={meeting.invitee_name ?? ''}
             >
@@ -109,15 +109,15 @@ export default function MeetingRow({ meeting, onOpenDetails }: MeetingRowProps) 
             )}
           </div>
           {meeting.event_type && (
-            <p className="text-[12px] text-slate-500 mt-0.5 truncate max-w-80">
+            <p className="text-[12px] text-slate-500 mt-0.5 truncate max-w-80 dark:text-slate-400">
               Event type{' '}
-              <span className="font-medium text-slate-700">{meeting.event_type}</span>
+              <span className="font-medium text-slate-700 dark:text-slate-200">{meeting.event_type}</span>
             </p>
           )}
         </div>
 
         {/* Hosts count — desktop only */}
-        <div className="text-[11px] text-slate-500 tabular-nums whitespace-nowrap text-right hidden md:block">
+        <div className="text-[11px] text-slate-500 tabular-nums whitespace-nowrap text-right hidden md:block dark:text-slate-400">
           {meeting.host_count} host{meeting.host_count === 1 ? '' : 's'}
           {' | '}
           {meeting.non_host_count} non-host{meeting.non_host_count === 1 ? '' : 's'}
@@ -132,7 +132,7 @@ export default function MeetingRow({ meeting, onOpenDetails }: MeetingRowProps) 
               rel="noreferrer"
               onClick={(e) => e.stopPropagation()}
               onKeyDown={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-400 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 cursor-pointer transition-colors whitespace-nowrap"
+              className="inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-400 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 cursor-pointer transition-colors whitespace-nowrap dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30"
               title="Open the meeting link in a new tab"
             >
               <Video className="w-3 h-3" />
@@ -140,7 +140,7 @@ export default function MeetingRow({ meeting, onOpenDetails }: MeetingRowProps) 
             </a>
           ) : (
             <span
-              className="inline-flex items-center gap-1 rounded-md border border-dashed border-slate-200 px-2.5 py-1 text-[11px] text-slate-400 whitespace-nowrap"
+              className="inline-flex items-center gap-1 rounded-md border border-dashed border-border px-2.5 py-1 text-[11px] text-slate-400 whitespace-nowrap dark:text-slate-500"
               title={
                 isCanceled
                   ? 'Meeting was canceled'
@@ -156,7 +156,7 @@ export default function MeetingRow({ meeting, onOpenDetails }: MeetingRowProps) 
         </div>
 
         {/* Details affordance — visual only; row click handles the action */}
-        <div className="flex items-center gap-1 text-xs font-medium text-slate-500 group-hover:text-blue-600 transition-colors shrink-0 justify-self-end">
+        <div className="flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400 group-hover:text-blue-600 transition-colors shrink-0 justify-self-end">
           Details
           <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
         </div>
@@ -175,9 +175,9 @@ interface StatusPillProps {
 
 function StatusPill({ tone, icon, children }: StatusPillProps) {
   const map = {
-    rose: 'bg-rose-100 text-rose-800 border-rose-200',
-    amber: 'bg-amber-100 text-amber-800 border-amber-200',
-    slate: 'bg-slate-100 text-slate-700 border-slate-200',
+    rose: 'bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/30',
+    amber: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30',
+    slate: 'bg-muted text-slate-700 border-border dark:text-slate-200',
   };
   return (
     <span

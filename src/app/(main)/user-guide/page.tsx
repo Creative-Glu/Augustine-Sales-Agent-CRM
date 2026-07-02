@@ -70,7 +70,7 @@ export default function UserGuidePage() {
           {/* ── Sticky table of contents ── */}
           <aside className="hidden lg:block">
             <nav className="sticky top-24 space-y-1">
-              <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+              <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 On this page
               </p>
               {SECTIONS.map((s) => {
@@ -232,12 +232,12 @@ function GettingStarted() {
             href={s.href}
             className="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-3 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md transition-all"
           >
-            <div className="text-[10px] uppercase tracking-wider text-slate-400">
+            <div className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">
               Step {s.n}
             </div>
             <div className="mt-1 flex items-center justify-between">
               <span className="font-medium text-slate-800 dark:text-slate-100">{s.label}</span>
-              <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-blue-500 transition-colors" />
+              <ArrowRight className="h-4 w-4 text-slate-400 dark:text-slate-500 group-hover:text-blue-500 transition-colors" />
             </div>
           </Link>
         ))}

@@ -3,7 +3,7 @@ import { BellIcon } from '@heroicons/react/24/outline';
 export default function Navbar() {
   return (
     <header
-      className="h-16 flex items-center justify-between px-6 bg-white shadow-sm z-10"
+      className="h-16 flex items-center justify-between px-6 bg-card shadow-sm z-10"
       style={{ marginLeft: 288 }}
     >
       <div className="flex items-center gap-4">
@@ -11,8 +11,8 @@ export default function Navbar() {
       </div>
 
       <div className="flex items-center gap-4">
-        <button className="p-2 rounded-md hover:bg-gray-100">
-          <BellIcon className="w-5 h-5 text-slate-600" />
+        <button className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800/40">
+          <BellIcon className="w-5 h-5 text-slate-600 dark:text-slate-400" />
         </button>
 
         <div className="flex items-center gap-3">
@@ -21,7 +21,7 @@ export default function Navbar() {
           </div>
           <div className="text-sm">
             <div className="font-medium">Admin</div>
-            <div className="text-xs text-slate-400">admin@augustine.com</div>
+            <div className="text-xs text-slate-400 dark:text-slate-500">admin@augustine.com</div>
           </div>
         </div>
       </div>

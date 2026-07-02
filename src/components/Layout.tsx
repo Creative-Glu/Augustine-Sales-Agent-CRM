@@ -6,7 +6,7 @@ type Props = { children: ReactNode };
 
 export default function Layout({ children }: Props) {
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen flex bg-background">
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Navbar />

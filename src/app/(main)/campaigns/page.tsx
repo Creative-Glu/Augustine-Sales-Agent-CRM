@@ -351,11 +351,11 @@ export default function CampaignsPage() {
           deleteTarget ? (
             <>
               You&apos;re about to permanently delete the campaign{' '}
-              <span className="font-semibold text-slate-900">
+              <span className="font-semibold text-slate-900 dark:text-slate-100">
                 &ldquo;{deleteTarget.campaign_name}&rdquo;
               </span>
               . Because this campaign has dependent records, deleting it will{' '}
-              <span className="font-semibold text-red-700">also remove</span> every journey created
+              <span className="font-semibold text-red-700 dark:text-red-400">also remove</span> every journey created
               under it and every outreach / event log attached to those journeys.
             </>
           ) : (

@@ -57,8 +57,8 @@ const SLOT_META = [
     label: 'Primary',
     icon: <Star className="w-3 h-3" />,
     accentBar: 'bg-emerald-500',
-    pillBg: 'bg-emerald-100',
-    pillText: 'text-emerald-800',
+    pillBg: 'bg-emerald-100 dark:bg-emerald-500/15',
+    pillText: 'text-emerald-800 dark:text-emerald-300',
     rowAccent: 'border-l-emerald-500',
   },
   {
@@ -66,8 +66,8 @@ const SLOT_META = [
     label: 'Upsell',
     icon: <Zap className="w-3 h-3" />,
     accentBar: 'bg-blue-500',
-    pillBg: 'bg-blue-100',
-    pillText: 'text-blue-800',
+    pillBg: 'bg-blue-100 dark:bg-blue-500/15',
+    pillText: 'text-blue-800 dark:text-blue-300',
     rowAccent: 'border-l-blue-500',
   },
   {
@@ -75,8 +75,8 @@ const SLOT_META = [
     label: 'Cross-sell',
     icon: <Sparkles className="w-3 h-3" />,
     accentBar: 'bg-violet-500',
-    pillBg: 'bg-violet-100',
-    pillText: 'text-violet-800',
+    pillBg: 'bg-violet-100 dark:bg-violet-500/15',
+    pillText: 'text-violet-800 dark:text-violet-300',
     rowAccent: 'border-l-violet-500',
   },
 ];
@@ -110,25 +110,25 @@ export default function ProductOfferViewModal({
 
         <div className="space-y-5">
           {/* ─── Offer header card ──────────────────────────────── */}
-          <section className="rounded-xl border border-slate-200 bg-card overflow-hidden shadow-sm">
-            <div className="bg-linear-to-br from-blue-50 via-indigo-50/60 to-violet-50/40 px-5 py-4 border-b border-slate-200 relative">
+          <section className="rounded-xl border border-border bg-card overflow-hidden shadow-sm">
+            <div className="bg-linear-to-br from-blue-50 via-indigo-50/60 to-violet-50/40 dark:from-blue-950/40 dark:via-indigo-950/40 dark:to-violet-950/40 px-5 py-4 border-b border-border relative">
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500" />
               <div className="pl-2 flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     Offer
                   </p>
-                  <h3 className="mt-0.5 text-base font-bold text-slate-900 truncate">
+                  <h3 className="mt-0.5 text-base font-bold text-slate-900 dark:text-slate-100 truncate">
                     {offer.offer_name || '—'}
                   </h3>
                 </div>
-                <Badge className="bg-indigo-100 text-indigo-800 border border-indigo-200 text-[11px] font-semibold shadow-sm shrink-0">
+                <Badge className="bg-indigo-100 text-indigo-800 border border-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-300 dark:border-indigo-500/30 text-[11px] font-semibold shadow-sm shrink-0">
                   {filledSlots} / 3 {filledSlots === 1 ? 'slot' : 'slots'} filled
                 </Badge>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+            <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border">
               <Stat
                 icon={<Tag className="w-4 h-4" />}
                 label="Offer ID"
@@ -152,19 +152,19 @@ export default function ProductOfferViewModal({
           </section>
 
           {/* ─── ICP details table ──────────────────────────────── */}
-          <section className="rounded-xl border border-slate-200 bg-card shadow-sm overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-amber-50 to-amber-50/30 border-b border-slate-200">
+          <section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-amber-50 to-amber-50/30 dark:from-amber-950/40 dark:to-amber-950/40 border-b border-border">
               <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-amber-100 text-amber-600">
                 <Users className="w-3.5 h-3.5" />
               </span>
-              <p className="text-xs font-bold text-slate-900">Target ICP</p>
+              <p className="text-xs font-bold text-slate-900 dark:text-slate-100">Target ICP</p>
             </div>
 
             {icp ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-slate-50/60 border-b border-slate-100">
+                    <tr className="bg-muted/50 border-b border-border">
                       <Th>Field</Th>
                       <Th>Value</Th>
                     </tr>
@@ -200,13 +200,13 @@ export default function ProductOfferViewModal({
           </section>
 
           {/* ─── Products table ─────────────────────────────────── */}
-          <section className="rounded-xl border border-slate-200 bg-card shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between gap-2 px-4 py-2.5 bg-linear-to-r from-emerald-50 to-blue-50/30 border-b border-slate-200">
+          <section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between gap-2 px-4 py-2.5 bg-linear-to-r from-emerald-50 to-blue-50/30 dark:from-emerald-950/40 dark:to-blue-950/40 border-b border-border">
               <div className="flex items-center gap-2">
                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-emerald-100 text-emerald-600">
                   <Package className="w-3.5 h-3.5" />
                 </span>
-                <p className="text-xs font-bold text-slate-900">Bundled Products</p>
+                <p className="text-xs font-bold text-slate-900 dark:text-slate-100">Bundled Products</p>
               </div>
               <Badge variant="secondary" className="text-[10px] tabular-nums">
                 {filledSlots} of 3 filled
@@ -216,7 +216,7 @@ export default function ProductOfferViewModal({
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-slate-50/60 border-b border-slate-100">
+                  <tr className="bg-muted/50 border-b border-border">
                     <Th className="w-32">Slot</Th>
                     <Th>Product</Th>
                     <Th className="w-32">Product ID</Th>
@@ -231,14 +231,14 @@ export default function ProductOfferViewModal({
                       return (
                         <tr
                           key={sv.key}
-                          className={`border-b border-slate-100 last:border-0 border-l-2 border-l-slate-200 bg-slate-50/30`}
+                          className={`border-b border-border last:border-0 border-l-2 border-l-border bg-muted/50`}
                         >
                           <td className="py-2.5 px-3">
                             <SlotChip meta={sv} muted />
                           </td>
                           <td
                             colSpan={4}
-                            className="py-2.5 px-3 text-[11px] text-slate-400 italic"
+                            className="py-2.5 px-3 text-[11px] text-slate-400 dark:text-slate-500 italic"
                           >
                             Empty slot — add a product from the edit form
                           </td>
@@ -251,28 +251,28 @@ export default function ProductOfferViewModal({
                     return (
                       <tr
                         key={sv.key}
-                        className={`border-b border-slate-100 last:border-0 border-l-2 ${sv.rowAccent} hover:bg-slate-50/60 transition-colors`}
+                        className={`border-b border-border last:border-0 border-l-2 ${sv.rowAccent} hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors`}
                       >
                         <td className="py-2.5 px-3">
                           <SlotChip meta={sv} />
                         </td>
                         <td className="py-2.5 px-3 min-w-0">
                           <p
-                            className="text-sm font-semibold text-slate-900 truncate max-w-65"
+                            className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate max-w-65"
                             title={p.product_name}
                           >
                             {p.product_name}
                           </p>
                           {p.product_description && (
                             <p
-                              className="text-[11px] text-slate-500 truncate max-w-65 mt-0.5"
+                              className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-65 mt-0.5"
                               title={p.product_description}
                             >
                               {p.product_description}
                             </p>
                           )}
                         </td>
-                        <td className="py-2.5 px-3 font-mono text-[11px] text-slate-600 whitespace-nowrap">
+                        <td className="py-2.5 px-3 font-mono text-[11px] text-slate-600 dark:text-slate-400 whitespace-nowrap">
                           {p.product_id}
                         </td>
                         <td className="py-2.5 px-3">
@@ -284,7 +284,7 @@ export default function ProductOfferViewModal({
                             {p.pricing_type || 'N/A'}
                           </Badge>
                         </td>
-                        <td className="py-2.5 px-3 text-xs font-semibold text-slate-900 tabular-nums text-right whitespace-nowrap">
+                        <td className="py-2.5 px-3 text-xs font-semibold text-slate-900 dark:text-slate-100 tabular-nums text-right whitespace-nowrap">
                           {formatPrice(p.price, p.pricing_type ?? undefined)}
                         </td>
                       </tr>
@@ -295,7 +295,7 @@ export default function ProductOfferViewModal({
             </div>
 
             {/* Slot legend footer */}
-            <div className="bg-slate-50/40 border-t border-slate-100 px-4 py-2 flex flex-wrap items-center gap-2 text-[10px] text-slate-500">
+            <div className="bg-muted/50 border-t border-border px-4 py-2 flex flex-wrap items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400">
               <Info className="w-3 h-3" />
               <span className="font-semibold uppercase tracking-wide">Slots:</span>
               {SLOT_META.map((m) => (
@@ -314,7 +314,7 @@ export default function ProductOfferViewModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-card border border-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
             >
               Close
             </button>
@@ -350,11 +350,11 @@ function Stat({ icon, label, value, tint, mono }: StatProps) {
         {icon}
       </span>
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           {label}
         </p>
         <p
-          className={`mt-0.5 text-sm font-bold text-slate-900 truncate ${
+          className={`mt-0.5 text-sm font-bold text-slate-900 dark:text-slate-100 truncate ${
             mono ? 'font-mono text-xs' : ''
           }`}
         >
@@ -374,7 +374,7 @@ function SlotChip({ meta, muted }: SlotChipProps) {
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide whitespace-nowrap ${
-        muted ? 'bg-slate-100 text-slate-400' : `${meta.pillBg} ${meta.pillText}`
+        muted ? 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500' : `${meta.pillBg} ${meta.pillText}`
       }`}
     >
       {meta.icon}
@@ -392,7 +392,7 @@ function Th({
 }) {
   return (
     <th
-      className={`text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500 ${
+      className={`text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 ${
         className ?? ''
       }`}
     >
@@ -415,13 +415,13 @@ function TableRow({
   multiline?: boolean;
 }) {
   return (
-    <tr className="border-b border-slate-100 last:border-0 hover:bg-slate-50/40 transition-colors">
-      <td className="py-2 px-3 w-40 text-[11px] font-medium text-slate-500 align-top whitespace-nowrap">
+    <tr className="border-b border-border last:border-0 hover:bg-slate-50/40 dark:hover:bg-slate-800/40 transition-colors">
+      <td className="py-2 px-3 w-40 text-[11px] font-medium text-slate-500 dark:text-slate-400 align-top whitespace-nowrap">
         {label}
       </td>
       <td
         className={`py-2 px-3 text-sm ${
-          highlight ? 'font-semibold text-slate-900' : 'text-slate-700'
+          highlight ? 'font-semibold text-slate-900 dark:text-slate-100' : 'text-slate-700 dark:text-slate-200'
         } ${mono ? 'font-mono text-xs' : ''} ${multiline ? 'whitespace-pre-wrap' : ''}`}
       >
         {value}
@@ -432,7 +432,7 @@ function TableRow({
 
 function EmptyRow({ message }: { message: string }) {
   return (
-    <div className="px-4 py-6 text-center text-[12px] text-slate-400 italic">
+    <div className="px-4 py-6 text-center text-[12px] text-slate-400 dark:text-slate-500 italic">
       {message}
     </div>
   );

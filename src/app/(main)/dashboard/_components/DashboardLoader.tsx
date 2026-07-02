@@ -4,7 +4,7 @@ export default function DashboardLoader() {
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className="h-32 bg-gray-100 rounded-2xl shadow-sm border border-gray-200"
+          className="h-32 bg-muted/60 rounded-2xl shadow-sm border border-border"
         ></div>
       ))}
     </div>

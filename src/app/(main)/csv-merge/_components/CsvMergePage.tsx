@@ -170,11 +170,11 @@ function ResultsDashboard({ result }: { result: MergeResult }) {
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Your Files</p>
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 rounded-xl bg-blue-50/50 dark:bg-blue-950/10 border border-blue-200/60 dark:border-blue-800/30 text-center">
-              <p className="text-3xl font-bold tabular-nums text-blue-600">{stats.hubspotTotal.toLocaleString()}</p>
+              <p className="text-3xl font-bold tabular-nums text-blue-600 dark:text-blue-400">{stats.hubspotTotal.toLocaleString()}</p>
               <p className="text-sm text-blue-700 dark:text-blue-400 font-medium mt-1">HubSpot Contacts</p>
             </div>
             <div className="p-4 rounded-xl bg-purple-50/50 dark:bg-purple-950/10 border border-purple-200/60 dark:border-purple-800/30 text-center">
-              <p className="text-3xl font-bold tabular-nums text-purple-600">{stats.crmTotal.toLocaleString()}</p>
+              <p className="text-3xl font-bold tabular-nums text-purple-600 dark:text-purple-400">{stats.crmTotal.toLocaleString()}</p>
               <p className="text-sm text-purple-700 dark:text-purple-400 font-medium mt-1">CRM Contacts</p>
             </div>
           </div>
@@ -187,7 +187,7 @@ function ResultsDashboard({ result }: { result: MergeResult }) {
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">What We Found</p>
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/10 border border-indigo-200/60 dark:border-indigo-800/30 text-center">
-              <p className="text-3xl font-bold tabular-nums text-indigo-600">{matched.toLocaleString()}</p>
+              <p className="text-3xl font-bold tabular-nums text-indigo-600 dark:text-indigo-400">{matched.toLocaleString()}</p>
               <p className="text-sm text-indigo-700 dark:text-indigo-400 font-medium mt-1">Same Person in Both</p>
               <p className="text-xs text-muted-foreground mt-1">
                 {stats.matchedByEmail > 0 && <>{stats.matchedByEmail} matched by email</>}
@@ -196,7 +196,7 @@ function ResultsDashboard({ result }: { result: MergeResult }) {
               </p>
             </div>
             <div className="p-4 rounded-xl bg-amber-50/50 dark:bg-amber-950/10 border border-amber-200/60 dark:border-amber-800/30 text-center">
-              <p className="text-3xl font-bold tabular-nums text-amber-600">{newContacts.toLocaleString()}</p>
+              <p className="text-3xl font-bold tabular-nums text-amber-600 dark:text-amber-400">{newContacts.toLocaleString()}</p>
               <p className="text-sm text-amber-700 dark:text-amber-400 font-medium mt-1">New People</p>
               <p className="text-xs text-muted-foreground mt-1">Only in CRM, not in HubSpot</p>
             </div>
@@ -210,11 +210,11 @@ function ResultsDashboard({ result }: { result: MergeResult }) {
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">What Happens After Import</p>
           <div className="grid grid-cols-3 gap-3">
             <div className="p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/10 border border-amber-200/60 dark:border-amber-800/30 text-center">
-              <p className="text-2xl font-bold tabular-nums text-amber-600">{newContacts.toLocaleString()}</p>
+              <p className="text-2xl font-bold tabular-nums text-amber-600 dark:text-amber-400">{newContacts.toLocaleString()}</p>
               <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mt-1">Added to HubSpot</p>
             </div>
             <div className="p-3 rounded-xl bg-green-50/50 dark:bg-green-950/10 border border-green-200/60 dark:border-green-800/30 text-center">
-              <p className="text-2xl font-bold tabular-nums text-green-600">{withChanges.toLocaleString()}</p>
+              <p className="text-2xl font-bold tabular-nums text-green-600 dark:text-green-400">{withChanges.toLocaleString()}</p>
               <p className="text-xs font-medium text-green-700 dark:text-green-400 mt-1">Updated</p>
               <p className="text-[10px] text-muted-foreground mt-0.5">{stats.fieldsFilledIn} fields filled</p>
             </div>
@@ -230,12 +230,12 @@ function ResultsDashboard({ result }: { result: MergeResult }) {
       <Card className="border-border bg-card">
         <CardContent className="py-4">
           <div className="flex items-center justify-center gap-2 flex-wrap text-sm">
-            <span className="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/40 font-bold tabular-nums text-blue-600">
+            <span className="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/40 font-bold tabular-nums text-blue-600 dark:text-blue-400">
               {stats.hubspotTotal.toLocaleString()}
             </span>
             <span className="text-xs text-muted-foreground">HubSpot</span>
             <span className="text-lg font-bold text-muted-foreground">+</span>
-            <span className="px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 font-bold tabular-nums text-amber-600">
+            <span className="px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 font-bold tabular-nums text-amber-600 dark:text-amber-400">
               {newContacts.toLocaleString()}
             </span>
             <span className="text-xs text-muted-foreground">new</span>
@@ -610,7 +610,7 @@ function UpdatedContactsSection({ diffs }: { diffs: MatchedRecordDiff[] }) {
                             <th className="text-left font-medium text-muted-foreground pb-1 w-[150px]">Field</th>
                             <th className="text-left font-medium text-red-400 pb-1">Currently</th>
                             <th className="text-left pb-1 w-8"></th>
-                            <th className="text-left font-medium text-green-600 pb-1">After Import</th>
+                            <th className="text-left font-medium text-green-600 dark:text-green-400 pb-1">After Import</th>
                           </tr>
                         </thead>
                         <tbody>

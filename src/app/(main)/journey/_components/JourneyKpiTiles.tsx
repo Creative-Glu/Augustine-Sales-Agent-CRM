@@ -27,16 +27,16 @@ interface TileProps {
 
 function Tile({ label, value, suffix, sub, icon, accent, trend }: TileProps) {
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md border border-slate-200/60 p-5 hover:shadow-lg transition-shadow">
+    <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-md border border-border/60 p-5 hover:shadow-lg transition-shadow">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
         <div className={`p-2 rounded-lg ${accent}`}>{icon}</div>
       </div>
-      <p className="text-3xl font-bold text-slate-800 tabular-nums">
+      <p className="text-3xl font-bold text-slate-800 dark:text-slate-200 tabular-nums">
         <AnimatedCounter value={value} suffix={suffix} />
       </p>
       <div className="mt-1 flex items-center justify-between gap-2">
-        {sub && <p className="text-xs text-slate-500 truncate">{sub}</p>}
+        {sub && <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{sub}</p>}
         {trend && (
           <TrendBadge
             current={trend.current}
@@ -117,16 +117,16 @@ export default function JourneyKpiTiles({ journeys }: JourneyKpiTilesProps) {
         label="Total Journeys"
         value={total}
         sub={`${uniqueLeads} unique leads`}
-        icon={<Users className="w-4 h-4 text-blue-600" />}
-        accent="bg-blue-100"
+        icon={<Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
+        accent="bg-blue-100 dark:bg-blue-500/15"
         trend={trendTotal}
       />
       <Tile
         label="Active"
         value={active}
         sub={total > 0 ? `${Math.round((active / total) * 100)}% of total` : '—'}
-        icon={<Activity className="w-4 h-4 text-emerald-600" />}
-        accent="bg-emerald-100"
+        icon={<Activity className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
+        accent="bg-emerald-100 dark:bg-emerald-500/15"
         trend={trendActive}
       />
       <Tile
@@ -134,8 +134,8 @@ export default function JourneyKpiTiles({ journeys }: JourneyKpiTilesProps) {
         value={engagementRate}
         suffix="%"
         sub={`${engaged} engaged or beyond`}
-        icon={<TrendingUp className="w-4 h-4 text-indigo-600" />}
-        accent="bg-indigo-100"
+        icon={<TrendingUp className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
+        accent="bg-indigo-100 dark:bg-indigo-500/15"
         trend={trendEngaged}
       />
       <Tile
@@ -143,16 +143,16 @@ export default function JourneyKpiTiles({ journeys }: JourneyKpiTilesProps) {
         value={conversionRate}
         suffix="%"
         sub={`${won} closed-won`}
-        icon={<Trophy className="w-4 h-4 text-amber-600" />}
-        accent="bg-amber-100"
+        icon={<Trophy className="w-4 h-4 text-amber-600 dark:text-amber-400" />}
+        accent="bg-amber-100 dark:bg-amber-500/15"
         trend={trendWon}
       />
       <Tile
         label="Stale Leads"
         value={stale}
         sub={`No activity in ${STALE_DAYS}+ days`}
-        icon={<Clock className="w-4 h-4 text-rose-600" />}
-        accent="bg-rose-100"
+        icon={<Clock className="w-4 h-4 text-rose-600 dark:text-rose-400" />}
+        accent="bg-rose-100 dark:bg-rose-500/15"
         trend={{ ...trendStale, variant: 'up-bad' }}
       />
     </div>

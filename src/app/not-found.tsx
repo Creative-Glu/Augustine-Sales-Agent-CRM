@@ -30,26 +30,26 @@ const Custom404 = () => {
   }, [router]);
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4">
-      <div className="w-full text-center bg-white/90 backdrop-blur-sm shadow-2xl rounded-3xl p-8 md:p-12 border border-slate-200/50 transform transition-all duration-500 hover:scale-[1.01]">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 p-4">
+      <div className="w-full text-center bg-card/90 backdrop-blur-sm shadow-2xl rounded-3xl p-8 md:p-12 border border-border/50 transform transition-all duration-500 hover:scale-[1.01]">
         {/* Error Code */}
         <h1 className="text-9xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-pink-600 mb-4 animate-pulse">
           404
         </h1>
 
         {/* Title */}
-        <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">Page Not Found</h2>
+        <h2 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-slate-200 mb-4">Page Not Found</h2>
 
         {/* Message */}
-        <p className="text-lg text-slate-600 mb-8">
+        <p className="text-lg text-slate-600 dark:text-slate-400 mb-8">
           Oops! The page you are looking for does not exist or has been moved. It seems you've hit a
           dead end in the {APP_NAME}.
         </p>
 
         {/* Redirect Message */}
-        <div className="bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-xl shadow-md mb-8">
+        <div className="bg-blue-50 dark:bg-blue-500/15 border border-blue-200 dark:border-blue-500/30 text-blue-800 dark:text-blue-300 p-4 rounded-xl shadow-md mb-8">
           <p className="font-semibold">
-            Redirecting to the <span className="font-bold text-blue-900">{REDIRECT_PATH}</span> page
+            Redirecting to the <span className="font-bold text-blue-900 dark:text-blue-200">{REDIRECT_PATH}</span> page
             in <span className="text-xl font-extrabold">{countdown}</span> seconds...
           </p>
         </div>
@@ -63,7 +63,7 @@ const Custom404 = () => {
         </button>
 
         {/* Footer/Branding */}
-        <p className="mt-10 text-sm text-slate-400">
+        <p className="mt-10 text-sm text-slate-400 dark:text-slate-500">
           &copy; {new Date().getFullYear()} {APP_NAME}. All rights reserved.
         </p>
       </div>

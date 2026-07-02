@@ -186,14 +186,14 @@ export default function JourneyViewModal({
           </section>
 
           {/* ─── Mark outcome ─────────────────────────────────────── */}
-          <section className="rounded-xl border border-slate-200 bg-card shadow-sm overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-slate-50 to-blue-50/30 border-b border-slate-200">
-              <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-blue-100 text-blue-600">
+          <section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-slate-50 to-blue-50/30 dark:from-slate-800/60 dark:to-blue-950/40 border-b border-border">
+              <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300">
                 <Flag className="w-3.5 h-3.5" />
               </span>
               <div>
-                <p className="text-xs font-bold text-slate-900">Mark Journey Outcome</p>
-                <p className="text-[10px] text-slate-500">
+                <p className="text-xs font-bold text-slate-900 dark:text-slate-100">Mark Journey Outcome</p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400">
                   Manually close out this journey when the deal is decided
                 </p>
               </div>
@@ -204,15 +204,15 @@ export default function JourneyViewModal({
                 <div
                   className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 ${
                     closedAsWon
-                      ? 'border-emerald-200 bg-emerald-50/60'
-                      : 'border-rose-200 bg-rose-50/60'
+                      ? 'border-emerald-200 bg-emerald-50/60 dark:bg-emerald-500/15 dark:border-emerald-500/30'
+                      : 'border-rose-200 bg-rose-50/60 dark:bg-rose-500/15 dark:border-rose-500/30'
                   }`}
                 >
                   <span
                     className={`inline-flex items-center justify-center w-8 h-8 rounded-full shrink-0 ${
                       closedAsWon
-                        ? 'bg-emerald-100 text-emerald-600'
-                        : 'bg-rose-100 text-rose-600'
+                        ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300'
+                        : 'bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300'
                     }`}
                   >
                     {closedAsWon ? (
@@ -224,17 +224,17 @@ export default function JourneyViewModal({
                   <div className="min-w-0">
                     <p
                       className={`text-sm font-semibold ${
-                        closedAsWon ? 'text-emerald-900' : 'text-rose-900'
+                        closedAsWon ? 'text-emerald-900 dark:text-emerald-300' : 'text-rose-900 dark:text-rose-300'
                       }`}
                     >
                       Journey is already {journey.funnel_stage}
                     </p>
-                    <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">
                       Closed at {formatDateTime(journey.last_interaction)}. To
                       reopen, update the funnel stage directly from the journey
                       record or contact your admin.
                     </p>
-                    <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-medium text-slate-500">
+                    <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400">
                       <Lock className="w-2.5 h-2.5" />
                       Locked
                     </p>
@@ -247,17 +247,17 @@ export default function JourneyViewModal({
                       type="button"
                       onClick={() => setPendingOutcome('Closed-Won')}
                       disabled={isMarkingClosed}
-                      className="group flex items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-emerald-50/40 hover:bg-emerald-100/70 hover:border-emerald-400 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed px-3 py-2.5 transition-colors"
+                      className="group flex items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-emerald-50/40 dark:bg-emerald-500/15 dark:border-emerald-500/30 hover:bg-emerald-100/70 hover:border-emerald-400 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed px-3 py-2.5 transition-colors"
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 group-hover:bg-emerald-200 transition-colors shrink-0">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300 group-hover:bg-emerald-200 transition-colors shrink-0">
                           <Trophy className="w-4 h-4" />
                         </span>
                         <div className="text-left">
-                          <p className="text-sm font-bold text-emerald-900">
+                          <p className="text-sm font-bold text-emerald-900 dark:text-emerald-300">
                             Mark as Closed-Won
                           </p>
-                          <p className="text-[10px] text-emerald-800/80">
+                          <p className="text-[10px] text-emerald-800/80 dark:text-emerald-400">
                             Deal won · stops outreach
                           </p>
                         </div>
@@ -268,24 +268,24 @@ export default function JourneyViewModal({
                       type="button"
                       onClick={() => setPendingOutcome('Closed-Lost')}
                       disabled={isMarkingClosed}
-                      className="group flex items-center justify-between gap-2 rounded-lg border border-rose-200 bg-rose-50/40 hover:bg-rose-100/70 hover:border-rose-400 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed px-3 py-2.5 transition-colors"
+                      className="group flex items-center justify-between gap-2 rounded-lg border border-rose-200 bg-rose-50/40 dark:bg-rose-500/15 dark:border-rose-500/30 hover:bg-rose-100/70 hover:border-rose-400 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed px-3 py-2.5 transition-colors"
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-rose-100 text-rose-600 group-hover:bg-rose-200 transition-colors shrink-0">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300 group-hover:bg-rose-200 transition-colors shrink-0">
                           <XCircle className="w-4 h-4" />
                         </span>
                         <div className="text-left">
-                          <p className="text-sm font-bold text-rose-900">
+                          <p className="text-sm font-bold text-rose-900 dark:text-rose-300">
                             Mark as Closed-Lost
                           </p>
-                          <p className="text-[10px] text-rose-800/80">
+                          <p className="text-[10px] text-rose-800/80 dark:text-rose-400">
                             Deal lost · stops outreach
                           </p>
                         </div>
                       </div>
                     </button>
                   </div>
-                  <p className="mt-2 text-[11px] text-slate-500 leading-relaxed">
+                  <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
                     Current stage:{' '}
                     <span
                       className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold text-white"
@@ -402,7 +402,7 @@ export default function JourneyViewModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-slate-200 bg-card border border-border rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800/40 cursor-pointer transition-colors"
           >
             Close
           </button>

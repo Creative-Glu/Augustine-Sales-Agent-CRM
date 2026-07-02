@@ -127,13 +127,13 @@ export default function MeetingsPage() {
   return (
     <div className="space-y-5">
       {/* Hints / notes banner */}
-      <div className="flex items-start gap-3 rounded-xl border border-violet-200 bg-linear-to-br from-violet-50 via-indigo-50/60 to-blue-50/40 px-4 py-3">
+      <div className="flex items-start gap-3 rounded-xl border border-violet-200 bg-linear-to-br from-violet-50 via-indigo-50/60 to-blue-50/40 dark:from-violet-950/40 dark:via-indigo-950/40 dark:to-blue-950/40 px-4 py-3">
         <span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-violet-100 text-violet-600 shrink-0">
           <Info className="w-4 h-4" />
         </span>
-        <div className="text-xs text-violet-900 leading-relaxed">
+        <div className="text-xs text-violet-900 dark:text-violet-200 leading-relaxed">
           <p className="font-semibold mb-1">How meetings work</p>
-          <ul className="list-disc list-inside space-y-0.5 text-violet-900/85">
+          <ul className="list-disc list-inside space-y-0.5 text-violet-900/85 dark:text-violet-300">
             <li>
               Every row here is a <span className="font-semibold">slot booked by a lead or contact</span>{' '}
               through your Calendly link — synced live from your Calendly account.
@@ -161,16 +161,16 @@ export default function MeetingsPage() {
       </div>
 
       {/* Header */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-md overflow-hidden">
-        <div className="px-6 py-5 border-b border-slate-100 flex flex-wrap items-start justify-between gap-3">
+      <div className="bg-card rounded-2xl border border-border shadow-md overflow-hidden">
+        <div className="px-6 py-5 border-b border-border flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-linear-to-br from-violet-500 to-indigo-600 text-white shadow-sm">
                 <Calendar className="w-4 h-4" />
               </span>
-              <h1 className="text-xl font-bold text-slate-900">Meetings</h1>
+              <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Meetings</h1>
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 mt-1 dark:text-slate-400">
               All Calendly bookings synced from your account
             </p>
           </div>
@@ -179,7 +179,7 @@ export default function MeetingsPage() {
             <button
               type="button"
               onClick={() => active.refetch()}
-              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer transition-colors"
               title="Refresh"
             >
               <RefreshCw
@@ -191,7 +191,7 @@ export default function MeetingsPage() {
               type="button"
               onClick={handleExport}
               disabled={meetings.length === 0}
-              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
               title="Export to CSV"
             >
               <Download className="w-3.5 h-3.5" />
@@ -210,11 +210,11 @@ export default function MeetingsPage() {
         </div>
 
         {/* Tabs + date range + live count */}
-        <div className="px-6 py-3 flex flex-wrap items-center justify-between gap-3 bg-slate-50/40">
+        <div className="px-6 py-3 flex flex-wrap items-center justify-between gap-3 bg-muted/50">
           <div className="flex flex-wrap items-center gap-3">
             {/* Tabs — disabled visual when a date range is active */}
             <div
-              className={`inline-flex rounded-lg bg-white border border-slate-200 p-0.5 ${
+              className={`inline-flex rounded-lg bg-card border border-border p-0.5 ${
                 rangeActive ? 'opacity-50' : ''
               }`}
               aria-disabled={rangeActive}
@@ -240,7 +240,7 @@ export default function MeetingsPage() {
             <DateRangePicker value={dateRange} onChange={setDateRange} />
           </div>
 
-          <p className="text-[11px] text-slate-500 tabular-nums">
+          <p className="text-[11px] text-slate-500 tabular-nums dark:text-slate-400">
             {active.isLoading
               ? 'Loading…'
               : `Showing ${meetings.length}${
@@ -262,19 +262,19 @@ export default function MeetingsPage() {
 
           {/* Calendly not configured */}
           {!active.isLoading && notConfigured && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-6 text-center">
-              <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 mb-2">
-                <CalendarDays className="w-5 h-5 text-amber-700" />
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-6 text-center dark:bg-amber-500/15 dark:border-amber-500/30">
+              <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 mb-2 dark:bg-amber-500/15">
+                <CalendarDays className="w-5 h-5 text-amber-700 dark:text-amber-400" />
               </div>
-              <p className="text-sm font-semibold text-amber-900">
+              <p className="text-sm font-semibold text-amber-900 dark:text-amber-400">
                 Calendly is not connected yet
               </p>
               <p
-                className="text-[12px] text-amber-800/90 mt-1 mx-auto leading-relaxed"
+                className="text-[12px] text-amber-800/90 mt-1 mx-auto leading-relaxed dark:text-amber-400"
                 style={{ maxWidth: '28rem' }}
               >
                 Set{' '}
-                <span className="font-mono bg-amber-100 border border-amber-200 rounded px-1 py-0.5">
+                <span className="font-mono bg-amber-100 border border-amber-200 rounded px-1 py-0.5 dark:bg-amber-500/15 dark:border-amber-500/30">
                   CALENDLY_API_TOKEN
                 </span>{' '}
                 in your server environment (Personal Access Token from
@@ -287,15 +287,15 @@ export default function MeetingsPage() {
 
           {/* Error */}
           {!active.isLoading && !notConfigured && active.isError && (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 px-5 py-6 text-center">
-              <AlertCircle className="w-5 h-5 text-rose-600 mx-auto mb-1.5" />
-              <p className="text-sm font-semibold text-rose-800">
+            <div className="rounded-xl border border-rose-200 bg-rose-50 px-5 py-6 text-center dark:bg-rose-500/15 dark:border-rose-500/30">
+              <AlertCircle className="w-5 h-5 text-rose-600 mx-auto mb-1.5 dark:text-rose-400" />
+              <p className="text-sm font-semibold text-rose-800 dark:text-rose-400">
                 Couldn&apos;t load meetings
               </p>
               <button
                 type="button"
                 onClick={() => active.refetch()}
-                className="mt-2 text-xs font-medium text-rose-700 hover:text-rose-900 underline cursor-pointer"
+                className="mt-2 text-xs font-medium text-rose-700 hover:text-rose-900 underline cursor-pointer dark:text-rose-400"
               >
                 Try again
               </button>
@@ -307,15 +307,15 @@ export default function MeetingsPage() {
             !notConfigured &&
             !active.isError &&
             meetings.length === 0 && (
-              <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50/60 px-5 py-8 text-center">
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 mb-2">
-                  <Inbox className="w-5 h-5 text-slate-400" />
+              <div className="rounded-xl border border-dashed border-slate-300 bg-muted/50 px-5 py-8 text-center">
+                <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-muted mb-2">
+                  <Inbox className="w-5 h-5 text-slate-400 dark:text-slate-500" />
                 </div>
-                <p className="text-sm font-semibold text-slate-700">
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                   {tab === 'upcoming' ? 'No upcoming meetings' : 'No past meetings'}
                 </p>
                 <p
-                  className="text-[12px] text-slate-500 mt-1 mx-auto leading-relaxed"
+                  className="text-[12px] text-slate-500 mt-1 mx-auto leading-relaxed dark:text-slate-400"
                   style={{ maxWidth: '24rem' }}
                 >
                   {tab === 'upcoming'
@@ -333,16 +333,16 @@ export default function MeetingsPage() {
                 const isToday = isSameDay(groupDate, today);
                 return (
                   <section key={group.dateKey}>
-                    <div className="flex items-center gap-2 px-5 py-2 border-b border-slate-100">
-                      <p className="text-[12px] font-semibold text-slate-700">
+                    <div className="flex items-center gap-2 px-5 py-2 border-b border-border">
+                      <p className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">
                         {formatDayHeader(group.dateKey)}
                       </p>
                       {isToday && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 text-violet-800 border border-violet-200 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 text-violet-800 border border-violet-200 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider dark:bg-violet-500/15 dark:text-violet-300 dark:border-violet-500/30">
                           Today
                         </span>
                       )}
-                      <span className="ml-auto text-[10px] text-slate-400 tabular-nums">
+                      <span className="ml-auto text-[10px] text-slate-400 tabular-nums dark:text-slate-500">
                         {group.items.length}{' '}
                         {group.items.length === 1 ? 'meeting' : 'meetings'}
                       </span>
@@ -394,13 +394,13 @@ function TabButton({ active, disabled, onClick, count, label }: TabButtonProps) 
       } ${
         active
           ? 'bg-violet-600 text-white shadow-sm'
-          : 'text-slate-600 hover:bg-slate-50'
+          : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800/40'
       } ${disabled ? 'hover:bg-transparent' : ''}`}
     >
       {label}
       <span
         className={`tabular-nums rounded-full px-1.5 py-0 text-[10px] ${
-          active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+          active ? 'bg-white/20 text-white' : 'bg-muted text-slate-600 dark:text-slate-400'
         }`}
       >
         {count}

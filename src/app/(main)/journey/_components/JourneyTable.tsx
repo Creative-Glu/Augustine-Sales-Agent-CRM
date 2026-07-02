@@ -52,15 +52,15 @@ function statusBadgeClass(status?: string): string {
   const base = 'inline-flex rounded-md text-[10px] font-semibold px-2 py-0.5 uppercase tracking-wide';
   switch (status) {
     case 'Running':
-      return `${base} border border-green-200 bg-green-50 text-green-700`;
+      return `${base} border border-green-200 bg-green-50 text-green-700 dark:bg-green-500/15 dark:text-green-300 dark:border-green-500/30`;
     case 'Active':
-      return `${base} border border-blue-200 bg-blue-50 text-blue-700`;
+      return `${base} border border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/30`;
     case 'Draft':
-      return `${base} border border-slate-200 bg-slate-50 text-slate-700`;
+      return `${base} border border-slate-200 bg-slate-50 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300 dark:border-slate-500/30`;
     case 'Stopped':
-      return `${base} border border-red-200 bg-red-50 text-red-700`;
+      return `${base} border border-red-200 bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/30`;
     default:
-      return `${base} border border-slate-200 bg-slate-50 text-slate-600`;
+      return `${base} border border-slate-200 bg-slate-50 text-slate-600 dark:bg-slate-500/15 dark:text-slate-300 dark:border-slate-500/30`;
   }
 }
 
@@ -124,7 +124,7 @@ export default function JourneyTable({ journeys, isLoading, isError }: JourneyTa
   // ─── Loading state ──────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md border border-slate-200/60 p-6">
+      <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-md border border-border/60 p-6">
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-20 w-full" />
@@ -137,8 +137,8 @@ export default function JourneyTable({ journeys, isLoading, isError }: JourneyTa
   // ─── Error state ────────────────────────────────────────────
   if (isError) {
     return (
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md border border-rose-200 p-8 text-center">
-        <p className="text-sm text-rose-600 font-medium">
+      <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-md border border-rose-200 p-8 text-center">
+        <p className="text-sm text-rose-600 dark:text-rose-400 font-medium">
           Failed to load journeys. Please try again.
         </p>
       </div>
@@ -148,12 +148,12 @@ export default function JourneyTable({ journeys, isLoading, isError }: JourneyTa
   // ─── Empty state ────────────────────────────────────────────
   if (groups.length === 0) {
     return (
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md border border-slate-200/60 p-12 text-center">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 mb-3">
-          <Megaphone className="w-6 h-6 text-slate-400" />
+      <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-md border border-border/60 p-12 text-center">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted/60 mb-3">
+          <Megaphone className="w-6 h-6 text-slate-400 dark:text-slate-500" />
         </div>
-        <p className="text-sm font-medium text-slate-700">No journeys yet</p>
-        <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">No journeys yet</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
           Journeys appear here as soon as a campaign sends its first outreach. Try
           adjusting the filters above.
         </p>
@@ -164,11 +164,11 @@ export default function JourneyTable({ journeys, isLoading, isError }: JourneyTa
   return (
     <div className="space-y-4">
       {/* Header bar */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md border border-slate-200/60 px-5 py-4">
+      <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-md border border-border/60 px-5 py-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="text-lg font-bold text-slate-800">Journeys by Campaign</h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">Journeys by Campaign</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {groups.length} {groups.length === 1 ? 'campaign' : 'campaigns'} ·{' '}
               {journeys.length} {journeys.length === 1 ? 'journey' : 'journeys'} total
             </p>
@@ -180,7 +180,7 @@ export default function JourneyTable({ journeys, isLoading, isError }: JourneyTa
               onClick={() =>
                 setExpanded(Object.fromEntries(groups.map((g) => [g.campaignId, true])))
               }
-              className="text-xs font-medium text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50 transition-colors"
+              className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50 transition-colors"
             >
               Expand all
             </button>
@@ -188,7 +188,7 @@ export default function JourneyTable({ journeys, isLoading, isError }: JourneyTa
             <button
               type="button"
               onClick={() => setExpanded({})}
-              className="text-xs font-medium text-slate-600 hover:text-slate-800 px-2 py-1 rounded hover:bg-slate-50 transition-colors"
+              className="text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-800 px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
             >
               Collapse all
             </button>
@@ -196,11 +196,11 @@ export default function JourneyTable({ journeys, isLoading, isError }: JourneyTa
         </div>
 
         {/* Hint banner */}
-        <div className="mt-3 flex items-start gap-3 rounded-lg border border-blue-100 bg-blue-50/60 px-4 py-3">
-          <Lightbulb className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
-          <div className="text-xs text-blue-900 leading-relaxed">
+        <div className="mt-3 flex items-start gap-3 rounded-lg border border-blue-100 bg-blue-50/60 px-4 py-3 dark:bg-blue-500/15 dark:border-blue-500/30">
+          <Lightbulb className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+          <div className="text-xs text-blue-900 dark:text-blue-300 leading-relaxed">
             <p className="font-semibold mb-0.5">How this view works</p>
-            <ul className="list-disc list-inside space-y-0.5 text-blue-800/90">
+            <ul className="list-disc list-inside space-y-0.5 text-blue-800/90 dark:text-blue-400">
               <li>
                 Journeys are grouped by campaign so you see every lead a single campaign
                 touched in one place.
@@ -231,30 +231,30 @@ export default function JourneyTable({ journeys, isLoading, isError }: JourneyTa
           return (
             <div
               key={group.campaignId}
-              className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden"
+              className="bg-card rounded-xl border border-border shadow-sm overflow-hidden"
             >
               {/* Campaign header (clickable to toggle) */}
               <button
                 type="button"
                 onClick={() => toggleExpand(group.campaignId)}
-                className="w-full flex items-center justify-between gap-3 px-5 py-4 hover:bg-slate-50/60 transition-colors"
+                className="w-full flex items-center justify-between gap-3 px-5 py-4 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   {isOpen ? (
-                    <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
+                    <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
                   ) : (
-                    <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
                   )}
                   <div className="min-w-0 text-left">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-semibold text-slate-900 truncate">
+                      <h4 className="font-semibold text-slate-900 dark:text-slate-100 truncate">
                         {campaignName}
                       </h4>
                       <span className={statusBadgeClass(group.campaign?.campaign_status)}>
                         {group.campaign?.campaign_status ?? 'Unknown'}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-500 mt-0.5 truncate">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
                       {group.campaign?.instructions?.slice(0, 100) || 'No instructions.'}
                       {(group.campaign?.instructions?.length ?? 0) > 100 ? '…' : ''}
                     </p>
@@ -281,9 +281,9 @@ export default function JourneyTable({ journeys, isLoading, isError }: JourneyTa
 
               {/* Journeys inside campaign */}
               {isOpen && (
-                <div className="border-t border-slate-100 bg-slate-50/30">
+                <div className="border-t border-border bg-muted/30">
                   {/* Sub-hint */}
-                  <div className="px-5 py-2 border-b border-slate-100 flex items-center gap-2 text-[11px] text-slate-500">
+                  <div className="px-5 py-2 border-b border-border flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
                     <Info className="w-3 h-3 shrink-0" />
                     <span>
                       Showing {group.journeys.length} journey
@@ -293,22 +293,22 @@ export default function JourneyTable({ journeys, isLoading, isError }: JourneyTa
                   </div>
 
                   {/* Column headers */}
-                  <div className="hidden md:grid grid-cols-[minmax(0,1fr)_140px_180px_120px] gap-4 items-center px-5 py-2 border-b border-slate-100 bg-slate-100/50">
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                  <div className="hidden md:grid grid-cols-[minmax(0,1fr)_140px_180px_120px] gap-4 items-center px-5 py-2 border-b border-border bg-muted/50">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                       Lead
                     </span>
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 text-center">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-center">
                       Stage
                     </span>
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 text-right">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-right">
                       Last Interaction
                     </span>
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 text-right">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-right">
                       Actions
                     </span>
                   </div>
 
-                  <ul className="divide-y divide-slate-100">
+                  <ul className="divide-y divide-border">
                     <AnimatePresence initial={false}>
                     {group.journeys.map((j) => {
                       const stageColor = STAGE_COLORS[j.funnel_stage] || '#94a3b8';
@@ -324,16 +324,16 @@ export default function JourneyTable({ journeys, isLoading, isError }: JourneyTa
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, x: 24, height: 0, paddingTop: 0, paddingBottom: 0 }}
                           transition={{ duration: 0.2, ease: 'easeOut' }}
-                          className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_140px_180px_120px] gap-3 md:gap-4 items-center px-5 py-3 hover:bg-white transition-colors overflow-hidden"
+                          className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_140px_180px_120px] gap-3 md:gap-4 items-center px-5 py-3 hover:bg-card transition-colors overflow-hidden"
                         >
                           {/* Lead info */}
                           <div className="min-w-0">
                             <LeadHoverCard lead={j.lead}>
-                              <p className="text-sm font-semibold text-slate-900 truncate hover:text-blue-700 transition-colors">
+                              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate hover:text-blue-700 transition-colors">
                                 {parishName}
                               </p>
                             </LeadHoverCard>
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-500 mt-0.5">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                               {email && (
                                 <span className="inline-flex items-center gap-1 min-w-0 max-w-full">
                                   <Mail className="w-3 h-3 shrink-0" />
@@ -347,7 +347,7 @@ export default function JourneyTable({ journeys, isLoading, isError }: JourneyTa
                                 </span>
                               )}
                               {!email && !phone && (
-                                <span className="text-slate-400 italic">
+                                <span className="text-slate-400 dark:text-slate-500 italic">
                                   No contact info
                                 </span>
                               )}
@@ -366,8 +366,8 @@ export default function JourneyTable({ journeys, isLoading, isError }: JourneyTa
                           </div>
 
                           {/* Last interaction — right aligned */}
-                          <div className="text-[11px] text-slate-600 tabular-nums text-left md:text-right">
-                            <span className="md:hidden text-slate-400 mr-1">
+                          <div className="text-[11px] text-slate-600 dark:text-slate-400 tabular-nums text-left md:text-right">
+                            <span className="md:hidden text-slate-400 dark:text-slate-500 mr-1">
                               Last interaction:
                             </span>
                             {formatDate(j.last_interaction)}
@@ -393,9 +393,9 @@ export default function JourneyTable({ journeys, isLoading, isError }: JourneyTa
 
       {/* Pagination over campaigns */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-3">
-          <p className="text-xs text-slate-500">
-            Page <span className="font-semibold text-slate-700">{safePage}</span> of{' '}
+        <div className="flex items-center justify-between bg-card rounded-xl border border-border shadow-sm px-5 py-3">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Page <span className="font-semibold text-slate-700 dark:text-slate-200">{safePage}</span> of{' '}
             {totalPages} · Showing campaigns {pageStart + 1}–
             {Math.min(pageStart + CAMPAIGNS_PER_PAGE, groups.length)} of {groups.length}
           </p>
@@ -404,7 +404,7 @@ export default function JourneyTable({ journeys, isLoading, isError }: JourneyTa
               type="button"
               disabled={safePage <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="text-xs font-medium px-3 py-1.5 rounded-md border border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
+              className="text-xs font-medium px-3 py-1.5 rounded-md border border-border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
             >
               Previous
             </button>
@@ -412,7 +412,7 @@ export default function JourneyTable({ journeys, isLoading, isError }: JourneyTa
               type="button"
               disabled={safePage >= totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="text-xs font-medium px-3 py-1.5 rounded-md border border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
+              className="text-xs font-medium px-3 py-1.5 rounded-md border border-border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
             >
               Next
             </button>

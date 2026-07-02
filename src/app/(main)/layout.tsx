@@ -41,7 +41,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     <>
       <Sidebar />
       <div
-        className={`ml-64 min-h-screen bg-purplecrm-50 p-8 ${isOthersRoute ? 'polish-others' : ''}`}
+        className={`ml-64 min-h-screen bg-slate-50 dark:bg-slate-950 p-8 ${isOthersRoute ? 'polish-others' : ''}`}
       >
         {/* Top-right user badge — replaces the user info that used to live
             in the sidebar footer. Sticky so it stays visible while scrolling. */}

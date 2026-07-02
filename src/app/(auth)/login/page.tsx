@@ -84,7 +84,7 @@ export default function LoginPage() {
 
   return (
     <div
-      className="min-h-screen w-full bg-slate-50 grid grid-cols-1 lg:grid-cols-2"
+      className="min-h-screen w-full bg-background grid grid-cols-1 lg:grid-cols-2"
       style={{ width: '100%' }}
     >
       {/* ─── LEFT: Brand panel (desktop only) ────────────────────── */}
@@ -211,10 +211,10 @@ export default function LoginPage() {
         <div className="flex-1 flex items-center justify-center px-6 sm:px-10 py-10 lg:py-12">
           <div className="w-full" style={{ maxWidth: '28rem' }}>
             <header className="mb-6 space-y-1.5">
-              <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+              <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                 Welcome back
               </h2>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 Sign in to continue managing your outreach campaigns.
               </p>
             </header>
@@ -223,7 +223,7 @@ export default function LoginPage() {
               {/* Email */}
               <div className="space-y-1.5">
                 <label
-                  className="block text-sm font-medium text-slate-700"
+                  className="block text-sm font-medium text-slate-700 dark:text-slate-200"
                   htmlFor="email"
                 >
                   Email
@@ -236,9 +236,9 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400"
+                  className="bg-card border-border text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                 />
-                <p className="text-[11px] text-slate-500 flex items-start gap-1.5">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-start gap-1.5">
                   <Info className="h-3 w-3 mt-0.5 shrink-0" />
                   Use the email address provided by your administrator.
                 </p>
@@ -248,14 +248,14 @@ export default function LoginPage() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label
-                    className="block text-sm font-medium text-slate-700"
+                    className="block text-sm font-medium text-slate-700 dark:text-slate-200"
                     htmlFor="password"
                   >
                     Password
                   </label>
                   <button
                     type="button"
-                    className="text-[11px] font-medium text-blue-600 hover:text-blue-700"
+                    className="text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700"
                     onClick={() =>
                       toast({
                         title: 'Need help signing in?',
@@ -276,12 +276,12 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="pr-10 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400"
+                    className="pr-10 bg-card border-border text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 dark:text-slate-500 hover:text-slate-600"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? (
@@ -291,7 +291,7 @@ export default function LoginPage() {
                     )}
                   </button>
                 </div>
-                <p className="text-[11px] text-slate-500 flex items-start gap-1.5">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-start gap-1.5">
                   <ShieldCheck className="h-3 w-3 mt-0.5 shrink-0 text-emerald-500" />
                   Your session is secured with token-based authentication.
                 </p>
@@ -311,19 +311,19 @@ export default function LoginPage() {
             </form>
 
             {/* Helpful hint card */}
-            <div className="mt-6 rounded-lg border border-blue-100 bg-blue-50/60 px-4 py-3">
-              <p className="text-xs font-semibold text-blue-900">First time here?</p>
-              <p className="mt-0.5 text-[11px] leading-relaxed text-blue-800/80">
+            <div className="mt-6 rounded-lg border border-blue-100 dark:border-blue-500/30 bg-blue-50/60 dark:bg-blue-500/15 px-4 py-3">
+              <p className="text-xs font-semibold text-blue-900 dark:text-blue-300">First time here?</p>
+              <p className="mt-0.5 text-[11px] leading-relaxed text-blue-800/80 dark:text-blue-200">
                 Access is invite-only. If you don&apos;t have credentials yet, ask your
                 administrator to add you in the Roles section.
               </p>
             </div>
 
             <div className="mt-6 text-center space-y-1">
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-400 dark:text-slate-500">
                 © {new Date().getFullYear()} Augustine Institute. All rights reserved.
               </p>
-              <p className="text-[10px] text-slate-400">
+              <p className="text-[10px] text-slate-400 dark:text-slate-500">
                 Build {APP_VERSION} · Secure connection
               </p>
             </div>

@@ -155,7 +155,7 @@ export function LeadHoverCard({
                   width: CARD_WIDTH,
                   zIndex: 9999,
                 }}
-                className="rounded-lg border border-slate-200 bg-white shadow-xl overflow-hidden pointer-events-auto"
+                className="rounded-lg border border-border bg-card shadow-xl overflow-hidden pointer-events-auto"
                 role="tooltip"
                 onMouseEnter={() => {
                   // Stay open while hovering the card itself
@@ -164,15 +164,15 @@ export function LeadHoverCard({
                 onMouseLeave={handleLeave}
               >
                 {/* Header */}
-                <div className="bg-linear-to-br from-slate-50 to-blue-50/40 px-4 py-3 border-b border-slate-100">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                <div className="bg-linear-to-br from-slate-50 to-blue-50/40 dark:from-slate-800/40 dark:to-blue-950/30 px-4 py-3 border-b border-border">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     Lead Preview
                   </p>
-                  <h4 className="mt-0.5 text-sm font-bold text-slate-900 truncate">
+                  <h4 className="mt-0.5 text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
                     {name}
                   </h4>
                   {diocese && (
-                    <p className="mt-0.5 text-[11px] text-slate-500 flex items-center gap-1 truncate">
+                    <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 truncate">
                       <MapPin className="w-3 h-3 shrink-0" />
                       {diocese}
                     </p>
@@ -182,42 +182,42 @@ export function LeadHoverCard({
                 {/* Contact */}
                 <div className="px-4 py-3 space-y-2 text-[12px]">
                   {email && (
-                    <div className="flex items-center gap-2 text-slate-700">
-                      <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
+                      <Mail className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                       <span className="truncate">{email}</span>
                     </div>
                   )}
                   {phone && (
-                    <div className="flex items-center gap-2 text-slate-700">
-                      <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
+                      <Phone className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                       <span>{phone}</span>
                     </div>
                   )}
                   {!email && !phone && (
-                    <p className="text-[11px] italic text-slate-400">No contact info</p>
+                    <p className="text-[11px] italic text-slate-400 dark:text-slate-500">No contact info</p>
                   )}
                 </div>
 
                 {/* Attributes */}
                 {(institutionType || classification || techReadiness) && (
-                  <div className="border-t border-slate-100 px-4 py-2.5 space-y-1.5 bg-slate-50/40">
+                  <div className="border-t border-border px-4 py-2.5 space-y-1.5 bg-muted/40">
                     {institutionType && (
                       <AttrRow
-                        icon={<Building2 className="w-3 h-3 text-slate-400" />}
+                        icon={<Building2 className="w-3 h-3 text-slate-400 dark:text-slate-500" />}
                         label="Institution"
                         value={institutionType}
                       />
                     )}
                     {classification && (
                       <AttrRow
-                        icon={<Sparkles className="w-3 h-3 text-slate-400" />}
+                        icon={<Sparkles className="w-3 h-3 text-slate-400 dark:text-slate-500" />}
                         label="Classification"
                         value={classification}
                       />
                     )}
                     {techReadiness && (
                       <AttrRow
-                        icon={<Sparkles className="w-3 h-3 text-slate-400" />}
+                        icon={<Sparkles className="w-3 h-3 text-slate-400 dark:text-slate-500" />}
                         label="Tech Readiness"
                         value={techReadiness}
                       />
@@ -225,7 +225,7 @@ export function LeadHoverCard({
                   </div>
                 )}
 
-                <div className="px-4 py-2 bg-white border-t border-slate-100 text-[10px] text-slate-400">
+                <div className="px-4 py-2 bg-card border-t border-border text-[10px] text-slate-400 dark:text-slate-500">
                   Hover over the eye icon for full details
                 </div>
               </motion.div>
@@ -250,8 +250,8 @@ function AttrRow({
     <div className="flex items-start gap-2 text-[11px]">
       <span className="mt-0.5">{icon}</span>
       <div className="min-w-0">
-        <span className="text-slate-500">{label}: </span>
-        <span className="text-slate-800 font-medium">{value}</span>
+        <span className="text-slate-500 dark:text-slate-400">{label}: </span>
+        <span className="text-slate-800 dark:text-slate-200 font-medium">{value}</span>
       </div>
     </div>
   );
