@@ -49,7 +49,7 @@ const ICPs = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl border border-gray-200 shadow-md overflow-hidden">
+      <div className="bg-card rounded-xl border border-border shadow-md overflow-hidden">
         <div className="p-6">
           <PageHeader
             title="ICPs"

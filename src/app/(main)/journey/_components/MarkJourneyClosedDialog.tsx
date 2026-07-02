@@ -66,13 +66,13 @@ export default function MarkJourneyClosedDialog({
           <div className="flex items-center gap-3">
             <div
               className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                isWon ? 'bg-emerald-100' : 'bg-rose-100'
+                isWon ? 'bg-emerald-100 dark:bg-emerald-500/15' : 'bg-rose-100 dark:bg-rose-500/15'
               }`}
             >
               {isWon ? (
-                <Trophy className="w-5 h-5 text-emerald-600" />
+                <Trophy className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               ) : (
-                <XCircle className="w-5 h-5 text-rose-600" />
+                <XCircle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
               )}
             </div>
             <AlertDialogTitle className="text-left">
@@ -83,20 +83,20 @@ export default function MarkJourneyClosedDialog({
             {isWon ? (
               <>
                 You&apos;re about to mark{' '}
-                <span className="font-semibold text-slate-900">
+                <span className="font-semibold text-slate-900 dark:text-slate-100">
                   {journeyLabel ?? 'this journey'}
                 </span>{' '}
-                as <span className="font-semibold text-emerald-700">Closed-Won</span>.
+                as <span className="font-semibold text-emerald-700 dark:text-emerald-400">Closed-Won</span>.
                 This stops the outreach pipeline for this lead and records the change
                 in the activity log.
               </>
             ) : (
               <>
                 You&apos;re about to mark{' '}
-                <span className="font-semibold text-slate-900">
+                <span className="font-semibold text-slate-900 dark:text-slate-100">
                   {journeyLabel ?? 'this journey'}
                 </span>{' '}
-                as <span className="font-semibold text-rose-700">Closed-Lost</span>.
+                as <span className="font-semibold text-rose-700 dark:text-rose-400">Closed-Lost</span>.
                 This stops the outreach pipeline for this lead and records the change
                 in the activity log.
               </>
@@ -109,7 +109,7 @@ export default function MarkJourneyClosedDialog({
           <div className="space-y-1.5">
             <label
               htmlFor="lost-reason-select"
-              className="block text-xs font-medium text-slate-700"
+              className="block text-xs font-medium text-slate-700 dark:text-slate-200"
             >
               Reason for loss <span className="text-rose-600">*</span>
             </label>
@@ -120,10 +120,10 @@ export default function MarkJourneyClosedDialog({
               disabled={loading}
               required
               aria-invalid={lostReason ? 'false' : 'true'}
-              className={`w-full rounded-md border bg-white px-3 py-2 text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-100 disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`w-full rounded-md border bg-card px-3 py-2 text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-100 disabled:opacity-50 disabled:cursor-not-allowed ${
                 lostReason
-                  ? 'border-slate-300 text-slate-800 focus:border-rose-500'
-                  : 'border-rose-300 text-slate-400 focus:border-rose-500'
+                  ? 'border-border text-slate-800 dark:text-slate-200 focus:border-rose-500'
+                  : 'border-rose-300 text-slate-400 dark:text-slate-500 focus:border-rose-500'
               }`}
             >
               <option value="" disabled>
@@ -136,7 +136,7 @@ export default function MarkJourneyClosedDialog({
               ))}
             </select>
             {!lostReason && (
-              <p className="text-[11px] text-rose-600">
+              <p className="text-[11px] text-rose-600 dark:text-rose-400">
                 Pick a reason so the team has context in the activity log.
               </p>
             )}
@@ -148,10 +148,10 @@ export default function MarkJourneyClosedDialog({
           <div className="space-y-1.5">
             <label
               htmlFor="closure-note"
-              className="block text-xs font-medium text-slate-700"
+              className="block text-xs font-medium text-slate-700 dark:text-slate-200"
             >
               Additional note{' '}
-              <span className="font-normal text-slate-400">(optional)</span>
+              <span className="font-normal text-slate-400 dark:text-slate-500">(optional)</span>
             </label>
             <Textarea
               id="closure-note"
@@ -161,7 +161,7 @@ export default function MarkJourneyClosedDialog({
               disabled={loading}
               className="min-h-20"
             />
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
               This note is saved to the journey&apos;s activity log so the team
               has context later.
             </p>

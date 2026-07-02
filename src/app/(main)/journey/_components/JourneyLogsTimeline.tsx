@@ -118,11 +118,11 @@ export default function JourneyLogsTimeline({ journeyId }: JourneyLogsTimelinePr
   return (
     <div className="space-y-3">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+      <div className="flex items-center justify-between border-b border-border pb-2">
         <div className="flex items-center gap-2">
-          <Activity className="w-4 h-4 text-slate-500" />
-          <h3 className="text-sm font-semibold text-slate-800">Activity Log</h3>
-          <span className="text-[11px] text-slate-500">
+          <Activity className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+          <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">Activity Log</h3>
+          <span className="text-[11px] text-slate-500 dark:text-slate-400">
             {data ? `${data.length} ${data.length === 1 ? 'entry' : 'entries'}` : ''}
           </span>
         </div>
@@ -131,8 +131,8 @@ export default function JourneyLogsTimeline({ journeyId }: JourneyLogsTimelinePr
           <span
             className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
               isLive
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                : 'bg-slate-50 text-slate-500 border border-slate-200'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30'
+                : 'bg-slate-50 text-slate-500 border border-slate-200 dark:bg-slate-500/15 dark:text-slate-300 dark:border-slate-500/30'
             }`}
             title={isLive ? 'Listening for live updates' : 'Realtime is not connected'}
           >
@@ -146,7 +146,7 @@ export default function JourneyLogsTimeline({ journeyId }: JourneyLogsTimelinePr
           <button
             type="button"
             onClick={() => refetch()}
-            className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 hover:text-slate-900 px-1.5 py-0.5 rounded hover:bg-slate-100 transition-colors"
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 px-1.5 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors"
             title="Refresh"
           >
             <RefreshCw className="w-3 h-3" />
@@ -166,13 +166,13 @@ export default function JourneyLogsTimeline({ journeyId }: JourneyLogsTimelinePr
 
       {/* Error */}
       {!isLoading && isError && (
-        <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-center">
-          <AlertCircle className="w-5 h-5 text-rose-600 mx-auto mb-1.5" />
-          <p className="text-sm font-medium text-rose-800">Failed to load logs</p>
+        <div className="rounded-lg border border-rose-200 bg-rose-50 dark:bg-rose-500/15 dark:border-rose-500/30 p-4 text-center">
+          <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 mx-auto mb-1.5" />
+          <p className="text-sm font-medium text-rose-800 dark:text-rose-400">Failed to load logs</p>
           <button
             type="button"
             onClick={() => refetch()}
-            className="mt-2 text-xs font-medium text-rose-700 hover:text-rose-900 underline"
+            className="mt-2 text-xs font-medium text-rose-700 dark:text-rose-400 hover:text-rose-900 underline"
           >
             Try again
           </button>
@@ -181,10 +181,10 @@ export default function JourneyLogsTimeline({ journeyId }: JourneyLogsTimelinePr
 
       {/* Empty */}
       {!isLoading && !isError && (!data || data.length === 0) && (
-        <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50/60 p-8 text-center">
-          <Inbox className="w-6 h-6 text-slate-400 mx-auto mb-2" />
-          <p className="text-sm font-medium text-slate-700">No logs yet</p>
-          <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+        <div className="rounded-lg border border-dashed border-border bg-muted/60 p-8 text-center">
+          <Inbox className="w-6 h-6 text-slate-400 dark:text-slate-500 mx-auto mb-2" />
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-200">No logs yet</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs mx-auto">
             Activity for this journey — emails sent, replies, status changes — will
             appear here in real time.
           </p>
@@ -228,14 +228,14 @@ export default function JourneyLogsTimeline({ journeyId }: JourneyLogsTimelinePr
                     />
 
                     <article
-                      className={`rounded-lg border bg-white shadow-sm overflow-hidden transition-shadow ${
+                      className={`rounded-lg border bg-card shadow-sm overflow-hidden transition-shadow ${
                         isNewest
                           ? 'border-emerald-300 shadow-emerald-100'
-                          : 'border-slate-200'
+                          : 'border-border'
                       }`}
                     >
                       {/* Header */}
-                      <header className="flex items-center justify-between gap-3 px-3 py-2 bg-slate-50/60 border-b border-slate-100">
+                      <header className="flex items-center justify-between gap-3 px-3 py-2 bg-muted/60 border-b border-border">
                         <div className="flex items-center gap-2 min-w-0">
                           <span
                             className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold text-white shrink-0"
@@ -245,19 +245,19 @@ export default function JourneyLogsTimeline({ journeyId }: JourneyLogsTimelinePr
                             {log.funnel_stage}
                           </span>
                           <span
-                            className="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded shrink-0"
+                            className="text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-muted/60 px-1.5 py-0.5 rounded shrink-0"
                             title={`Log #${log.idx}`}
                           >
                             #{log.idx}
                           </span>
                           {isNewest && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-700">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30">
                               <Sparkles className="w-2.5 h-2.5" />
                               Latest
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 shrink-0">
+                        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 shrink-0">
                           <Clock className="w-3 h-3" />
                           <span
                             title={formatTimestamp(log.created_at)}
@@ -272,14 +272,14 @@ export default function JourneyLogsTimeline({ journeyId }: JourneyLogsTimelinePr
                       <div className="px-3 py-2.5">
                         {notes ? (
                           <>
-                            <pre className="whitespace-pre-wrap wrap-break-word font-sans text-[12px] leading-relaxed text-slate-700">
+                            <pre className="whitespace-pre-wrap wrap-break-word font-sans text-[12px] leading-relaxed text-slate-700 dark:text-slate-200">
                               {displayNotes}
                             </pre>
                             {isLong && (
                               <button
                                 type="button"
                                 onClick={() => toggle(log.log_id)}
-                                className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 hover:text-blue-800"
+                                className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800"
                               >
                                 {isOpen ? (
                                   <>
@@ -296,12 +296,12 @@ export default function JourneyLogsTimeline({ journeyId }: JourneyLogsTimelinePr
                             )}
                           </>
                         ) : (
-                          <p className="text-[12px] text-slate-400 italic">No notes</p>
+                          <p className="text-[12px] text-slate-400 dark:text-slate-500 italic">No notes</p>
                         )}
                       </div>
 
                       {/* Footer with timestamp */}
-                      <footer className="px-3 py-1.5 bg-slate-50/40 border-t border-slate-100 text-[10px] text-slate-400 tabular-nums">
+                      <footer className="px-3 py-1.5 bg-muted/40 border-t border-border text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">
                         {formatTimestamp(log.created_at)}
                       </footer>
                     </article>

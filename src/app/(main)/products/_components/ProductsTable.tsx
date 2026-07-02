@@ -26,7 +26,7 @@ export default function ProductsTable({
 }: ProductsTableProps) {
   return (
     <div className="w-full">
-      <div className="overflow-x-auto rounded-lg border border-slate-200">
+      <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">
           <TableHeader columns={PRODUCT_TABLE_COLUMNS} />
 
@@ -64,7 +64,7 @@ export default function ProductsTable({
                 return (
                   <tr
                     key={product.product_id}
-                    className="border-b border-gray-100 last:border-0 hover:bg-slate-50/60 transition-colors"
+                    className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors"
                   >
                     {/* Name + description */}
                     <td className="py-2 px-3">

@@ -57,7 +57,7 @@ const ProductOfferPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl border border-gray-200 shadow-md overflow-hidden">
+      <div className="bg-card rounded-xl border border-border shadow-md overflow-hidden">
         <div className="p-6 space-y-5">
           <PageHeader
             title="Product Offers"
@@ -74,11 +74,11 @@ const ProductOfferPage = () => {
           </PageHeader>
 
           {/* Info banner — what an offer is, slot rules */}
-          <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
-            <Info className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
-            <div className="text-xs text-blue-900 leading-relaxed">
+          <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-500/15 dark:border-blue-500/30 px-4 py-3">
+            <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+            <div className="text-xs text-blue-900 dark:text-blue-200 leading-relaxed">
               <p className="font-medium mb-1">How product offers work</p>
-              <ul className="list-disc list-inside space-y-0.5 text-blue-800">
+              <ul className="list-disc list-inside space-y-0.5 text-blue-800 dark:text-blue-400">
                 <li>
                   An offer bundles up to <span className="font-semibold">3 products</span> for a
                   specific <span className="font-semibold">ICP</span>, and is referenced by
@@ -101,12 +101,12 @@ const ProductOfferPage = () => {
           </div>
 
           {isEmpty ? (
-            <div className="flex flex-col items-center justify-center text-center rounded-lg border border-dashed border-gray-200 bg-gray-50/60 py-12 px-6">
-              <div className="rounded-full bg-white border border-gray-200 p-3 mb-3 shadow-sm">
-                <PackageOpen className="w-6 h-6 text-gray-500" />
+            <div className="flex flex-col items-center justify-center text-center rounded-lg border border-dashed border-border bg-muted/50 py-12 px-6">
+              <div className="rounded-full bg-card border border-border p-3 mb-3 shadow-sm">
+                <PackageOpen className="w-6 h-6 text-gray-500 dark:text-slate-400" />
               </div>
-              <p className="text-sm font-medium text-gray-700">No product offers yet</p>
-              <p className="text-xs text-gray-500 mt-1 max-w-80">
+              <p className="text-sm font-medium text-gray-700 dark:text-slate-200">No product offers yet</p>
+              <p className="text-xs text-gray-500 dark:text-slate-400 mt-1 max-w-80">
                 Create your first offer to pair an ICP with up to three products. Campaigns will
                 reference it to decide what to pitch.
               </p>

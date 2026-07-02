@@ -28,7 +28,7 @@ export function TrendBadge({
   // stays consistent across tiles.
   if (previous === 0 && current === 0) {
     return (
-      <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-slate-400">
+      <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-slate-400 dark:text-slate-500">
         <ArrowRight className="w-2.5 h-2.5" />
         no change · {periodLabel}
       </span>
@@ -38,7 +38,7 @@ export function TrendBadge({
   // From zero → positive growth, but percentage is undefined. Show "+N new".
   if (previous === 0) {
     return (
-      <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-emerald-600">
+      <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
         <ArrowUp className="w-2.5 h-2.5" />+{current} new · {periodLabel}
       </span>
     );
@@ -49,7 +49,7 @@ export function TrendBadge({
 
   if (rounded === 0) {
     return (
-      <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-slate-500">
+      <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-slate-500 dark:text-slate-400">
         <ArrowRight className="w-2.5 h-2.5" />
         0% · {periodLabel}
       </span>
@@ -58,7 +58,7 @@ export function TrendBadge({
 
   const isUp = rounded > 0;
   const isGood = variant === 'up-good' ? isUp : !isUp;
-  const color = isGood ? 'text-emerald-600' : 'text-rose-600';
+  const color = isGood ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400';
   const Icon = isUp ? ArrowUp : ArrowDown;
   const sign = isUp ? '+' : '';
 

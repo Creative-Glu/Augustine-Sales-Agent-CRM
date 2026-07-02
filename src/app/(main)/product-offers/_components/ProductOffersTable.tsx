@@ -67,7 +67,7 @@ export default function ProductOfferTable({
 
   return (
     <div className="w-full">
-      <div className="overflow-x-auto rounded-lg border border-slate-200">
+      <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">
           <TableHeader columns={PRODUCT_OFFER_COLUMNS} />
 
@@ -76,7 +76,7 @@ export default function ProductOfferTable({
             {isLoading && (
               <>
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <tr key={i} className="border-b border-slate-100 last:border-0">
+                  <tr key={i} className="border-b border-border last:border-0">
                     <td colSpan={5} className="py-2 px-3">
                       <Skeleton className="h-10 w-full" />
                     </td>
@@ -91,13 +91,13 @@ export default function ProductOfferTable({
                 <td colSpan={5} className="py-8">
                   <div className="flex flex-col items-center text-center gap-1.5">
                     <AlertCircle className="w-5 h-5 text-rose-500" />
-                    <p className="text-sm font-medium text-rose-700">
+                    <p className="text-sm font-medium text-rose-700 dark:text-rose-400">
                       Failed to load product offers
                     </p>
                     <button
                       type="button"
                       onClick={fetchProductOffersList}
-                      className="text-xs font-medium text-rose-600 hover:text-rose-800 underline"
+                      className="text-xs font-medium text-rose-600 dark:text-rose-400 hover:text-rose-800 underline"
                     >
                       Try again
                     </button>
@@ -111,10 +111,10 @@ export default function ProductOfferTable({
               <tr>
                 <td colSpan={5} className="py-8">
                   <div className="flex flex-col items-center text-center gap-1.5">
-                    <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100">
-                      <PackageOpen className="w-4 h-4 text-slate-400" />
+                    <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-muted/60">
+                      <PackageOpen className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                     </div>
-                    <p className="text-xs font-medium text-slate-700">
+                    <p className="text-xs font-medium text-slate-700 dark:text-slate-200">
                       No product offers found
                     </p>
                   </div>
@@ -136,18 +136,18 @@ export default function ProductOfferTable({
                 return (
                   <tr
                     key={offer.offer_id}
-                    className="border-b border-slate-100 last:border-0 hover:bg-slate-50/60 transition-colors"
+                    className="border-b border-border last:border-0 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors"
                   >
                     {/* Offer Name + ID */}
                     <td className="py-2 px-3 min-w-0">
                       <p
-                        className="font-medium text-sm text-slate-900 truncate max-w-60"
+                        className="font-medium text-sm text-slate-900 dark:text-slate-100 truncate max-w-60"
                         title={offer.offer_name}
                       >
                         {offer.offer_name || '—'}
                       </p>
                       <p
-                        className="text-[10px] font-mono text-slate-500 truncate"
+                        className="text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate"
                         title={offer.offer_id}
                       >
                         {offer.offer_id}
@@ -158,13 +158,13 @@ export default function ProductOfferTable({
                     <td className="py-2 px-3">
                       {offer.icp?.icp_name ? (
                         <span
-                          className="inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 max-w-40 truncate"
+                          className="inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30 max-w-40 truncate"
                           title={offer.icp.icp_name}
                         >
                           {offer.icp.icp_name}
                         </span>
                       ) : (
-                        <span className="text-[11px] text-slate-400 italic">No ICP</span>
+                        <span className="text-[11px] text-slate-400 dark:text-slate-500 italic">No ICP</span>
                       )}
                     </td>
 
@@ -192,8 +192,8 @@ export default function ProductOfferTable({
                               <span
                                 className={`truncate max-w-50 ${
                                   name
-                                    ? 'text-slate-700'
-                                    : 'text-slate-400 italic'
+                                    ? 'text-slate-700 dark:text-slate-200'
+                                    : 'text-slate-400 dark:text-slate-500 italic'
                                 }`}
                                 title={name ?? ''}
                               >
@@ -203,13 +203,13 @@ export default function ProductOfferTable({
                           );
                         })}
                       </ol>
-                      <p className="text-[10px] text-slate-400 mt-1">
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
                         {filledCount}/3 slots filled
                       </p>
                     </td>
 
                     {/* Created At */}
-                    <td className="py-2 px-3 text-[11px] text-slate-500 tabular-nums whitespace-nowrap">
+                    <td className="py-2 px-3 text-[11px] text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">
                       {formatDateTimeShort(offer.created_at)}
                     </td>
 

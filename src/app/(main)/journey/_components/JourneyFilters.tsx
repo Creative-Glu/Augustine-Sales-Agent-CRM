@@ -61,10 +61,10 @@ export default function JourneyFilters({
     filters.dateRange !== 'all';
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md border border-slate-200/60 p-4 md:p-5">
+    <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-md border border-border/60 p-4 md:p-5">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
         <div className="lg:col-span-2 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
           <Input
             placeholder="Search parish, diocese, email..."
             value={filters.search}
@@ -141,7 +141,7 @@ export default function JourneyFilters({
             variant="ghost"
             size="sm"
             onClick={() => onChange(DEFAULT_JOURNEY_FILTERS)}
-            className="text-slate-600 hover:text-slate-900"
+            className="text-slate-600 dark:text-slate-400 hover:text-slate-900"
           >
             <X className="w-4 h-4 mr-1" />
             Clear filters

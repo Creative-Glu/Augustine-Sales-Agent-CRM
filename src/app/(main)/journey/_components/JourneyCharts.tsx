@@ -24,8 +24,8 @@ interface JourneyChartsProps {
 }
 
 const tooltipStyle = {
-  backgroundColor: 'rgba(255, 255, 255, 0.97)',
-  border: '1px solid #e2e8f0',
+  backgroundColor: 'var(--card)',
+  border: '1px solid var(--border)',
   borderRadius: '12px',
   boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
   fontSize: '13px',
@@ -41,10 +41,10 @@ function ChartCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md border border-slate-200/60 p-5 h-full flex flex-col">
+    <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-md border border-border/60 p-5 h-full flex flex-col">
       <div className="mb-3">
-        <h3 className="text-lg font-bold text-slate-800">{title}</h3>
-        {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{title}</h3>
+        {subtitle && <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{subtitle}</p>}
       </div>
       <div className="flex-1 min-h-[280px]">{children}</div>
     </div>
@@ -117,7 +117,7 @@ export default function JourneyCharts({ journeys }: JourneyChartsProps) {
   }, [journeys]);
 
   const emptyState = (label: string) => (
-    <div className="h-full flex items-center justify-center text-sm text-slate-400">{label}</div>
+    <div className="h-full flex items-center justify-center text-sm text-slate-400 dark:text-slate-500">{label}</div>
   );
 
   // Dynamic height so every campaign row has enough breathing room.
@@ -193,16 +193,16 @@ export default function JourneyCharts({ journeys }: JourneyChartsProps) {
       </div>
 
       {/* Row 2: Stages by Campaign — full width, horizontal bars */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md border border-slate-200/60 p-5">
+      <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-md border border-border/60 p-5">
         <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">
           <div>
-            <h3 className="text-lg font-bold text-slate-800">Stages by Campaign</h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">Stages by Campaign</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Funnel-stage breakdown per campaign · sorted by total journeys
             </p>
           </div>
           {campaignBarData.length > 0 && (
-            <p className="text-[11px] text-slate-500 tabular-nums">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
               {campaignBarData.length}{' '}
               {campaignBarData.length === 1 ? 'campaign' : 'campaigns'}
             </p>
@@ -210,7 +210,7 @@ export default function JourneyCharts({ journeys }: JourneyChartsProps) {
         </div>
 
         {campaignBarData.length === 0 ? (
-          <div className="h-72 flex items-center justify-center text-sm text-slate-400">
+          <div className="h-72 flex items-center justify-center text-sm text-slate-400 dark:text-slate-500">
             No data
           </div>
         ) : (
@@ -276,12 +276,12 @@ export default function JourneyCharts({ journeys }: JourneyChartsProps) {
             </div>
 
             {/* Color legend / hint */}
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-slate-500">
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400">
               <span className="font-semibold uppercase tracking-wide">Stages:</span>
               {activeStages.map((stage) => (
                 <span
                   key={stage}
-                  className="inline-flex items-center gap-1 rounded-full bg-slate-50 border border-slate-200 px-2 py-0.5 font-medium text-slate-700"
+                  className="inline-flex items-center gap-1 rounded-full bg-slate-50 border border-slate-200 px-2 py-0.5 font-medium text-slate-700 dark:bg-slate-500/15 dark:text-slate-300 dark:border-slate-500/30"
                 >
                   <span
                     className="w-2 h-2 rounded-full"

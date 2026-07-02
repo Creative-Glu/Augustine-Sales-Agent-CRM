@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/providers/AuthProvider';
+import { ThemeToggle } from './ThemeToggle';
 
 const SIDEBAR_STATE_KEY = 'augustine.sidebar.collapsibles';
 
@@ -159,6 +160,14 @@ export default function Sidebar() {
           </div>
         ))}
       </nav>
+
+      {/* ── Footer: appearance / theme toggle ── */}
+      <div className="border-t border-slate-800 px-4 py-4 bg-linear-to-t from-slate-950/60 to-transparent">
+        <p className="px-1 mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400 select-none">
+          Appearance
+        </p>
+        <ThemeToggle className="w-full" />
+      </div>
 
       {/* ── Footer ── only sign-out + version ── */}
       {/* <div className="border-t border-slate-800 px-3 py-3 bg-linear-to-t from-slate-950/60 to-transparent">

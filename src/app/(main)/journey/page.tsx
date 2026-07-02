@@ -16,7 +16,7 @@ export default function DashboardPage() {
 
       <div className="mt-5">
         {' '}
-        <Suspense fallback={<h2 className="text-gray-500">Loading Lead Journey Chart...</h2>}>
+        <Suspense fallback={<h2 className="text-gray-500 dark:text-slate-400">Loading Lead Journey Chart...</h2>}>
           <JourneyPage />
         </Suspense>
       </div>

@@ -52,7 +52,7 @@ export default function ICPsTable({
 
   return (
     <div className="w-full">
-      <div className="overflow-x-auto rounded-lg border border-slate-200">
+      <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">
           <TableHeader columns={ICP_TABLE_COLUMNS} />
 
@@ -61,7 +61,7 @@ export default function ICPsTable({
             {isLoading && (
               <>
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <tr key={i} className="border-b border-slate-100 last:border-0">
+                  <tr key={i} className="border-b border-border last:border-0">
                     <td colSpan={4} className="py-2 px-3">
                       <Skeleton className="h-10 w-full" />
                     </td>
@@ -76,13 +76,13 @@ export default function ICPsTable({
                 <td colSpan={4} className="py-8">
                   <div className="flex flex-col items-center text-center gap-1.5">
                     <AlertCircle className="w-5 h-5 text-rose-500" />
-                    <p className="text-sm font-medium text-rose-700">
+                    <p className="text-sm font-medium text-rose-700 dark:text-rose-400">
                       Failed to load ICPs
                     </p>
                     <button
                       type="button"
                       onClick={fetchICPs}
-                      className="text-xs font-medium text-rose-600 hover:text-rose-800 underline"
+                      className="text-xs font-medium text-rose-600 hover:text-rose-800 underline dark:text-rose-400"
                     >
                       Try again
                     </button>
@@ -96,10 +96,10 @@ export default function ICPsTable({
               <tr>
                 <td colSpan={4} className="py-8">
                   <div className="flex flex-col items-center text-center gap-1.5">
-                    <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100">
-                      <Target className="w-4 h-4 text-slate-400" />
+                    <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-muted">
+                      <Target className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                     </div>
-                    <p className="text-xs font-medium text-slate-700">No ICPs found</p>
+                    <p className="text-xs font-medium text-slate-700 dark:text-slate-200">No ICPs found</p>
                   </div>
                 </td>
               </tr>
@@ -111,18 +111,18 @@ export default function ICPsTable({
               icps.map((icp) => (
                 <tr
                   key={icp.icp_id}
-                  className="border-b border-slate-100 last:border-0 hover:bg-slate-50/60 transition-colors"
+                  className="border-b border-border last:border-0 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors"
                 >
                   {/* Name + ID */}
                   <td className="py-2 px-3 min-w-0">
                     <p
-                      className="text-sm font-medium text-slate-900 truncate max-w-60"
+                      className="text-sm font-medium text-slate-900 truncate max-w-60 dark:text-slate-100"
                       title={icp.icp_name}
                     >
                       {icp.icp_name || '—'}
                     </p>
                     <p
-                      className="text-[10px] font-mono text-slate-500 truncate"
+                      className="text-[10px] font-mono text-slate-500 truncate dark:text-slate-400"
                       title={icp.icp_id}
                     >
                       {icp.icp_id}
@@ -132,17 +132,17 @@ export default function ICPsTable({
                   {/* Description */}
                   <td className="py-2 px-3 min-w-0">
                     <p
-                      className="text-[11px] text-slate-600 truncate max-w-80"
+                      className="text-[11px] text-slate-600 truncate max-w-80 dark:text-slate-400"
                       title={icp.icp_desc ?? ''}
                     >
                       {icp.icp_desc || (
-                        <span className="text-slate-400 italic">No description</span>
+                        <span className="text-slate-400 italic dark:text-slate-500">No description</span>
                       )}
                     </p>
                   </td>
 
                   {/* Created date + time */}
-                  <td className="py-2 px-3 text-[11px] text-slate-500 tabular-nums whitespace-nowrap">
+                  <td className="py-2 px-3 text-[11px] text-slate-500 tabular-nums whitespace-nowrap dark:text-slate-400">
                     {formatDateTimeShort(icp.created_at)}
                   </td>
 

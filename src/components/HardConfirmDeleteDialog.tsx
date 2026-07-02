@@ -50,8 +50,8 @@ export default function HardConfirmDeleteDialog({
       <AlertDialogContent className="sm:max-w-[480px]">
         <AlertDialogHeader>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
+            <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-500/15 flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
             </div>
             <AlertDialogTitle className="text-left">{title}</AlertDialogTitle>
           </div>
@@ -61,16 +61,16 @@ export default function HardConfirmDeleteDialog({
         </AlertDialogHeader>
 
         {warningPoints.length > 0 && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-3 mt-1">
-            <p className="text-xs font-semibold text-red-900 mb-1.5">
+          <div className="rounded-lg border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/15 p-3 mt-1">
+            <p className="text-xs font-semibold text-red-900 dark:text-red-300 mb-1.5">
               The following will be permanently deleted:
             </p>
-            <ul className="list-disc list-inside space-y-0.5 text-xs text-red-800">
+            <ul className="list-disc list-inside space-y-0.5 text-xs text-red-800 dark:text-red-400">
               {warningPoints.map((p) => (
                 <li key={p}>{p}</li>
               ))}
             </ul>
-            <p className="mt-2 text-[11px] font-medium text-red-700">
+            <p className="mt-2 text-[11px] font-medium text-red-700 dark:text-red-400">
               This action cannot be undone.
             </p>
           </div>
@@ -79,10 +79,10 @@ export default function HardConfirmDeleteDialog({
         <div className="space-y-1.5 mt-2">
           <label
             htmlFor="hard-confirm-input"
-            className="block text-xs font-medium text-slate-700"
+            className="block text-xs font-medium text-slate-700 dark:text-slate-200"
           >
             Type{' '}
-            <span className="font-mono font-bold text-red-700 bg-red-50 border border-red-200 rounded px-1.5 py-0.5">
+            <span className="font-mono font-bold text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-500/15 border border-red-200 dark:border-red-500/30 rounded px-1.5 py-0.5">
               {confirmWord}
             </span>{' '}
             to confirm:
@@ -97,7 +97,7 @@ export default function HardConfirmDeleteDialog({
             className="font-mono"
           />
           {input.length > 0 && !matches && (
-            <p className="text-[11px] text-amber-700">
+            <p className="text-[11px] text-amber-700 dark:text-amber-400">
               Doesn&apos;t match — type exactly{' '}
               <span className="font-mono">{confirmWord}</span> (case-sensitive).
             </p>

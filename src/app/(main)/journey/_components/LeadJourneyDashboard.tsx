@@ -190,22 +190,22 @@ export default function LeadJourneyDashboard({ journeys, isLoading }: LeadJourne
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-800/60 dark:via-blue-950/40 dark:to-indigo-950/40 p-6 md:p-8">
       <div className="">
         {/* Header */}
         <div className="space-y-2">
           <h1 className="text-2xl md:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
             Funnel Overview
           </h1>
-          <p className="text-slate-600 text-lg">
+          <p className="text-slate-600 dark:text-slate-400 text-lg">
             Track and manage your lead progression through the funnel
           </p>
         </div>
 
         {/* Funnel Chart */}
-        <div className="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-6 md:p-8 border border-slate-200/50">
+        <div className="bg-card/80 backdrop-blur-sm shadow-xl rounded-2xl p-6 md:p-8 border border-border/50">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-slate-800">Funnel Overview</h2>
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Funnel Overview</h2>
             <div className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-full text-sm font-semibold shadow-lg">
               {journeys.length} Total Leads
             </div>
@@ -215,8 +215,8 @@ export default function LeadJourneyDashboard({ journeys, isLoading }: LeadJourne
             <FunnelChart>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                  border: '1px solid #e2e8f0',
+                  backgroundColor: 'var(--card)',
+                  border: '1px solid var(--border)',
                   borderRadius: '12px',
                   boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
                 }}
@@ -245,12 +245,12 @@ export default function LeadJourneyDashboard({ journeys, isLoading }: LeadJourne
                 stageCount[stage] && (
                   <div
                     key={stage}
-                    className="group px-4 py-2 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 hover:from-blue-100 hover:to-indigo-100 transition-all duration-300 shadow-md hover:shadow-lg"
+                    className="group px-4 py-2 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 hover:from-blue-100 hover:to-indigo-100 dark:from-slate-800/60 dark:to-slate-800/60 dark:hover:from-blue-950/40 dark:hover:to-indigo-950/40 transition-all duration-300 shadow-md hover:shadow-lg"
                   >
-                    <span className="text-sm font-semibold text-slate-700 group-hover:text-blue-700 transition-colors">
+                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-blue-700 transition-colors">
                       {stage}
                     </span>
-                    <span className="ml-2 px-2 py-1 bg-white rounded-full text-xs font-bold text-indigo-600">
+                    <span className="ml-2 px-2 py-1 bg-card rounded-full text-xs font-bold text-indigo-600 dark:text-indigo-400">
                       {stageCount[stage]}
                     </span>
                   </div>
@@ -261,7 +261,7 @@ export default function LeadJourneyDashboard({ journeys, isLoading }: LeadJourne
 
         {/* Accordion Lead Cards */}
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-slate-800 mb-4">Lead Details</h2>
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-4">Lead Details</h2>
 
           {Object.values(leadsMap).map((leadJourneys) => {
             const lead = leadJourneys[0];
@@ -270,17 +270,17 @@ export default function LeadJourneyDashboard({ journeys, isLoading }: LeadJourne
             return (
               <div
                 key={lead.lead_id}
-                className="bg-white/80 backdrop-blur-sm shadow-lg rounded-2xl overflow-hidden border border-slate-200/50 hover:shadow-2xl transition-all duration-300"
+                className="bg-card/80 backdrop-blur-sm shadow-lg rounded-2xl overflow-hidden border border-border/50 hover:shadow-2xl transition-all duration-300"
               >
                 <button
                   onClick={() => toggleAccordion(lead.lead_id)}
-                  className="w-full flex justify-between items-center px-6 py-5 bg-gradient-to-r from-slate-50 to-blue-50 hover:from-blue-50 hover:to-indigo-50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-all duration-300"
+                  className="w-full flex justify-between items-center px-6 py-5 bg-gradient-to-r from-slate-50 to-blue-50 hover:from-blue-50 hover:to-indigo-50 dark:from-slate-800/60 dark:to-blue-950/40 dark:hover:from-blue-950/40 dark:hover:to-indigo-950/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-all duration-300"
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                       {lead.campaign_test_group['Parish Name']?.charAt(0) || 'L'}
                     </div>
-                    <h3 className="text-xl font-bold text-slate-800">
+                    <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">
                       {lead.campaign_test_group['Parish Name']}
                     </h3>
                   </div>
@@ -297,7 +297,7 @@ export default function LeadJourneyDashboard({ journeys, isLoading }: LeadJourne
                       ))}
                     </div>
                     <div
-                      className={`ml-4 text-slate-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                      className={`ml-4 text-slate-500 dark:text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
                     >
                       <svg
                         className="w-6 h-6"
@@ -317,11 +317,11 @@ export default function LeadJourneyDashboard({ journeys, isLoading }: LeadJourne
                 </button>
 
                 {isExpanded && (
-                  <div className="px-6 py-6 border-t border-slate-200 bg-white space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="px-6 py-6 border-t border-border bg-card space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
                     {/* Last Interaction */}
-                    <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
+                    <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/40 rounded-xl border border-amber-200">
                       <svg
-                        className="w-5 h-5 text-amber-600"
+                        className="w-5 h-5 text-amber-600 dark:text-amber-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -333,9 +333,9 @@ export default function LeadJourneyDashboard({ journeys, isLoading }: LeadJourne
                           d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      <p className="text-sm font-medium text-slate-700">
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
                         Last Interaction:{' '}
-                        <span className="font-bold text-slate-900">
+                        <span className="font-bold text-slate-900 dark:text-slate-100">
                           {new Date(
                             leadJourneys[leadJourneys.length - 1].last_interaction
                           ).toLocaleString()}
@@ -346,10 +346,10 @@ export default function LeadJourneyDashboard({ journeys, isLoading }: LeadJourne
                     {/* Lead Info Grid */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {/* Lead Info Card */}
-                      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-200 shadow-sm">
+                      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 rounded-xl p-5 border border-blue-200 shadow-sm">
                         <div className="flex items-center gap-2 mb-4">
                           <svg
-                            className="w-5 h-5 text-blue-600"
+                            className="w-5 h-5 text-blue-600 dark:text-blue-400"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -361,12 +361,12 @@ export default function LeadJourneyDashboard({ journeys, isLoading }: LeadJourne
                               d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                             />
                           </svg>
-                          <h4 className="font-bold text-lg text-slate-800">Lead Information</h4>
+                          <h4 className="font-bold text-lg text-slate-800 dark:text-slate-200">Lead Information</h4>
                         </div>
                         <div className="space-y-3 text-sm">
                           <div className="flex items-start gap-2">
                             <svg
-                              className="w-4 h-4 text-slate-500 mt-0.5"
+                              className="w-4 h-4 text-slate-500 dark:text-slate-400 mt-0.5"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -379,15 +379,15 @@ export default function LeadJourneyDashboard({ journeys, isLoading }: LeadJourne
                               />
                             </svg>
                             <div>
-                              <span className="text-slate-600 font-medium">Email:</span>
-                              <p className="text-slate-900 font-semibold">
+                              <span className="text-slate-600 dark:text-slate-400 font-medium">Email:</span>
+                              <p className="text-slate-900 dark:text-slate-100 font-semibold">
                                 {lead.campaign_test_group['Parish Contact Email']}
                               </p>
                             </div>
                           </div>
                           <div className="flex items-start gap-2">
                             <svg
-                              className="w-4 h-4 text-slate-500 mt-0.5"
+                              className="w-4 h-4 text-slate-500 dark:text-slate-400 mt-0.5"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -400,15 +400,15 @@ export default function LeadJourneyDashboard({ journeys, isLoading }: LeadJourne
                               />
                             </svg>
                             <div>
-                              <span className="text-slate-600 font-medium">Phone:</span>
-                              <p className="text-slate-900 font-semibold">
+                              <span className="text-slate-600 dark:text-slate-400 font-medium">Phone:</span>
+                              <p className="text-slate-900 dark:text-slate-100 font-semibold">
                                 {lead.campaign_test_group['Parish Phone']}
                               </p>
                             </div>
                           </div>
                           <div className="flex items-start gap-2">
                             <svg
-                              className="w-4 h-4 text-slate-500 mt-0.5"
+                              className="w-4 h-4 text-slate-500 dark:text-slate-400 mt-0.5"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -421,8 +421,8 @@ export default function LeadJourneyDashboard({ journeys, isLoading }: LeadJourne
                               />
                             </svg>
                             <div>
-                              <span className="text-slate-600 font-medium">Formed Status:</span>
-                              <p className="text-slate-900 font-semibold">
+                              <span className="text-slate-600 dark:text-slate-400 font-medium">Formed Status:</span>
+                              <p className="text-slate-900 dark:text-slate-100 font-semibold">
                                 {lead.campaign_test_group['Formed Status']}
                               </p>
                             </div>
@@ -431,10 +431,10 @@ export default function LeadJourneyDashboard({ journeys, isLoading }: LeadJourne
                       </div>
 
                       {/* Campaigns Card */}
-                      <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-5 border border-purple-200 shadow-sm">
+                      <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/40 dark:to-pink-950/40 rounded-xl p-5 border border-purple-200 shadow-sm">
                         <div className="flex items-center gap-2 mb-4">
                           <svg
-                            className="w-5 h-5 text-purple-600"
+                            className="w-5 h-5 text-purple-600 dark:text-purple-400"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -446,23 +446,23 @@ export default function LeadJourneyDashboard({ journeys, isLoading }: LeadJourne
                               d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
                             />
                           </svg>
-                          <h4 className="font-bold text-lg text-slate-800">Campaigns</h4>
+                          <h4 className="font-bold text-lg text-slate-800 dark:text-slate-200">Campaigns</h4>
                         </div>
                         <div className="space-y-4">
                           {leadJourneys.map((j) => (
                             <div
                               key={j.journey_id}
-                              className="bg-white rounded-lg p-4 shadow-sm border border-purple-100"
+                              className="bg-card rounded-lg p-4 shadow-sm border border-purple-100"
                             >
-                              <p className="font-bold text-slate-900 mb-2">
+                              <p className="font-bold text-slate-900 dark:text-slate-100 mb-2">
                                 {j.campaigns.campaign_name}
                               </p>
                               <div className="flex items-center gap-2 mb-2">
-                                <span className="px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-semibold">
+                                <span className="px-2 py-1 bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300 rounded-md text-xs font-semibold">
                                   {j.campaigns.campaign_status}
                                 </span>
                               </div>
-                              <p className="text-slate-600 text-sm leading-relaxed">
+                              <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
                                 {j.campaigns.instructions}
                               </p>
                             </div>
@@ -472,10 +472,10 @@ export default function LeadJourneyDashboard({ journeys, isLoading }: LeadJourne
                     </div>
 
                     {/* Notes Section */}
-                    <div className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-xl p-5 border border-slate-200 shadow-sm">
+                    <div className="bg-gradient-to-br from-slate-50 to-gray-50 dark:from-slate-800/60 dark:to-gray-950/40 rounded-xl p-5 border border-border shadow-sm">
                       <div className="flex items-center gap-2 mb-4">
                         <svg
-                          className="w-5 h-5 text-slate-600"
+                          className="w-5 h-5 text-slate-600 dark:text-slate-400"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -487,13 +487,13 @@ export default function LeadJourneyDashboard({ journeys, isLoading }: LeadJourne
                             d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                           />
                         </svg>
-                        <h4 className="font-bold text-lg text-slate-800">Notes</h4>
+                        <h4 className="font-bold text-lg text-slate-800 dark:text-slate-200">Notes</h4>
                       </div>
                       <div className="space-y-3">
                         {leadJourneys.map((j) => (
                           <div
                             key={j.journey_id}
-                            className="bg-white rounded-lg p-4 text-slate-700 text-sm leading-relaxed whitespace-pre-wrap shadow-sm border border-slate-200"
+                            className="bg-card rounded-lg p-4 text-slate-700 dark:text-slate-200 text-sm leading-relaxed whitespace-pre-wrap shadow-sm border border-border"
                           >
                             {j.notes}
                           </div>
